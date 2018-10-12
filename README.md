@@ -1,0 +1,6 @@
+STM32F4DISCOVERY
+STM32F407
+WiFi ESP8266
+MicroSD FatFS
+UART debug, firmware update
+MP3 audio
