@@ -1,7 +1,8 @@
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : usbh_platform.h
-  * @brief          : Header for usbh_platform.c file.
+  * File Name          : freertos.c
+  * Description        : Code for freertos applications
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -45,28 +46,46 @@
   *
   ******************************************************************************
   */
-
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USBH_PLATFORM_H__
-#define __USBH_PLATFORM_H__
-
-#ifdef __cplusplus
- extern "C" {
-#endif
+/* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "usb_host.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "main.h"
 
-/* USER CODE BEGIN INCLUDE */
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */     
 
-/* USER CODE END INCLUDE */
+/* USER CODE END Includes */
 
-void MX_DriverVbusFS(uint8_t state); 
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
 
-#ifdef __cplusplus
-}
-#endif
+/* USER CODE END PTD */
 
-#endif /* __USBH_PLATFORM_H__ */
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+/* USER CODE BEGIN Variables */
+
+/* USER CODE END Variables */
+
+/* Private function prototypes -----------------------------------------------*/
+/* USER CODE BEGIN FunctionPrototypes */
+   
+/* USER CODE END FunctionPrototypes */
+
+/* Private application code --------------------------------------------------*/
+/* USER CODE BEGIN Application */
+     
+/* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
