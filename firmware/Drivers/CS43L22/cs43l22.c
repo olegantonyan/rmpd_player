@@ -82,10 +82,16 @@ bool cs43l22_init(CS43L22 cs43l22) {
   printf("0x05: 0x%x\n", i2c_read_register(0x05));
 
 
-
   // beep
   i2c_write_register(CS43L22_REG_BEEP_TONE_CFG, 0xC0);
-  i2c_write_register(CS43L22_REG_BEEP_FREQ_ON_TIME, 0x7C);
+  i2c_write_register(CS43L22_REG_BEEP_FREQ_ON_TIME, 0x1C);
+
+  while(true) {
+    uint16_t Istr[1];
+    Istr[0] = 0;
+
+    HAL_I2S_Transmit (config.i2s, Istr , 0x10, 10 );
+  }
 
   initialized = true;
   return true;
