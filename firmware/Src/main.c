@@ -387,7 +387,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1000);
+    osDelay(5000);
     //HAL_UART_Transmit(&huart4, (uint8_t *)"hello\n", 6, 100);
     printf("hello123\n");
 
