@@ -53,6 +53,7 @@
 
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "cs43l22.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -371,14 +372,27 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
-
   /* USER CODE BEGIN 5 */
+
+  CS43L22 cs43l22;
+  cs43l22.i2c = &hi2c1;
+  cs43l22.i2s = &hi2s3;
+  cs43l22.address = 0x94;
+  cs43l22.reset_port = Audio_RST_GPIO_Port;
+  cs43l22.reset_pin = Audio_RST_Pin;
+  cs43l22_init(cs43l22);
+
+  printf("start\n");
+
   /* Infinite loop */
   for(;;)
   {
-    osDelay(500);
+    osDelay(1000);
     //HAL_UART_Transmit(&huart4, (uint8_t *)"hello\n", 6, 100);
     printf("hello123\n");
+
+    //uint16_t buf[2] = {0x1245, 0x6842};
+    //HAL_I2S_Transmit (&hi2s3, buf, 2, 1000);
   }
   /* USER CODE END 5 */
 }
