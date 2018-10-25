@@ -64,6 +64,7 @@ Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
 Middlewares/Third_Party/FreeRTOS/Source/list.c \
 Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c
+
 C_SOURCES += $(shell find app/ -type f -iname '*.c')
 C_SOURCES += $(shell find Src/ -type f -iname '*.c')
 C_SOURCES += $(shell find Drivers/CS43L22 -type f -iname '*.c')
@@ -131,6 +132,7 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 -IMiddlewares/Third_Party/FreeRTOS/Source/include \
 -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS
+
 C_INCLUDES += -Iapp
 C_INCLUDES += -IDrivers/CS43L22
 
