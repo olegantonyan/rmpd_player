@@ -14,5 +14,6 @@ typedef struct {
 } CS43L22;
 
 bool cs43l22_init(CS43L22 cs43l22);
+void cs43l22_set_master_volume(uint8_t percents);
 
 #endif // __CS43L22_H
