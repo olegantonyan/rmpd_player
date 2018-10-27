@@ -66,10 +66,10 @@ bool cs43l22_init(CS43L22 cs43l22) {
 #endif
 
   // beep
-  write_register(BEEP_TONE_CFG, 0xC0);
-  write_register(BEEP_FREQ_ON_TIME, 0x1C);
+//  write_register(BEEP_TONE_CFG, 0xC0);
+//  write_register(BEEP_FREQ_ON_TIME, 0x1C);
 
-  cs43l22_set_master_volume(60);
+  cs43l22_set_master_volume(50);
 
   /*while(true) {
     uint16_t Istr[1];
@@ -129,7 +129,7 @@ static void init_sequence() {
   write_register(POWER_CTL1, 0x9E);
   write_register(POWER_CTL2, 0xAA);         // output both
   write_register(CLOCKING_CTL, 0x81);
-  write_register(INTERFACE_CTL1, 0x04);     // set the slave mode and the audio standard
+  write_register(INTERFACE_CTL1, 0b00000100);     // set the slave mode and the audio standard
   write_register(ANALOG_ZC_SR_SETT, 0x00);
   //write_register(MISC_CTL, 0x04);           // disable the digital soft ramp
   write_register(LIMIT_CTL1, 0x00);         // disable the limiter attack level
