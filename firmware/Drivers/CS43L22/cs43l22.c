@@ -71,14 +71,14 @@ bool cs43l22_init(CS43L22 cs43l22) {
 
   cs43l22_set_master_volume(60);
 
-  while(true) {
+  /*while(true) {
     uint16_t Istr[1];
     Istr[0] = 0;
 
     HAL_I2S_Transmit (config.i2s, Istr , 0x10, 10 );
 
 
-  }
+  }*/
 
   initialized = true;
   return true;
@@ -87,6 +87,14 @@ bool cs43l22_init(CS43L22 cs43l22) {
 void cs43l22_set_master_volume(uint8_t percents) {
   write_register(MASTER_A_VOL, volume_convert(percents));
   write_register(MASTER_B_VOL, volume_convert(percents));
+}
+
+#define AUDIODATA_SIZE                  2   /* 16-bits audio data size */
+#define DMA_MAX_SZE                     0xFFFF
+#define DMA_MAX(_X_)                (((_X_) <= DMA_MAX_SZE)? (_X_):DMA_MAX_SZE)
+void cs43l22_play(uint16_t *buffer, size_t size) {
+  //HAL_I2S_Transmit(config.i2s, buffer, size, 10);
+  HAL_I2S_Transmit_DMA(config.i2s, buffer, DMA_MAX(size / AUDIODATA_SIZE));
 }
 
 // private

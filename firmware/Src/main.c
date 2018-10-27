@@ -54,12 +54,14 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "cs43l22.h"
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
 I2S_HandleTypeDef hi2s3;
+DMA_HandleTypeDef hdma_spi3_tx;
 
 UART_HandleTypeDef huart4;
 
@@ -73,6 +75,7 @@ osThreadId defaultTaskHandle;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2S3_Init(void);
 static void MX_UART4_Init(void);
@@ -116,6 +119,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_I2S3_Init();
   MX_UART4_Init();
@@ -293,6 +297,21 @@ static void MX_UART4_Init(void)
 
 }
 
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
+
+}
+
 /** Configure pins as
         * Analog
         * Input
@@ -360,7 +379,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+static uint16_t buf[360];
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -372,6 +391,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
+
   /* USER CODE BEGIN 5 */
 
   CS43L22 cs43l22;
@@ -384,17 +404,27 @@ void StartDefaultTask(void const * argument)
 
   printf("start\n");
 
+
+  for (size_t i = 0 ; i < sizeof(buf) / sizeof(buf[0]); i++) {
+    buf[i] = sin(i * 6.28 / 360);
+  }
+cs43l22_play(buf, sizeof buf);
   /* Infinite loop */
   for(;;)
   {
-    osDelay(5000);
+
+    //osDelay(10);
     //HAL_UART_Transmit(&huart4, (uint8_t *)"hello\n", 6, 100);
-    printf("hello123\n");
+    //printf("hello123\n");
 
     //uint16_t buf[2] = {0x1245, 0x6842};
     //HAL_I2S_Transmit (&hi2s3, buf, 2, 1000);
   }
   /* USER CODE END 5 */
+}
+
+void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s) {
+  cs43l22_play(buf, sizeof buf);
 }
 
 /**
