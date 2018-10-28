@@ -54,7 +54,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "audio/audio.h"
-#include <stdlib.h>
+#include "rng/rng.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,6 +62,8 @@ I2C_HandleTypeDef hi2c1;
 
 I2S_HandleTypeDef hi2s3;
 DMA_HandleTypeDef hdma_spi3_tx;
+
+RNG_HandleTypeDef hrng;
 
 UART_HandleTypeDef huart4;
 
@@ -79,6 +81,7 @@ static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2S3_Init(void);
 static void MX_UART4_Init(void);
+static void MX_RNG_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
@@ -123,6 +126,7 @@ int main(void)
   MX_I2C1_Init();
   MX_I2S3_Init();
   MX_UART4_Init();
+  MX_RNG_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -278,6 +282,18 @@ static void MX_I2S3_Init(void)
 
 }
 
+/* RNG init function */
+static void MX_RNG_Init(void)
+{
+
+  hrng.Instance = RNG;
+  if (HAL_RNG_Init(&hrng) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /* UART4 init function */
 static void MX_UART4_Init(void)
 {
@@ -403,6 +419,8 @@ void StartDefaultTask(void const * argument)
 
   printf("start\n");
 
+  rng_init(&hrng);
+
   AudioConfig audio;
   audio.i2c = &hi2c1;
   audio.i2s = &hi2s3;
@@ -411,14 +429,12 @@ void StartDefaultTask(void const * argument)
   audio.reset_pin = Audio_RST_Pin;
   audio_init(audio);
 
-  srand(100);
-
   for (size_t i = 0 ; i < sizeof(buf) / 2; i++) {
     if (i % 2 != 0) {
       buf[i] = 0x0;//i; //sin((double)i * 6.28 / 44100);
       //printf("0x%X\n", buf[i]);
     } else {
-      buf[i] = rand();//0xAA;// & 0xFF;
+      buf[i] = rng_get();
     }
   }
   audio_play(buf, sizeof(buf) / 2);

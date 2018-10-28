@@ -46,7 +46,7 @@ extern DMA_HandleTypeDef hdma_spi3_tx;
 extern TIM_HandleTypeDef htim1;
 
 /******************************************************************************/
-/*            Cortex-M4 Processor Interruption and Exception Handlers         */
+/*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
 
 /**
