@@ -150,7 +150,7 @@ C_GLOBAL_INCLUDES = -include stdbool.h
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
-CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -Wno-pointer-sign -Wno-format-truncation -std=c11 -Werror $(C_GLOBAL_INCLUDES) -DDEBUG=$(DEBUG)
+CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -Wno-pointer-sign -Wno-format-truncation -Wno-unused-but-set-variable -std=c11 -Werror $(C_GLOBAL_INCLUDES) -DDEBUG=$(DEBUG)
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2

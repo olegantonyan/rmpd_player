@@ -1,11 +1,20 @@
+#include "cmsis_os.h"
+#include <stdio.h>
+
 #include "audio/audio.h"
 #include "cs43l22.h"
+#include "rng/rng.h"
 
 static AudioConfig config;
+static osThreadId thread_handle;
+static osSemaphoreId sema;
 
+static void thread_task(void const * args);
 static bool codec_write_register(uint8_t reg, uint8_t data);
 static uint8_t codec_read_register(uint8_t reg);
 static void codec_reset();
+
+static uint16_t buf[2048] = { 0 }; // TODO remove
 
 bool audio_init(AudioConfig cfg) {
   config = cfg;
@@ -27,6 +36,23 @@ bool audio_init(AudioConfig cfg) {
     return false;
   }
 
+  osSemaphoreDef(sema);
+  sema = osSemaphoreCreate(osSemaphore(sema), 1);
+
+  osThreadDef(thread_task, thread_task, osPriorityNormal, 0, 128);
+  thread_handle = osThreadCreate(osThread(thread_task), NULL);
+
+  // TODO remove
+  for (size_t i = 0 ; i < sizeof(buf) / 2; i++) {
+    if (i % 2 != 0) {
+      buf[i] = 0;
+    } else {
+      buf[i] = rng_get();
+    }
+  }
+  //audio_play(buf, sizeof(buf) / 2);
+  //
+
   return true;
 }
 
@@ -35,9 +61,17 @@ void audio_set_volume(uint8_t percents) {
 }
 
 void audio_transfer_complete_callback() {
+  osSemaphoreRelease(sema);
 }
 
 // private
+
+static void thread_task(void const * args) {
+  while(true) {
+    osSemaphoreWait(sema, osWaitForever);
+    audio_play(buf, sizeof(buf) / 2); // TODO remove
+  }
+}
 
 static bool codec_write_register(uint8_t reg, uint8_t data) {
   return HAL_I2C_Mem_Write(config.i2c, config.address, reg, I2C_MEMADD_SIZE_8BIT, &data, sizeof(data), 10) == HAL_OK;
