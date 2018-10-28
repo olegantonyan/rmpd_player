@@ -4,6 +4,7 @@
 #include "audio/audio.h"
 #include "cs43l22.h"
 #include "rng/rng.h"
+#include "audio/mp3.h"
 
 static AudioConfig config;
 static osThreadId thread_handle;
@@ -52,6 +53,8 @@ bool audio_init(AudioConfig cfg) {
   }
   //audio_play(buf, sizeof(buf) / 2);
   //
+
+  mp3_init();
 
   return true;
 }
