@@ -53,8 +53,7 @@
 
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include "cs43l22.h"
-#include <math.h>
+#include "audio/audio.h"
 #include <stdlib.h>
 /* USER CODE END Includes */
 
@@ -380,36 +379,13 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-
-
-static uint16_t buf[512];/* = { 32767, 39811, 46526, 52597, 57741,
-                          61717, 64340, 65486, 65102, 63207,
-                          59888, 55301, 49660, 43230, 36310,
-                          29224, 22304, 15874, 10233, 5646,
-                          2327, 432, 48, 1194, 3817, 7793,
-                          12937, 19008, 25723,
-                          32767, 39811, 46526, 52597, 57741,
-                          61717, 64340, 65486, 65102, 63207,
-                          59888, 55301, 49660, 43230, 36310,
-                          29224, 22304, 15874, 10233, 5646,
-                          2327, 432, 48, 1194, 3817, 7793,
-                          12937, 19008, 25723,
-                          32767, 39811, 46526, 52597, 57741,
-                          61717, 64340, 65486, 65102, 63207,
-                          59888, 55301, 49660, 43230, 36310,
-                          29224, 22304, 15874, 10233, 5646,
-                          2327, 432, 48, 1194, 3817, 7793,
-                          12937, 19008, 25723,
-                          32767, 39811, 46526, 52597, 57741,
-                          61717, 64340, 65486, 65102, 63207,
-                          59888, 55301, 49660, 43230, 36310,
-                          29224, 22304, 15874, 10233, 5646,
-                          2327, 432, 48, 1194, 3817, 7793,
-                          12937, 19008, 25723};*/
+static uint16_t buf[2048] = { 0 };
 
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s) {
- cs43l22_play(buf, sizeof buf);
+  if (hi2s == &hi2s3) {
+    audio_transfer_complete_callback();
+    audio_play(buf, sizeof(buf) / 2);
+  }
 }
 /* USER CODE END 4 */
 
@@ -425,17 +401,19 @@ void StartDefaultTask(void const * argument)
 
   /* USER CODE BEGIN 5 */
 
-  CS43L22 cs43l22;
-  cs43l22.i2c = &hi2c1;
-  cs43l22.i2s = &hi2s3;
-  cs43l22.address = 0x94;
-  cs43l22.reset_port = Audio_RST_GPIO_Port;
-  cs43l22.reset_pin = Audio_RST_Pin;
-  cs43l22_init(cs43l22);
-srand(100);
   printf("start\n");
 
-  for (size_t i = 0 ; i < sizeof(buf)/2; i++) {
+  AudioConfig audio;
+  audio.i2c = &hi2c1;
+  audio.i2s = &hi2s3;
+  audio.address = 0x94;
+  audio.reset_port = Audio_RST_GPIO_Port;
+  audio.reset_pin = Audio_RST_Pin;
+  audio_init(audio);
+
+  srand(100);
+
+  for (size_t i = 0 ; i < sizeof(buf) / 2; i++) {
     if (i % 2 != 0) {
       buf[i] = 0x0;//i; //sin((double)i * 6.28 / 44100);
       //printf("0x%X\n", buf[i]);
@@ -443,18 +421,10 @@ srand(100);
       buf[i] = rand();//0xAA;// & 0xFF;
     }
   }
-cs43l22_play(buf, sizeof(buf)/2);
-  /* Infinite loop */
-  for(;;)
-  {
+  audio_play(buf, sizeof(buf) / 2);
+  audio_set_volume(50);
 
-    //osDelay(10);
-    //HAL_UART_Transmit(&huart4, (uint8_t *)"hello\n", 6, 100);
-    //printf("hello123\n");
-
-    //uint16_t buf[2] = {0x1245, 0x6842};
-    //HAL_I2S_Transmit (&hi2s3, buf, 2, 1000);
-  }
+  osThreadTerminate(NULL);
   /* USER CODE END 5 */
 }
 

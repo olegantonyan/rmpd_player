@@ -46,7 +46,7 @@ extern DMA_HandleTypeDef hdma_spi3_tx;
 extern TIM_HandleTypeDef htim1;
 
 /******************************************************************************/
-/*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
+/*            Cortex-M4 Processor Interruption and Exception Handlers         */
 /******************************************************************************/
 
 /**
@@ -55,7 +55,7 @@ extern TIM_HandleTypeDef htim1;
 void NMI_Handler(void)
 {
   /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
-  printf("Got into NMI_Handler\n");
+  printf("NMI_Handler\n");
   /* USER CODE END NonMaskableInt_IRQn 0 */
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
 
@@ -68,7 +68,7 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-  printf("Got into HardFault_Handler\n");
+  printf("HardFault_Handler\n");
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -86,7 +86,7 @@ void HardFault_Handler(void)
 void MemManage_Handler(void)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
-  printf("Got into MemManage_Handler\n");
+  printf("MemManage_Handler\n");
   /* USER CODE END MemoryManagement_IRQn 0 */
   while (1)
   {
@@ -104,7 +104,7 @@ void MemManage_Handler(void)
 void BusFault_Handler(void)
 {
   /* USER CODE BEGIN BusFault_IRQn 0 */
-  printf("Got into BusFault_Handler\n");
+  printf("BusFault_Handler\n");
   /* USER CODE END BusFault_IRQn 0 */
   while (1)
   {
@@ -122,7 +122,7 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
-  printf("Got into UsageFault_Handler\n");
+  printf("UsageFault_Handler\n");
   /* USER CODE END UsageFault_IRQn 0 */
   while (1)
   {
@@ -140,7 +140,7 @@ void UsageFault_Handler(void)
 void DebugMon_Handler(void)
 {
   /* USER CODE BEGIN DebugMonitor_IRQn 0 */
-  printf("Got into DebugMon_Handler\n");
+  printf("DebugMon_Handler\n");
   /* USER CODE END DebugMonitor_IRQn 0 */
   /* USER CODE BEGIN DebugMonitor_IRQn 1 */
 

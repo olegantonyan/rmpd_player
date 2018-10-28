@@ -43,44 +43,22 @@ typedef enum {
 } CS43L22_REGISTER;
 
 static CS43L22 config;
-static bool initialized = false;
 
-static void reset_cycle();
 static void init_sequence();
 static bool write_register(CS43L22_REGISTER reg, uint8_t data);
 static uint8_t read_register(CS43L22_REGISTER reg);
 static uint8_t volume_convert(uint8_t percents);
 
 bool cs43l22_init(CS43L22 cs43l22) {
-  if (initialized) {
-    return false;
-  }
   config = cs43l22;
 
-  reset_cycle();
+  config.codec_reset();
   init_sequence();
-
-
-#if DEBUG
-  printf("CS43L22 chip id/rev: 0x%X\n", read_register(ID));
-#endif
 
   // beep
 //  write_register(BEEP_TONE_CFG, 0xC0);
 //  write_register(BEEP_FREQ_ON_TIME, 0x1C);
 
-  cs43l22_set_master_volume(50);
-
-  /*while(true) {
-    uint16_t Istr[1];
-    Istr[0] = 0;
-
-    HAL_I2S_Transmit (config.i2s, Istr , 0x10, 10 );
-
-
-  }*/
-
-  initialized = true;
   return true;
 }
 
@@ -89,12 +67,8 @@ void cs43l22_set_master_volume(uint8_t percents) {
   write_register(MASTER_B_VOL, volume_convert(percents));
 }
 
-#define AUDIODATA_SIZE                  2   /* 16-bits audio data size */
-#define DMA_MAX_SZE                     0xFFFF
-#define DMA_MAX(_X_)                (((_X_) <= DMA_MAX_SZE)? (_X_):DMA_MAX_SZE)
-void cs43l22_play(uint16_t *buffer, size_t size) {
-  //HAL_I2S_Transmit(config.i2s, buffer, size, 10);
-  HAL_I2S_Transmit_DMA(config.i2s, buffer, DMA_MAX(size / AUDIODATA_SIZE));
+uint8_t cs43l22_id() {
+  return read_register(ID);
 }
 
 // private
@@ -111,12 +85,6 @@ static uint8_t volume_convert(uint8_t percents) {
   } else {
     return converted + 0x19;
   }
-}
-
-static void reset_cycle() {
-  HAL_GPIO_WritePin(config.reset_port, config.reset_pin, GPIO_PIN_RESET);
-//  HAL_Delay(5);
-  HAL_GPIO_WritePin(config.reset_port, config.reset_pin, GPIO_PIN_SET);
 }
 
 static void init_sequence() {
@@ -139,11 +107,9 @@ static void init_sequence() {
 }
 
 static bool write_register(CS43L22_REGISTER reg, uint8_t data) {
-  return HAL_I2C_Mem_Write(config.i2c, config.address, reg, I2C_MEMADD_SIZE_8BIT, &data, sizeof(data), 10) == HAL_OK;
+  return config.codec_write_register(reg, data);
 }
 
 static uint8_t read_register(CS43L22_REGISTER reg) {
-  uint8_t buf = 0x00;
-  HAL_I2C_Mem_Read(config.i2c, config.address, reg, I2C_MEMADD_SIZE_8BIT, &buf, sizeof(buf), 10);
-  return buf;
+  return config.codec_read_register(reg);
 }
