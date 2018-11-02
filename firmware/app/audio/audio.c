@@ -5,6 +5,9 @@
 #include "cs43l22.h"
 #include "rng/rng.h"
 
+extern const char mp3_data[];
+#define MP3_SIZE	687348
+
 static AudioConfig config;
 static osThreadId thread_handle;
 static osSemaphoreId sema;
@@ -48,16 +51,26 @@ void audio_set_volume(uint8_t percents) {
 }
 
 void audio_transfer_complete_callback() {
+  ///printf("interrupt...\n");
   osSemaphoreRelease(sema);
 }
 
 // private
 
 static void thread_task(void const * args) {
+  /*__attribute__((section(".ccmram")))*/ static uint16_t buffer[2500];
+
+  for(size_t i = 0; i < sizeof(buffer) / sizeof(buffer[0]); i++) {
+    buffer[i] = rng_get();
+  }
+
+
 
   while(true) {
+
+
     osSemaphoreWait(sema, osWaitForever);
-    //audio_play(buf, sizeof(buf) / 2); // TODO remove
+    audio_play(buffer, sizeof(buffer) / 2); // TODO remove
   }
 }
 
@@ -81,5 +94,8 @@ bool audio_play(uint16_t *buffer, size_t size) {
   if(size > 0xFFFF) { // max dma size
     return false;
   }
-  return HAL_I2S_Transmit_DMA(config.i2s, buffer, size / 2) == HAL_OK; // 2 bytes per channel
+  int i = HAL_I2S_Transmit_DMA(config.i2s, buffer, size / 2); // 2 bytes per channel
+  printf("hal %i\n", i);
+  return i == HAL_OK;
+  //return HAL_I2S_Transmit(config.i2s, buffer, size / 2, 100) == HAL_OK; // 2 bytes per channel
 }

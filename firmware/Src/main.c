@@ -400,6 +400,10 @@ void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s) {
     audio_transfer_complete_callback();
   }
 }
+
+void vApplicationMallocFailedHook() {
+  printf("vApplicationMallocFailedHook\n");
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
