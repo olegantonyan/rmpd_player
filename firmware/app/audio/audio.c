@@ -55,6 +55,16 @@ void audio_transfer_complete_callback() {
   osSemaphoreRelease(sema);
 }
 
+bool audio_play(uint16_t *buffer, size_t size) {
+  if(size > 0xFFFF) { // max dma size
+    return false;
+  }
+  int i = HAL_I2S_Transmit_DMA(config.i2s, buffer, size / 2); // 2 bytes per channel
+  //printf("hal %i\n", i);
+  return i == HAL_OK;
+  //return HAL_I2S_Transmit(config.i2s, buffer, size / 2, 100) == HAL_OK; // 2 bytes per channel
+}
+
 // private
 
 static void thread_task(void const * args) {
@@ -88,14 +98,4 @@ static void codec_reset() {
   HAL_GPIO_WritePin(config.reset_port, config.reset_pin, GPIO_PIN_RESET);
   HAL_Delay(10);
   HAL_GPIO_WritePin(config.reset_port, config.reset_pin, GPIO_PIN_SET);
-}
-
-bool audio_play(uint16_t *buffer, size_t size) {
-  if(size > 0xFFFF) { // max dma size
-    return false;
-  }
-  int i = HAL_I2S_Transmit_DMA(config.i2s, buffer, size / 2); // 2 bytes per channel
-  printf("hal %i\n", i);
-  return i == HAL_OK;
-  //return HAL_I2S_Transmit(config.i2s, buffer, size / 2, 100) == HAL_OK; // 2 bytes per channel
 }

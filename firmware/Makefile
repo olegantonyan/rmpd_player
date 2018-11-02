@@ -75,6 +75,7 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rng.c
 
 C_SOURCES += $(shell find app/ -type f -iname '*.c')
 C_SOURCES += $(shell find Drivers/CS43L22 -type f -iname '*.c')
+C_SOURCES += $(shell find Middlewares/helix -type f -iname '*.c')
 
 # ASM sources
 ASM_SOURCES =  \
@@ -142,6 +143,8 @@ C_INCLUDES =  \
 
 C_INCLUDES += -Iapp
 C_INCLUDES += -IDrivers/CS43L22
+C_INCLUDES += -IMiddlewares/helix
+C_INCLUDES += -IMiddlewares/helix/pub
 
 C_GLOBAL_INCLUDES = -include stdbool.h
 
