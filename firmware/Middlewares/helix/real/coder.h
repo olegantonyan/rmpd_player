@@ -44,8 +44,7 @@
 #ifndef _CODER_H
 #define _CODER_H
 
-#include "mp3common.h"
-#include <stdint.h>
+#include "../pub/mp3common.h"
 
 #if defined(ASSERT)
 #undef ASSERT
@@ -91,13 +90,13 @@
 #define VBUF_LENGTH				(17 * 2 * NBANDS)	/* for double-sized vbuf FIFO */
 
 /* additional external symbols to name-mangle for static linking */
-#define	SetBitstreamPointer	STATNAME(SetBitstreamPointer)
-#define	GetBits				STATNAME(GetBits)
-#define	CalcBitsUsed		STATNAME(CalcBitsUsed)
-#define	DequantChannel		STATNAME(DequantChannel)
-#define	MidSideProc			STATNAME(MidSideProc)
-#define	IntensityProcMPEG1	STATNAME(IntensityProcMPEG1)
-#define	IntensityProcMPEG2	STATNAME(IntensityProcMPEG2)
+#define SetBitstreamPointer	STATNAME(SetBitstreamPointer)
+#define GetBits				STATNAME(GetBits)
+#define CalcBitsUsed		STATNAME(CalcBitsUsed)
+#define	 DequantChannel		STATNAME(DequantChannel)
+#define	 MidSideProc			STATNAME(MidSideProc)
+#define	 IntensityProcMPEG1	STATNAME(IntensityProcMPEG1)
+#define	 IntensityProcMPEG2	STATNAME(IntensityProcMPEG2)
 #define PolyphaseMono		STATNAME(PolyphaseMono)
 #define PolyphaseStereo		STATNAME(PolyphaseStereo)
 #define FDCT32				STATNAME(FDCT32)

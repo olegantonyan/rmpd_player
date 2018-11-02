@@ -4,6 +4,7 @@
 #include "audio/audio.h"
 #include "cs43l22.h"
 #include "rng/rng.h"
+#include "mp3dec.h"
 
 extern const char mp3_data[];
 #define MP3_SIZE	687348
@@ -51,7 +52,7 @@ void audio_set_volume(uint8_t percents) {
 }
 
 void audio_transfer_complete_callback() {
-  ///printf("interrupt...\n");
+  //printf("interrupt...\n");
   osSemaphoreRelease(sema);
 }
 
@@ -59,28 +60,79 @@ bool audio_play(uint16_t *buffer, size_t size) {
   if(size > 0xFFFF) { // max dma size
     return false;
   }
-  int i = HAL_I2S_Transmit_DMA(config.i2s, buffer, size / 2); // 2 bytes per channel
-  //printf("hal %i\n", i);
-  return i == HAL_OK;
-  //return HAL_I2S_Transmit(config.i2s, buffer, size / 2, 100) == HAL_OK; // 2 bytes per channel
+  //int i = HAL_I2S_Transmit_DMA(config.i2s, buffer, size / 2); // 2 bytes per channel
+  ///printf("hal %i\n", i);
+  //return i == HAL_OK;
+  return HAL_I2S_Transmit(config.i2s, buffer, size / 2, 100) == HAL_OK; // 2 bytes per channel
 }
 
 // private
 
 static void thread_task(void const * args) {
-  /*__attribute__((section(".ccmram")))*/ static uint16_t buffer[2500];
+  static uint16_t buffer[4096];
 
   for(size_t i = 0; i < sizeof(buffer) / sizeof(buffer[0]); i++) {
     buffer[i] = rng_get();
   }
 
+  int offset, err;
+	int outOfData = 0;
+	static const char *read_ptr = mp3_data;
+	static int bytes_left = MP3_SIZE;
 
+
+  MP3FrameInfo mp3FrameInfo;
+  HMP3Decoder hMP3Decoder = MP3InitDecoder();
 
   while(true) {
 
+    uint16_t *samples = buffer;
 
-    osSemaphoreWait(sema, osWaitForever);
-    audio_play(buffer, sizeof(buffer) / 2); // TODO remove
+    offset = MP3FindSyncWord((unsigned char*)read_ptr, bytes_left);
+  	bytes_left -= offset;
+
+  	if (bytes_left <= 10000) {
+  		read_ptr = mp3_data;
+  		bytes_left = MP3_SIZE;
+  		offset = MP3FindSyncWord((unsigned char*)read_ptr, bytes_left);
+  	}
+
+  	read_ptr += offset;
+  	err = MP3Decode(hMP3Decoder, (unsigned char**)&read_ptr, &bytes_left, samples, 0);
+
+  	if (err) {
+  		/* error occurred */
+  		switch (err) {
+  		case ERR_MP3_INDATA_UNDERFLOW:
+  			outOfData = 1;
+        printf("ERR_MP3_INDATA_UNDERFLOW\n");
+  			break;
+  		case ERR_MP3_MAINDATA_UNDERFLOW:
+  			/* do nothing - next call to decode will provide more mainData */
+        printf("ERR_MP3_MAINDATA_UNDERFLOW\n");
+  			break;
+  		case ERR_MP3_FREE_BITRATE_SYNC:
+  		default:
+  			outOfData = 1;
+        printf("ERR_MP3_FREE_BITRATE_SYNC || default\n");
+  			break;
+  		}
+  	} else {
+  		/* no error */
+  		MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
+  	}
+
+  	if (!outOfData) {
+      //printf("1\n");
+
+  		audio_play(samples, mp3FrameInfo.outputSamps);
+            //printf("2\n");
+      //osSemaphoreWait(sema, osWaitForever);
+      //osDelay(10);
+
+      //printf("3\n");
+  	}
+
   }
 }
 
