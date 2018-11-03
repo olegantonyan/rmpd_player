@@ -1,6 +1,6 @@
 #include "clock/clock.h"
 
-static uint32_t hal_read_rtc(); //HACK: HAL's rtc implementation sucks, and RTC_ReadTimeCounter is private. copy-pasted function here
+static uint32_t RTC_ReadTimeCounter(); //HACK: HAL's rtc implementation sucks, and RTC_ReadTimeCounter is private. copy-pasted function here
 
 static RTC_HandleTypeDef *rtc = NULL;
 
@@ -12,7 +12,7 @@ time_t clock_gettime() {
   if (!rtc) {
     return 0;
   }
-  return hal_read_rtc(rtc);
+  return RTC_ReadTimeCounter(rtc);
 }
 
 time_t time(time_t *t) {
@@ -25,8 +25,7 @@ time_t time(time_t *t) {
 
 // private
 
-// copy-pasted RTC_ReadTimeCounter
-static uint32_t hal_read_rtc(RTC_HandleTypeDef* hrtc)
+static uint32_t RTC_ReadTimeCounter(RTC_HandleTypeDef* hrtc)
 {
   uint16_t high1 = 0U, high2 = 0U, low = 0U;
   uint32_t timecounter = 0U;
