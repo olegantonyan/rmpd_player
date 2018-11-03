@@ -53,6 +53,7 @@
 
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "clock/clock.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -249,6 +250,7 @@ static void MX_RTC_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
+
 }
 
 /* USART1 init function */
@@ -311,13 +313,16 @@ void StartDefaultTask(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
+  clock_init(&hrtc);
   /* Infinite loop */
   for(;;) {
-    RTC_TimeTypeDef a;
+    /*RTC_TimeTypeDef a;
     RTC_DateTypeDef b;
     HAL_RTC_GetTime(&hrtc, &a, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &b, RTC_FORMAT_BIN);
-    printf("rtc %02u:%02u:%02u  %02u-%02u-%04u\n", a.Hours, a.Minutes, a.Seconds, b.Date, b.Month, b.Year);
+    printf("rtc %02u:%02u:%02u  %02u-%02u-%04u\n", a.Hours, a.Minutes, a.Seconds, b.Date, b.Month, b.Year);*/
+    time_t current_time = time(NULL);
+    printf("posix time: %s\n", ctime(&current_time));
     osDelay(1500);
   }
   osThreadTerminate(NULL);
