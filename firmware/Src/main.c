@@ -310,11 +310,10 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
-
+  
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  for(;;)
-  {
+  for(;;) {
     RTC_TimeTypeDef a;
     HAL_RTC_GetTime(&hrtc, &a, RTC_FORMAT_BIN);
     printf("rtc %02u:%02u:%02u\n", a.Hours, a.Minutes, a.Seconds);
