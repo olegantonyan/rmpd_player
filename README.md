@@ -1,6 +1,5 @@
-STM32F4DISCOVERY
-STM32F407
+STM32F103
 WiFi ESP8266
 MicroSD FatFS
 UART debug, firmware update
-MP3 audio
+MP3 audio VLSI
