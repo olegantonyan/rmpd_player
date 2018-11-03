@@ -37,7 +37,7 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */
-
+#include <stdio.h>
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -45,7 +45,7 @@
 extern TIM_HandleTypeDef htim1;
 
 /******************************************************************************/
-/*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
+/*            Cortex-M3 Processor Interruption and Exception Handlers         */
 /******************************************************************************/
 
 /**
@@ -68,7 +68,7 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
+  printf("panic: hardfault\n");
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -86,7 +86,7 @@ void HardFault_Handler(void)
 void MemManage_Handler(void)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
-
+  printf("panic: memmanage\n");
   /* USER CODE END MemoryManagement_IRQn 0 */
   while (1)
   {
@@ -104,7 +104,7 @@ void MemManage_Handler(void)
 void BusFault_Handler(void)
 {
   /* USER CODE BEGIN BusFault_IRQn 0 */
-
+  printf("panic: busfault\n");
   /* USER CODE END BusFault_IRQn 0 */
   while (1)
   {
@@ -122,7 +122,7 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
-
+  printf("panic: usagefault\n");
   /* USER CODE END UsageFault_IRQn 0 */
   while (1)
   {
