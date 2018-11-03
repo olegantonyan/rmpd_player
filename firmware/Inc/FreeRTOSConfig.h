@@ -100,26 +100,17 @@
 #define configCPU_CLOCK_HZ                       ( SystemCoreClock )
 #define configTICK_RATE_HZ                       ((TickType_t)1000)
 #define configMAX_PRIORITIES                     ( 7 )
-#define configMINIMAL_STACK_SIZE                 ((uint16_t)512)
-#define configTOTAL_HEAP_SIZE                    ((size_t)44680)
+#define configMINIMAL_STACK_SIZE                 ((uint16_t)128)
+#define configTOTAL_HEAP_SIZE                    ((size_t)3072)
 #define configMAX_TASK_NAME_LEN                  ( 16 )
 #define configUSE_16_BIT_TICKS                   0
 #define configUSE_MUTEXES                        1
 #define configQUEUE_REGISTRY_SIZE                8
-#define configUSE_RECURSIVE_MUTEXES              1
-#define configUSE_APPLICATION_TASK_TAG           1
-#define configUSE_COUNTING_SEMAPHORES            1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION  1
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES                    0
 #define configMAX_CO_ROUTINE_PRIORITIES          ( 2 )
-
-/* Software timer definitions. */
-#define configUSE_TIMERS                         1
-#define configTIMER_TASK_PRIORITY                ( 2 )
-#define configTIMER_QUEUE_LENGTH                 10
-#define configTIMER_TASK_STACK_DEPTH             1024
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -160,7 +151,7 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
 /* USER CODE BEGIN 1 */
-#define configASSERT( x ) if ((x) == 0) {taskDISABLE_INTERRUPTS(); for( ;; );}
+#define configASSERT( x ) if ((x) == 0) {taskDISABLE_INTERRUPTS(); for( ;; );} 
 /* USER CODE END 1 */
 
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS

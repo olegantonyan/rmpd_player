@@ -59,43 +59,6 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define CS_I2C_SPI_Pin GPIO_PIN_3
-#define CS_I2C_SPI_GPIO_Port GPIOE
-#define PC14_OSC32_IN_Pin GPIO_PIN_14
-#define PC14_OSC32_IN_GPIO_Port GPIOC
-#define PC15_OSC32_OUT_Pin GPIO_PIN_15
-#define PC15_OSC32_OUT_GPIO_Port GPIOC
-#define PH0_OSC_IN_Pin GPIO_PIN_0
-#define PH0_OSC_IN_GPIO_Port GPIOH
-#define PH1_OSC_OUT_Pin GPIO_PIN_1
-#define PH1_OSC_OUT_GPIO_Port GPIOH
-#define PDM_OUT_Pin GPIO_PIN_3
-#define PDM_OUT_GPIO_Port GPIOC
-#define I2S3_WS_Pin GPIO_PIN_4
-#define I2S3_WS_GPIO_Port GPIOA
-#define BOOT1_Pin GPIO_PIN_2
-#define BOOT1_GPIO_Port GPIOB
-#define CLK_IN_Pin GPIO_PIN_10
-#define CLK_IN_GPIO_Port GPIOB
-#define I2S3_MCK_Pin GPIO_PIN_7
-#define I2S3_MCK_GPIO_Port GPIOC
-#define SWDIO_Pin GPIO_PIN_13
-#define SWDIO_GPIO_Port GPIOA
-#define SWCLK_Pin GPIO_PIN_14
-#define SWCLK_GPIO_Port GPIOA
-#define I2S3_SCK_Pin GPIO_PIN_10
-#define I2S3_SCK_GPIO_Port GPIOC
-#define I2S3_SD_Pin GPIO_PIN_12
-#define I2S3_SD_GPIO_Port GPIOC
-#define Audio_RST_Pin GPIO_PIN_4
-#define Audio_RST_GPIO_Port GPIOD
-#define SWO_Pin GPIO_PIN_3
-#define SWO_GPIO_Port GPIOB
-#define Audio_SCL_Pin GPIO_PIN_6
-#define Audio_SCL_GPIO_Port GPIOB
-#define Audio_SDA_Pin GPIO_PIN_9
-#define Audio_SDA_GPIO_Port GPIOB
-
 /* ########################## Assert Selection ############################## */
 /**
   * @brief Uncomment the line below to expanse the "assert_param" macro in the 
@@ -104,7 +67,7 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
-#include <stdint.h>
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
