@@ -310,7 +310,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const * argument)
 {
-  
+
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;) {
@@ -354,6 +354,7 @@ void _Error_Handler(char *file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  printf("panic: error in %s at line %i\n", file, line);
   while(1)
   {
   }
