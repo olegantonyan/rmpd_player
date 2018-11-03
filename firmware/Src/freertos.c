@@ -54,7 +54,7 @@
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */     
+/* USER CODE BEGIN Includes */
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -93,7 +93,11 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, signed char *pcTaskName)
    /* Run time stack overflow checking is performed if
    configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
    called if a stack overflow is detected. */
-   printf("panic: stack overflow in %s\n", pcTaskName);
+   if(pcTaskName) {
+     printf("panic: stack overflow in %s\n", pcTaskName);
+   } else {
+     printf("panic: stack overflow\n");
+   }
    while(true) {}
 }
 /* USER CODE END 4 */
