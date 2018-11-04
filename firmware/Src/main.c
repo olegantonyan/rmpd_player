@@ -322,7 +322,7 @@ void StartDefaultTask(void const * argument)
     HAL_RTC_GetDate(&hrtc, &b, RTC_FORMAT_BIN);
     printf("rtc %02u:%02u:%02u  %02u-%02u-%04u\n", a.Hours, a.Minutes, a.Seconds, b.Date, b.Month, b.Year);*/
     time_t current_time = time(NULL);
-    printf("posix time: %s\n", ctime(&current_time));
+    printf("posix time: %s", ctime(&current_time));
     osDelay(1500);
   }
   osThreadTerminate(NULL);
