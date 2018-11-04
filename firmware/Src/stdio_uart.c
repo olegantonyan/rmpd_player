@@ -16,7 +16,7 @@ int _read(int file, char *data, int len) {
       return -1;
   }
 
-  if (HAL_UART_Receive(&UART_INSTANCE, (uint8_t *)data, len, 0) != HAL_OK) {
+  if (HAL_UART_Receive(&UART_INSTANCE, (uint8_t *)data, len, 100) != HAL_OK) {
     return -1;
   }
   return len;
