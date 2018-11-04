@@ -25,7 +25,7 @@ bool cli_init(UART_HandleTypeDef *uart_) {
   cli_commands_init();
 
   TaskHandle_t handle = NULL;
-  BaseType_t result = xTaskCreate(thread, "cli_thread", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &handle);
+  BaseType_t result = xTaskCreate(thread, "cli", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &handle);
   return result == pdPASS;
 }
 
