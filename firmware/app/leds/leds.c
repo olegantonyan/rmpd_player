@@ -25,6 +25,7 @@ void leds_on(Leds_t led) {
 
 void leds_off(Leds_t led) {
   write(led, 0);
+  blinks[led] = 0;
 }
 
 void leds_blink(Leds_t led) {
