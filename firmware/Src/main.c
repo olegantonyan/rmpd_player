@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -42,9 +42,7 @@
 
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include "FreeRTOS.h"
-#include "task.h"
-#include "clock/clock.h"
+#include "os.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -79,7 +77,7 @@ void vTaskCode( void * pvParameters )
     {
       time_t current_time = time(NULL);
       printf("posix time: %s", ctime(&current_time));
-      vTaskDelay(2000 / portTICK_PERIOD_MS);
+      os_delay(1234);
 
         /* Task code goes here. */
     }
@@ -157,7 +155,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -172,7 +170,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -195,15 +193,15 @@ void SystemClock_Config(void)
 
   HAL_RCC_MCOConfig(RCC_MCO, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
 
-    /**Enables the Clock Security System 
+    /**Enables the Clock Security System
     */
   HAL_RCC_EnableCSS();
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -223,7 +221,7 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 1 */
 
-    /**Initialize RTC Only 
+    /**Initialize RTC Only
     */
   hrtc.Instance = RTC;
   hrtc.Init.AsynchPrediv = RTC_AUTO_1_SECOND;
@@ -254,9 +252,9 @@ static void MX_USART1_UART_Init(void)
 
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
+/** Configure pins as
+        * Analog
+        * Input
         * Output
         * EVENT_OUT
         * EXTI
@@ -281,12 +279,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-//void vApplicationStackOverflowHook(TaskHandle_t xTask, signed char *pcTaskName);
-//void vApplicationMallocFailedHook(void);
-
-/* USER CODE BEGIN 4 */
-void vApplicationStackOverflowHook(TaskHandle_t *xTask, signed char *pcTaskName)
-{
+void vApplicationStackOverflowHook(TaskHandle_t *xTask, signed char *pcTaskName) {
    /* Run time stack overflow checking is performed if
    configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
    called if a stack overflow is detected. */
@@ -295,6 +288,26 @@ void vApplicationStackOverflowHook(TaskHandle_t *xTask, signed char *pcTaskName)
    } else {
      printf("panic: stack overflow\n");
    }
+   while(true) {}
+}
+
+void vApplicationIdleHook( void ) {
+  // kick wdt
+  // sleep?
+}
+
+void vApplicationMallocFailedHook(void) {
+   /* vApplicationMallocFailedHook() will only be called if
+   configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h. It is a hook
+   function that will get called if a call to pvPortMalloc() fails.
+   pvPortMalloc() is called internally by the kernel whenever a task, queue,
+   timer or semaphore is created. It is also called by various parts of the
+   demo application. If heap_1.c or heap_2.c are used, then the size of the
+   heap available to pvPortMalloc() is defined by configTOTAL_HEAP_SIZE in
+   FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
+   to query the size of free heap space that remains (although it does not
+   provide information on how the remaining heap might be fragmented). */
+   printf("panic: malloc failed\n");
    while(true) {}
 }
 /* USER CODE END 4 */
@@ -346,7 +359,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
