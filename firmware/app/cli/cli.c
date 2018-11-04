@@ -1,5 +1,7 @@
 #include "cli/cli.h"
 #include "os.h"
+#include "FreeRTOS_CLI.h"
+#include "cli/commands.h"
 
 #include <string.h>
 
@@ -19,6 +21,7 @@ bool cli_init(UART_HandleTypeDef *uart_) {
 
   channel = xMessageBufferCreate(sizeof(rx_buffer.data));
   uart_receive();
+  cli_commands_init();
 
   TaskHandle_t handle = NULL;
   BaseType_t result = xTaskCreate(thread, "cli_thread", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &handle);
@@ -43,15 +46,27 @@ void cli_callback() {
 
 static void thread(void *params) {
   while(true) {
-    uint8_t buf[sizeof(rx_buffer.data)] = { 0 }; // static maybe?
+    static char buf[sizeof(rx_buffer.data)] = { 0 };
+    static char out[configCOMMAND_INT_MAX_OUTPUT_SIZE] = { 0 };
     if(xMessageBufferReceive(channel, buf, sizeof(buf), portMAX_DELAY) > 0) {
-      printf("received: %s\n", buf);
-      // process it here
+      for(size_t i = 0; i < strlen(buf); i++) {
+        if (buf[i] == '\n' || buf[i] == '\r') {
+          buf[i] = '\0';
+        } 
+      }
+      BaseType_t res = pdFALSE;
+      do {
+        res = FreeRTOS_CLIProcessCommand(buf, out, sizeof(out));
+        printf(out);
+      } while (res != pdFALSE);
     }
   }
 }
 
 static void uart_receive() {
+  if (!uart) {
+    return;
+  }
   HAL_UART_Receive_IT(uart, &rx_buffer.data[rx_buffer.index], 1);
 }
 

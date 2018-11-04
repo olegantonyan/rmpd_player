@@ -97,7 +97,8 @@ to exclude the API function. */
 #define configUSE_MALLOC_FAILED_HOOK            1
 #define configUSE_DAEMON_TASK_STARTUP_HOOK      0
 
-
+/* CLI */
+#define configCOMMAND_INT_MAX_OUTPUT_SIZE      512
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS

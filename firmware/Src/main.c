@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -75,8 +75,8 @@ void vTaskCode( void * pvParameters )
     configASSERT( ( ( uint32_t ) pvParameters ) == 1 );*/
     for( ;; )
     {
-      time_t current_time = time(NULL);
-      printf("posix time: %s", ctime(&current_time));
+      //time_t current_time = time(NULL);
+  //    printf("posix time: %s", ctime(&current_time));
       os_delay(1234);
 
         /* Task code goes here. */
@@ -159,7 +159,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -174,7 +174,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -197,15 +197,15 @@ void SystemClock_Config(void)
 
   HAL_RCC_MCOConfig(RCC_MCO, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
 
-    /**Enables the Clock Security System 
+    /**Enables the Clock Security System
     */
   HAL_RCC_EnableCSS();
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -225,7 +225,7 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 1 */
 
-    /**Initialize RTC Only 
+    /**Initialize RTC Only
     */
   hrtc.Instance = RTC;
   hrtc.Init.AsynchPrediv = RTC_AUTO_1_SECOND;
@@ -256,9 +256,9 @@ static void MX_USART1_UART_Init(void)
 
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
+/** Configure pins as
+        * Analog
+        * Input
         * Output
         * EVENT_OUT
         * EXTI
@@ -369,7 +369,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
