@@ -47,20 +47,24 @@ void cli_received_callback() {
 
 static void thread(void *params) {
   while(true) {
-    static char buf[sizeof(rx_buffer.data)] = { 0 };
-    static char out[configCOMMAND_INT_MAX_OUTPUT_SIZE] = { 0 };
-    if(xMessageBufferReceive(channel, buf, sizeof(buf), portMAX_DELAY) > 0) {
-      for(size_t i = 0; i < strlen(buf); i++) {
-        if (buf[i] == '\n' || buf[i] == '\r') {
-          buf[i] = '\0';
+    //static char input[configCOMMAND_INT_MAX_INPUT_SIZE] = { 0 };
+    //static char output[configCOMMAND_INT_MAX_OUTPUT_SIZE] = { 0 };
+    char *input = pvPortMalloc(configCOMMAND_INT_MAX_INPUT_SIZE);
+    char *output = pvPortMalloc(configCOMMAND_INT_MAX_OUTPUT_SIZE);
+    if(xMessageBufferReceive(channel, input, configCOMMAND_INT_MAX_INPUT_SIZE, portMAX_DELAY) > 0) {
+      for(size_t i = 0; i < strlen(input); i++) {
+        if (input[i] == '\n' || input[i] == '\r') {
+          input[i] = '\0';
         }
       }
       BaseType_t res = pdFALSE;
       do {
-        res = FreeRTOS_CLIProcessCommand(buf, out, sizeof(out));
-        uart_transmit(out);
+        res = FreeRTOS_CLIProcessCommand(input, output, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+        uart_transmit(output);
       } while (res != pdFALSE);
     }
+    vPortFree(input);
+    vPortFree(output);
   }
 }
 
