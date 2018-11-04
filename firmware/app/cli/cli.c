@@ -25,7 +25,7 @@ bool cli_init(UART_HandleTypeDef *uart_) {
   cli_commands_init();
 
   TaskHandle_t handle = NULL;
-  BaseType_t result = xTaskCreate(thread, "cli", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &handle);
+  BaseType_t result = xTaskCreate(thread, "cli", 256, NULL, tskIDLE_PRIORITY, &handle);
   return result == pdPASS;
 }
 
@@ -47,10 +47,10 @@ void cli_received_callback() {
 
 static void thread(void *params) {
   while(true) {
-    //static char input[configCOMMAND_INT_MAX_INPUT_SIZE] = { 0 };
-    //static char output[configCOMMAND_INT_MAX_OUTPUT_SIZE] = { 0 };
-    char *input = pvPortMalloc(configCOMMAND_INT_MAX_INPUT_SIZE);
-    char *output = pvPortMalloc(configCOMMAND_INT_MAX_OUTPUT_SIZE);
+    static char input[configCOMMAND_INT_MAX_INPUT_SIZE] = { 0 };
+    static char output[configCOMMAND_INT_MAX_OUTPUT_SIZE] = { 0 };
+    //char *input = pvPortMalloc(configCOMMAND_INT_MAX_INPUT_SIZE);
+    //char *output = pvPortMalloc(configCOMMAND_INT_MAX_OUTPUT_SIZE);
     if(xMessageBufferReceive(channel, input, configCOMMAND_INT_MAX_INPUT_SIZE, portMAX_DELAY) > 0) {
       for(size_t i = 0; i < strlen(input); i++) {
         if (input[i] == '\n' || input[i] == '\r') {
