@@ -47,10 +47,10 @@ void cli_received_callback() {
 
 static void thread(void *params) {
   while(true) {
-    //static char input[configCOMMAND_INT_MAX_INPUT_SIZE] = { 0 };
-    //static char output[configCOMMAND_INT_MAX_OUTPUT_SIZE] = { 0 };
-    char *input = pvPortMalloc(configCOMMAND_INT_MAX_INPUT_SIZE);
-    char *output = pvPortMalloc(configCOMMAND_INT_MAX_OUTPUT_SIZE);
+    static char input[configCOMMAND_INT_MAX_INPUT_SIZE] = { 0 };
+    static char output[configCOMMAND_INT_MAX_OUTPUT_SIZE] = { 0 };
+    //char *input = pvPortMalloc(configCOMMAND_INT_MAX_INPUT_SIZE);
+    //char *output = pvPortMalloc(configCOMMAND_INT_MAX_OUTPUT_SIZE);
     if(xMessageBufferReceive(channel, input, configCOMMAND_INT_MAX_INPUT_SIZE, portMAX_DELAY) > 0) {
       for(size_t i = 0; i < strlen(input); i++) {
         if (input[i] == '\n' || input[i] == '\r') {
@@ -63,8 +63,8 @@ static void thread(void *params) {
         uart_transmit(output);
       } while (res != pdFALSE);
     }
-    vPortFree(input);
-    vPortFree(output);
+    //vPortFree(input);
+    //vPortFree(output);
   }
 }
 
