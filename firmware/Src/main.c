@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include "os.h"
 #include "cli/cli.h"
+#include "leds/leds.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -79,9 +80,22 @@ void vTaskCode( void * pvParameters )
     pvParameters value in the call to xTaskCreate() below.
     configASSERT( ( ( uint32_t ) pvParameters ) == 1 );*/
 
-    //HAL_GPIO_WritePin(LED_BLUE_GPIO_Port, LED_BLUE_Pin, GPIO_PIN_SET);
-    //HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
-    //HAL_GPIO_WritePin(LED_ORANGE_GPIO_Port, LED_ORANGE_Pin, GPIO_PIN_SET);
+    Leds_config_t cfg;
+    Led_config_t c;
+    c.port = LED_GREEN_GPIO_Port;
+    c.pin = LED_GREEN_Pin;
+    cfg.player = c;
+    c.port = LED_ORANGE_GPIO_Port;
+    c.pin = LED_ORANGE_Pin;
+    cfg.network = c;
+    c.port = LED_BLUE_GPIO_Port;
+    c.pin = LED_BLUE_Pin;
+    cfg.power = c;
+    leds_init(cfg);
+
+    leds_blink(LEDS_PLAYER);
+    leds_on(LEDS_PLAYER);
+    leds_blink(LEDS_NETWORK);
 
     for( ;; )
     {

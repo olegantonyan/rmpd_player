@@ -12,8 +12,8 @@
 #include "message_buffer.h"
 #include "timers.h"
 
-inline void os_delay(uint32_t ticks) {
-  vTaskDelay(ticks / portTICK_PERIOD_MS);
+inline void os_delay(uint32_t ms) {
+  vTaskDelay(ms / portTICK_PERIOD_MS);
 }
 
 #endif
