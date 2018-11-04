@@ -101,6 +101,17 @@ to exclude the API function. */
 #define configCOMMAND_INT_MAX_OUTPUT_SIZE      512
 #define configCOMMAND_INT_MAX_INPUT_SIZE       72
 
+/* Runtime stats */
+#define configGENERATE_RUN_TIME_STATS            1
+#define configUSE_TRACE_FACILITY                 1
+#define configUSE_STATS_FORMATTING_FUNCTIONS     1
+extern uint32_t get_runtime_stats_timer_value();
+extern void start_runtime_stats_timer();
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS start_runtime_stats_timer
+#define portGET_RUN_TIME_COUNTER_VALUE get_runtime_stats_timer_value
+
+
+
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS
  /* __BVIC_PRIO_BITS will be specified when CMSIS is being used. */
@@ -138,14 +149,5 @@ standard names. */
 /* IMPORTANT: This define MUST be commented when used with STM32Cube firmware,
               to prevent overwriting SysTick_Handler defined within STM32Cube HAL */
 #define xPortSysTickHandler SysTick_Handler
-
-/* Runtime stats */
-#define configGENERATE_RUN_TIME_STATS            1
-#define configUSE_TRACE_FACILITY                 1
-#define configUSE_STATS_FORMATTING_FUNCTIONS     1
-extern uint32_t get_runtime_stats_timer_value();
-extern void start_runtime_stats_timer();
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS start_runtime_stats_timer
-#define portGET_RUN_TIME_COUNTER_VALUE get_runtime_stats_timer_value
 
 #endif /* FREERTOS_CONFIG_H */
