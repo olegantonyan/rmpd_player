@@ -99,6 +99,7 @@ to exclude the API function. */
 
 /* CLI */
 #define configCOMMAND_INT_MAX_OUTPUT_SIZE      512
+#define configCOMMAND_INT_MAX_INPUT_SIZE       72
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS

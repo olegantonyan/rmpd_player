@@ -3,9 +3,7 @@
 
 #include "stm32f1xx_hal.h"
 
-#define CLI_MAX_INPUT_LENGTH (72)
-
 bool cli_init(UART_HandleTypeDef *uart);
-void cli_callback();
+void cli_received_callback();
 
 #endif

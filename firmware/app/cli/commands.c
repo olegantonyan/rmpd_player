@@ -12,7 +12,7 @@ static BaseType_t x_date(char *buffer, size_t length, const char *cmd) {
 
 static const CLI_Command_Definition_t x_date_command = {
   "date",
-  "date: returns current date/time\n",
+  "date: returns current date/time\r\n",
   x_date,
   0
 };

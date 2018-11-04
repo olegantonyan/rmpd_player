@@ -317,7 +317,7 @@ void vApplicationMallocFailedHook(void) {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart->Instance == USART1) {
-    cli_callback();
+    cli_received_callback();
   }
 }
 /* USER CODE END 4 */

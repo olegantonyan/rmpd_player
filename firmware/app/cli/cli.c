@@ -7,12 +7,13 @@
 
 static void thread(void *params);
 static void uart_receive();
+static bool uart_transmit(const char *str);
 static void clear_buffer();
 
 static UART_HandleTypeDef *uart = NULL;
 static MessageBufferHandle_t channel = NULL;
 static struct {
-  uint8_t data[CLI_MAX_INPUT_LENGTH];
+  uint8_t data[configCOMMAND_INT_MAX_INPUT_SIZE];
   size_t index;
 } rx_buffer = { {0}, 0 };
 
@@ -28,7 +29,7 @@ bool cli_init(UART_HandleTypeDef *uart_) {
   return result == pdPASS;
 }
 
-void cli_callback() {
+void cli_received_callback() {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
   if (rx_buffer.data[rx_buffer.index] == '\n') {
@@ -52,12 +53,12 @@ static void thread(void *params) {
       for(size_t i = 0; i < strlen(buf); i++) {
         if (buf[i] == '\n' || buf[i] == '\r') {
           buf[i] = '\0';
-        } 
+        }
       }
       BaseType_t res = pdFALSE;
       do {
         res = FreeRTOS_CLIProcessCommand(buf, out, sizeof(out));
-        printf(out);
+        uart_transmit(out);
       } while (res != pdFALSE);
     }
   }
@@ -72,4 +73,11 @@ static void uart_receive() {
 
 static void clear_buffer() {
   memset(&rx_buffer, 0, sizeof(rx_buffer));
+}
+
+static bool uart_transmit(const char *str) {
+  if (!uart) {
+    return false;
+  }
+  return HAL_UART_Transmit(uart, (uint8_t *)str, strlen(str), 100) == HAL_OK;
 }
