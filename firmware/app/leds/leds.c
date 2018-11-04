@@ -16,7 +16,7 @@ void leds_init(Leds_config_t cfg) {
   write(LEDS_PLAYER, 0);
 
   TaskHandle_t handle = NULL;
-  xTaskCreate(thread, "leds_thread", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, &handle);
+  xTaskCreate(thread, "leds_thread", 32, NULL, tskIDLE_PRIORITY, &handle);
 }
 
 void leds_on(Leds_t led) {
