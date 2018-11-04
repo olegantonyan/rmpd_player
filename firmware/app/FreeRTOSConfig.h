@@ -139,5 +139,13 @@ standard names. */
               to prevent overwriting SysTick_Handler defined within STM32Cube HAL */
 #define xPortSysTickHandler SysTick_Handler
 
+/* Runtime stats */
+#define configGENERATE_RUN_TIME_STATS            1
+#define configUSE_TRACE_FACILITY                 1
+#define configUSE_STATS_FORMATTING_FUNCTIONS     1
+extern uint32_t get_runtime_stats_timer_value();
+extern void start_runtime_stats_timer();
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS start_runtime_stats_timer
+#define portGET_RUN_TIME_COUNTER_VALUE get_runtime_stats_timer_value
 
 #endif /* FREERTOS_CONFIG_H */
