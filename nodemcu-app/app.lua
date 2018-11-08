@@ -1,9 +1,12 @@
 print("in app.lua")
 
+buffer = ""
+
 uart.on("data", 1,
   function(data)
-    print("receive from uart:", data)
-    if data=="quit" then
-      uart.on("data") -- unregister callback function
+    buffer = buffer..data
+    if(data == "\n") then
+      print(buffer)
+      buffer = ""
     end
 end, 0)

@@ -1,4 +1,4 @@
-PORT=/dev/ttyUSB1
+PORT=/dev/ttyUSB0
 
 firmware:
 	docker run -e "IMAGE_NAME=firmware" --rm -ti -v $(shell pwd)/../nodemcu-firmware:/opt/nodemcu-firmware marcelstoer/nodemcu-build build
