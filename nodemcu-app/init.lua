@@ -65,7 +65,30 @@ wifi.eventmon.register(wifi.eventmon.STA_CONNECTED, wifi_connect_event)
 wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, wifi_got_ip_event)
 wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, wifi_disconnect_event)
 
-print("Connecting to WiFi access point...")
-wifi.setmode(wifi.STATION)
-wifi.sta.config({ssid="flhome", pwd="password_changed"})
+--print("Connecting to WiFi access point...")
+--wifi.setmode(wifi.STATION)
+--wifi.sta.config({ssid="flhome", pwd="password_changed"})
 -- wifi.sta.connect() not necessary because config() uses auto-connect=true by default
+
+function sta_connected(i)
+  print("station connected  " .. i.MAC)
+end
+
+function sta_disconnected(i)
+  print("station disconnected  " .. i.MAC)
+end
+
+function sta_probe(i)
+  --print("station probe  ".. i.MAC)
+end
+
+function network_setup()
+  print("configuring wifi...")
+  wifi.setmode(wifi.STATIONAP)
+  wifi.ap.config({ssid="slon-ds-player", auth = wifi.WPA2_PSK, pwd="adminadmin", staconnected_cb=sta_connected, stadisconnected_cb=sta_disconnected, probereq_cb=sta_probe })
+  wifi.ap.setip({ip="10.10.0.1", netmask="255.255.255.0", gateway="10.10.0.1"})
+  wifi.sta.config({ssid="flhome", pwd="password_changed"})
+  --wifi.sta.connect();
+end
+
+tmr.create():alarm(5000, tmr.ALARM_SINGLE, network_setup)
