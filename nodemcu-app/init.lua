@@ -85,9 +85,9 @@ end
 function network_setup()
   print("configuring wifi...")
   wifi.setmode(wifi.STATIONAP)
-  wifi.ap.config({ssid="slon-ds-player", auth = wifi.WPA2_PSK, pwd="adminadmin", staconnected_cb=sta_connected, stadisconnected_cb=sta_disconnected, probereq_cb=sta_probe })
+  wifi.ap.config({ssid="slon-ds-player", auth = wifi.WPA2_PSK, pwd="adminadmin", staconnected_cb=sta_connected, stadisconnected_cb=sta_disconnected, probereq_cb=sta_probe, save=false })
   wifi.ap.setip({ip="10.10.0.1", netmask="255.255.255.0", gateway="10.10.0.1"})
-  wifi.sta.config({ssid="flhome", pwd="password_changed"})
+  wifi.sta.config({ssid="flhome", pwd="password_changed", save=false})
   --wifi.sta.connect();
 end
 
