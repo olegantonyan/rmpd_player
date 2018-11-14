@@ -8,7 +8,7 @@ NTP_SERVERS = { '0.debian.pool.ntp.org', '1.debian.pool.ntp.org', '2.debian.pool
   '0.pool.ntp.org', '1.pool.ntp.org', '2.pool.ntp.org', '3.pool.ntp.org', 'time.windows.com', 'pool.ntp.org',
   '0.ru.pool.ntp.org', '1.ru.pool.ntp.org', '2.ru.pool.ntp.org', '3.ru.pool.ntp.org' }
 function ntp_sync()
-  sntp.sync(NTP_SERVERS, ntp_callback, nil, false)
+  sntp.sync(NTP_SERVERS, ntp_callback, nil, nil)
 end
 
 function ap_connected(i)
