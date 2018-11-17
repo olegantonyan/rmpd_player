@@ -1,2 +1,3 @@
 firmware/build/
 firmware/.dep
+esp_firmware/build/
