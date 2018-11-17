@@ -7,4 +7,4 @@ flash_firmware:
 	esptool.py --port $(PORT) write_flash 0x00000 $(shell pwd)/../nodemcu-firmware/bin/nodemcu_float_firmware.bin
 
 app_flash:
-	nodemcu-uploader --port $(PORT) upload *.lua --verify=raw
+	nodemcu-uploader --port $(PORT) upload *.lua *.html --verify=raw
