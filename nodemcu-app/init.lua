@@ -69,4 +69,4 @@ function startup()
 end
 
 network_init()
-tmr.create():alarm(5000, tmr.ALARM_SINGLE, startup)
+tmr.create():alarm(1000, tmr.ALARM_SINGLE, startup)

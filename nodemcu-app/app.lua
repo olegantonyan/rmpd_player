@@ -1,7 +1,7 @@
 function write(text)
   uart.write(0, text)
 end
-
+--[[
 function on_recevie(text)
   write("gotcha! "..text)
 end
@@ -15,7 +15,7 @@ uart.on("data", 1,
       buffer = ""
     end
 end, 0)
-
+]]
 --[[if file.open("test.txt") then
   print(file.read())
   file.close()
