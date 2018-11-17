@@ -46,6 +46,7 @@
 #include "mbedtls/error.h"
 #include "mbedtls/certs.h"
 
+#include "lolol.h"
 /* The examples use simple WiFi configuration that you can set via
    'make menuconfig'.
 
@@ -329,6 +330,7 @@ static void https_get_task(void *pvParameters)
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         ESP_LOGI(TAG, "Starting again!");
+        doit();
     }
 }
 
