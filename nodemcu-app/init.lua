@@ -64,6 +64,7 @@ function startup()
   else
     file.close("init.lua")
     dofile("app.lua")
+    dofile("webserver.lua")
   end
 end
 
