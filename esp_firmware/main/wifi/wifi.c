@@ -73,7 +73,7 @@ bool wifi_init() {
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
 
-    strcpy((char *)sta_config.sta.ssid, "flhome");
+    strcpy((char *)sta_config.sta.ssid, "flhome3");
     strcpy((char *)sta_config.sta.password, "password_changed");
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_config));
 
