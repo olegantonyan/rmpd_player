@@ -3,11 +3,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-//#include "rom/ets_sys.h"
+#include "rom/ets_sys.h"
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+
+#include "web/web.h"
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t wifi_event_group;
@@ -107,4 +109,5 @@ void app_main()
     ESP_ERROR_CHECK(ret);
 
     wifi_init();
+    web_init();
 }
