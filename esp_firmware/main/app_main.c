@@ -10,6 +10,7 @@
 #include "nvs_flash.h"
 
 #include "web/web.h"
+#include "clock/ntp.h"
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t wifi_event_group;
@@ -94,6 +95,7 @@ static void wifi_init() {
 
     ESP_ERROR_CHECK(esp_wifi_start());
 
+  //  xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
 
     ESP_LOGI(TAG, "wifi init finished");
 }
@@ -110,4 +112,5 @@ void app_main()
 
     wifi_init();
     web_init();
+    ntp_init();
 }
