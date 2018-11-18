@@ -11,8 +11,16 @@
 #include "lwip/err.h"
 #include "lwip/apps/sntp.h"
 
-bool ntp_init() {
+static const char *TAG = "clock/ntp";
 
+static void thread(void * args);
+
+bool ntp_init() {
+  TaskHandle_t handle = NULL;
+  return xTaskCreate(thread, "ntp", 1024, NULL, tskIDLE_PRIORITY, &handle) == pdPASS;
+}
+
+static void thread(void * args) {
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, "pool.ntp.org");
   sntp_init();
@@ -20,16 +28,11 @@ bool ntp_init() {
   time_t now = 0;
   struct tm timeinfo = { 0 };
 
-  while(timeinfo.tm_year < (2016 - 1900)) {
-    ESP_LOGI("NTP", "Waiting for system time to be set...");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  while(timeinfo.tm_year < (2018 - 1900)) {
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
     time(&now);
-
-    time_t current_time = time(NULL);
-    printf("posix time: %s", ctime(&current_time));
-
     localtime_r(&now, &timeinfo);
   }
-
-  return true;
+  ESP_LOGI(TAG, "time synchronized: %s", ctime(&now));
+  vTaskDelete(NULL);
 }

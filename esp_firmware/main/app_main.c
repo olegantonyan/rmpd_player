@@ -20,7 +20,7 @@ static EventGroupHandle_t wifi_event_group;
    to the AP with an IP? */
 const int WIFI_CONNECTED_BIT = BIT0;
 
-static const char *TAG = "rmpd";
+static const char *TAG = "app_main";
 
 static esp_err_t event_handler(void *ctx, system_event_t *event) {
     switch(event->event_id) {
