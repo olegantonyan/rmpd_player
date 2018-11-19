@@ -1,8 +1,0 @@
-#
-# Component Makefile
-#
-COMPONENT_ADD_INCLUDEDIRS += include
-
-COMPONENT_SRCDIRS := ./
-
-CFLAGS += -DMEMLEAK_DEBUG
