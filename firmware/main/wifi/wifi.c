@@ -18,6 +18,7 @@
 #define MAX_CONN       5
 #define AP_SSID       "rmpd_player"
 #define AP_PASS       "12345678"
+#define HOSTNAME      "rmpd_player"
 
 /* FreeRTOS event group to signal when we are connected*/
 //static EventGroupHandle_t wifi_event_group;
@@ -29,30 +30,30 @@ const int WIFI_CONNECTED_BIT = BIT0;
 
 static const char *TAG = "wifi";
 
-static esp_err_t event_handler(void *ctx, system_event_t *event)
-{
-    switch(event->event_id) {
-    case SYSTEM_EVENT_STA_START:
-        esp_wifi_connect();
-        break;
-    case SYSTEM_EVENT_STA_GOT_IP:
-        ESP_LOGI(TAG, "got ip:%s", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-        //xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
-        break;
-    case SYSTEM_EVENT_AP_STACONNECTED:
-        ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d", MAC2STR(event->event_info.sta_connected.mac), event->event_info.sta_connected.aid);
-        break;
-    case SYSTEM_EVENT_AP_STADISCONNECTED:
-        ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d", MAC2STR(event->event_info.sta_disconnected.mac), event->event_info.sta_disconnected.aid);
-        break;
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-        esp_wifi_connect();
-        //xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
-        break;
-    default:
-        break;
-    }
-    return ESP_OK;
+static esp_err_t event_handler(void *ctx, system_event_t *event) {
+  switch(event->event_id) {
+  case SYSTEM_EVENT_STA_START:
+    tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, HOSTNAME);
+    esp_wifi_connect();
+    break;
+  case SYSTEM_EVENT_STA_GOT_IP:
+    ESP_LOGI(TAG, "got ip:%s", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+    //xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+    break;
+  case SYSTEM_EVENT_AP_STACONNECTED:
+    ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d", MAC2STR(event->event_info.sta_connected.mac), event->event_info.sta_connected.aid);
+    break;
+  case SYSTEM_EVENT_AP_STADISCONNECTED:
+    ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d", MAC2STR(event->event_info.sta_disconnected.mac), event->event_info.sta_disconnected.aid);
+    break;
+  case SYSTEM_EVENT_STA_DISCONNECTED:
+    esp_wifi_connect();
+    //xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
+    break;
+  default:
+    break;
+  }
+  return ESP_OK;
 }
 
 static void dhcp_server_init() {
@@ -80,7 +81,7 @@ static void softap() {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
-
+    tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, HOSTNAME);
     ESP_LOGI(TAG, "softap SSID:%s password:%s", STA_SSID, STA_PASS);
 }
 
@@ -98,7 +99,7 @@ static void sta() {
 bool wifi_init() {
   //wifi_event_group = xEventGroupCreate();
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
-  
+
   tcpip_adapter_init();
   dhcp_server_init();
   ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL) );
