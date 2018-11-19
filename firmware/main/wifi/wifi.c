@@ -97,6 +97,8 @@ static void sta() {
 
 bool wifi_init() {
   //wifi_event_group = xEventGroupCreate();
+  esp_wifi_set_storage(WIFI_STORAGE_RAM);
+  
   tcpip_adapter_init();
   dhcp_server_init();
   ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL) );
