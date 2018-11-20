@@ -9,7 +9,7 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "lwip/err.h"
-#include "apps/sntp/sntp.h"
+#include "lwip/apps/sntp.h"
 
 static const char *TAG = "ntp";
 
