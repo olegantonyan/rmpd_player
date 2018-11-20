@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-IDF_PATH := $(shell pwd)/../esp-idf-v3.1.1
+IDF_PATH := $(shell pwd)/../esp-idf-master
 export IDF_PATH
 
 PROJECT_NAME := firmware
