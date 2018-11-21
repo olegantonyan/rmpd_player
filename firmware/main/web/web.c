@@ -1,119 +1,107 @@
 #include "web/web.h"
+#include "fs/spi.h"
 
 #include <stdio.h>
-#include <esp_log.h>
-#include <esp_http_server.h>
+#include <string.h>
+#include <sys/unistd.h>
+#include <sys/stat.h>
+#include "esp_log.h"
+#include "esp_err.h"
+#include "esp_http_server.h"
 
 static const char *TAG = "web";
 
-static esp_err_t root_get_handler(httpd_req_t *req)
-{
-    char*  buf;
-    size_t buf_len;
+static void send_file(FILE* f, httpd_req_t *req);
+static bool string_ends_with(const char *str, const char *suffix);
 
-    /* Get header value string length and allocate memory for length + 1,
-     * extra byte for null termination */
-    buf_len = httpd_req_get_hdr_value_len(req, "Host") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        /* Copy null terminated value string into buffer */
-        if (httpd_req_get_hdr_value_str(req, "Host", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Host: %s", buf);
-        }
-        free(buf);
+static esp_err_t root_get_handler(httpd_req_t *req) {
+  if(strcmp("/", req->uri) == 0) {
+    FILE* f = fopen(FS_SPI_MOUNTPOINT "/index.html", "r");
+    if (f == NULL) {
+        ESP_LOGE(TAG, "cannot open index.html");
+        httpd_resp_set_status(req, "<h1>" HTTPD_404 "</h1>");
+        httpd_resp_set_type(req, "text/html");
+        httpd_resp_send(req, HTTPD_404, strlen(HTTPD_404));
+        return ESP_OK;
     }
-
-    buf_len = httpd_req_get_hdr_value_len(req, "Test-Header-2") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        if (httpd_req_get_hdr_value_str(req, "Test-Header-2", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Test-Header-2: %s", buf);
-        }
-        free(buf);
-    }
-
-    buf_len = httpd_req_get_hdr_value_len(req, "Test-Header-1") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        if (httpd_req_get_hdr_value_str(req, "Test-Header-1", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Test-Header-1: %s", buf);
-        }
-        free(buf);
-    }
-
-    /* Read URL query string length and allocate memory for length + 1,
-     * extra byte for null termination */
-    buf_len = httpd_req_get_url_query_len(req) + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        if (httpd_req_get_url_query_str(req, buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found URL query => %s", buf);
-            char param[32];
-            /* Get value of expected key from query string */
-            if (httpd_query_key_value(buf, "query1", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query1=%s", param);
-            }
-            if (httpd_query_key_value(buf, "query3", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query3=%s", param);
-            }
-            if (httpd_query_key_value(buf, "query2", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query2=%s", param);
-            }
-        }
-        free(buf);
-    }
-
-    /* Set some custom headers */
-    httpd_resp_set_hdr(req, "Custom-Header-1", "Custom-Value-1");
-    httpd_resp_set_hdr(req, "Custom-Header-2", "Custom-Value-2");
-
-    /* Send response with custom headers and body set as the
-     * string passed in user context*/
-    const char* resp_str = (const char*) req->user_ctx;
-    httpd_resp_send(req, resp_str, strlen(resp_str));
-
-    /* After sending the HTTP response the old HTTP request
-     * headers are lost. Check if HTTP request headers can be read now. */
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        ESP_LOGI(TAG, "Request headers lost");
-    }
+    httpd_resp_set_type(req, "text/html");
+    send_file(f, req);
+    fclose(f);
     return ESP_OK;
+  }
+
+  size_t fname_size = HTTPD_MAX_URI_LEN + strlen(FS_SPI_MOUNTPOINT);
+  char *fname = malloc(fname_size);
+  memset(fname, 0, fname_size);
+  strcpy(fname, FS_SPI_MOUNTPOINT);
+  strcat(fname, "/");
+  strncat(fname, req->uri + 1, fname_size - strlen(fname));
+  FILE* f = fopen(fname, "r");
+  if(f == NULL) {
+    httpd_resp_set_status(req, HTTPD_404);
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, HTTPD_404, strlen(HTTPD_404));
+    free(fname);
+    return ESP_OK;
+  }
+
+  if(string_ends_with(fname, ".html")) {
+    httpd_resp_set_type(req, "text/html");
+  } else if(string_ends_with(fname, ".css")) {
+    httpd_resp_set_type(req, "text/css");
+  } else if(string_ends_with(fname, ".js")) {
+    httpd_resp_set_type(req, "application/javascript");
+  } else if(string_ends_with(fname, ".ico")) {
+    httpd_resp_set_type(req, "image/x-icon");
+  } else {
+    httpd_resp_set_type(req, "application/octet-stream");
+  }
+  send_file(f, req);
+  fclose(f);
+  free(fname);
+  return ESP_OK;
 }
 
 httpd_uri_t root = {
-    .uri       = "/",
+    .uri       = "/*",
     .method    = HTTP_GET,
-    .handler   = root_get_handler,
-    /* Let's pass response string in user
-     * context to demonstrate it's usage */
-    .user_ctx  = "Hello World!"
+    .handler   = root_get_handler
 };
 
-httpd_handle_t start_webserver(void)
-{
-    httpd_handle_t server = NULL;
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-
-    // Start the httpd server
-    ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
-    if (httpd_start(&server, &config) == ESP_OK) {
-        // Set URI handlers
-        ESP_LOGI(TAG, "Registering URI handlers");
-        httpd_register_uri_handler(server, &root);
-        return server;
-    }
-
-    ESP_LOGI(TAG, "Error starting server!");
-    return NULL;
+static void send_file(FILE* f, httpd_req_t *req) {
+  static const size_t HTTP_CHUNK_SIZE = 1024;
+  char *buffer = malloc(HTTP_CHUNK_SIZE);
+  size_t bytes_read = 0;
+  while ((bytes_read = fread(buffer, 1, HTTP_CHUNK_SIZE, f)) > 0) {
+    httpd_resp_send_chunk(req, buffer, bytes_read);
+  }
+  httpd_resp_send_chunk(req, NULL, 0);
+  free(buffer);
 }
 
-void stop_webserver(httpd_handle_t server)
-{
-    // Stop the httpd server
+static bool string_ends_with(const char *str, const char *suffix) {
+  size_t str_len = strlen(str);
+  size_t suffix_len = strlen(suffix);
+  return (str_len >= suffix_len) && (0 == strcmp(str + (str_len - suffix_len), suffix));
+}
+
+httpd_handle_t start_webserver() {
+  httpd_handle_t server = NULL;
+  httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+
+  ESP_LOGI(TAG, "starting server on port: '%d'", config.server_port);
+  if (httpd_start(&server, &config) != ESP_OK) {
+    ESP_LOGI(TAG, "error starting server!");
+    return NULL;
+  }
+  httpd_register_uri_handler(server, &root);
+  return server;
+}
+
+void stop_webserver(httpd_handle_t server) {
     httpd_stop(server);
 }
 
 bool web_init() {
-  start_webserver();
-  return true;
+  return start_webserver() != NULL;
 }
