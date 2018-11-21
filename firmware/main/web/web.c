@@ -2,6 +2,7 @@
 #include "fs/spi.h"
 
 #include <stdio.h>
+#include <time.h>
 #include <string.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
@@ -13,8 +14,24 @@ static const char *TAG = "web";
 
 static void send_file(FILE* f, httpd_req_t *req);
 static bool string_ends_with(const char *str, const char *suffix);
+static size_t file_size(FILE *f);
+static void set_common_headers(httpd_req_t *req);
+static esp_err_t root_get_handler(httpd_req_t *req);
+static httpd_handle_t start_webserver();
+
+static httpd_uri_t root = {
+  .uri       = "/*",
+  .method    = HTTP_GET,
+  .handler   = root_get_handler
+};
+
+bool web_init() {
+  return start_webserver() != NULL;
+}
 
 static esp_err_t root_get_handler(httpd_req_t *req) {
+  set_common_headers(req);
+
   if(strcmp("/", req->uri) == 0) {
     FILE* f = fopen(FS_SPI_MOUNTPOINT "/index.html", "r");
     if (f == NULL) {
@@ -62,20 +79,19 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
   return ESP_OK;
 }
 
-httpd_uri_t root = {
-    .uri       = "/*",
-    .method    = HTTP_GET,
-    .handler   = root_get_handler
-};
-
 static void send_file(FILE* f, httpd_req_t *req) {
   static const size_t HTTP_CHUNK_SIZE = 1024;
   char *buffer = malloc(HTTP_CHUNK_SIZE);
-  size_t bytes_read = 0;
-  while ((bytes_read = fread(buffer, 1, HTTP_CHUNK_SIZE, f)) > 0) {
-    httpd_resp_send_chunk(req, buffer, bytes_read);
+  if(file_size(f) <= HTTP_CHUNK_SIZE) {
+    size_t bytes_read = fread(buffer, 1, HTTP_CHUNK_SIZE, f);
+    httpd_resp_send(req, buffer, bytes_read);
+  } else {
+    size_t bytes_read = 0;
+    while ((bytes_read = fread(buffer, 1, HTTP_CHUNK_SIZE, f)) > 0) {
+      httpd_resp_send_chunk(req, buffer, bytes_read);
+    }
+    httpd_resp_send_chunk(req, NULL, 0);
   }
-  httpd_resp_send_chunk(req, NULL, 0);
   free(buffer);
 }
 
@@ -85,7 +101,27 @@ static bool string_ends_with(const char *str, const char *suffix) {
   return (str_len >= suffix_len) && (0 == strcmp(str + (str_len - suffix_len), suffix));
 }
 
-httpd_handle_t start_webserver() {
+static size_t file_size(FILE *f) {
+  fseek(f, 0, SEEK_END);
+  size_t sz = ftell(f);
+  fseek(f, 0, SEEK_SET);
+  return sz;
+}
+
+static void set_common_headers(httpd_req_t *req) {
+  time_t now = time(NULL);
+  struct tm timeinfo = { 0 };
+  localtime_r(&now, &timeinfo);
+  if (timeinfo.tm_year >= (2018 - 1900)) {
+    char buffer[64] = { 0 };
+    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
+    httpd_resp_set_hdr(req, "Date", buffer);
+  }
+
+  httpd_resp_set_hdr(req, "Server", "esp_http_server");
+}
+
+static httpd_handle_t start_webserver() {
   httpd_handle_t server = NULL;
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
@@ -96,12 +132,4 @@ httpd_handle_t start_webserver() {
   }
   httpd_register_uri_handler(server, &root);
   return server;
-}
-
-void stop_webserver(httpd_handle_t server) {
-    httpd_stop(server);
-}
-
-bool web_init() {
-  return start_webserver() != NULL;
 }
