@@ -1,2 +1,5 @@
 firmware/build/
 firmware/.dep
+node_modules/
+.cache/
+firmware/webapp/dist/
