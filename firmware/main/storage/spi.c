@@ -1,4 +1,4 @@
-#include "fs/spi.h"
+#include "storage/spi.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -14,7 +14,7 @@ bool spiffs_init() {
   ESP_LOGI(TAG, "initializing SPIFFS");
 
   esp_vfs_spiffs_conf_t conf = {
-    .base_path = FS_SPI_MOUNTPOINT,
+    .base_path = STORAGE_SPI_MOUNTPOINT,
     .partition_label = NULL,
     .max_files = 30,
     .format_if_mount_failed = false

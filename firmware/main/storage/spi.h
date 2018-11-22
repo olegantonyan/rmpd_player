@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define FS_SPI_MOUNTPOINT "/spiffs"
+#define STORAGE_SPI_MOUNTPOINT "/spiffs"
 
 bool spiffs_init();
 

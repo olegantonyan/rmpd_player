@@ -1,5 +1,5 @@
 #include "web/web.h"
-#include "fs/spi.h"
+#include "storage/spi.h"
 
 #include <stdio.h>
 #include <time.h>
@@ -33,7 +33,7 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
   set_common_headers(req);
 
   if(strcmp("/", req->uri) == 0) {
-    FILE* f = fopen(FS_SPI_MOUNTPOINT "/index.html", "r");
+    FILE* f = fopen(STORAGE_SPI_MOUNTPOINT "/index.html", "r");
     if (f == NULL) {
         ESP_LOGE(TAG, "cannot open index.html");
         httpd_resp_set_status(req, "<h1>" HTTPD_404 "</h1>");
@@ -47,10 +47,10 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
     return ESP_OK;
   }
 
-  size_t fname_size = HTTPD_MAX_URI_LEN + strlen(FS_SPI_MOUNTPOINT);
+  size_t fname_size = HTTPD_MAX_URI_LEN + strlen(STORAGE_SPI_MOUNTPOINT);
   char *fname = malloc(fname_size);
   memset(fname, 0, fname_size);
-  strcpy(fname, FS_SPI_MOUNTPOINT);
+  strcpy(fname, STORAGE_SPI_MOUNTPOINT);
   strcat(fname, "/");
   strncat(fname, req->uri + 1, fname_size - strlen(fname));
   FILE* f = fopen(fname, "r");
