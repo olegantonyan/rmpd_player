@@ -7,6 +7,6 @@ export default ({ state, actions }) =>
     </div>
 
     <div class="content">
-      <p>Advanced status and settings</p>
+      <button class="pure-button pure-button-primary">Reboot</button>
     </div>
   </div>
