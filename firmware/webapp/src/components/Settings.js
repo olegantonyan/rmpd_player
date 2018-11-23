@@ -2,5 +2,11 @@ import { h } from 'hyperapp'
 
 export default ({ state, actions }) =>
   <div id="settings">
-    <h1>Settings component</h1>
+    <div class="header">
+      <h1>Settings</h1>
+    </div>
+
+    <div class="content">
+      <p>Form with wifi, playser, other settings</p>
+    </div>
   </div>
