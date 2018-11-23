@@ -1,28 +1,44 @@
 {
   "name": "webapp",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "webapp",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel index.html",
-    "build": "parcel build index.html --no-source-maps --no-cache --experimental-scope-hoisting",
-    "prebuild": "rm -rf dist",
-    "deploy": "rm -rf ../fs/*.{ico,html,css,js}; cp -R dist/* ../fs/"
+    "start": "webpack-dev-server",
+    "build": "rm -rf build && webpack -p --config webpack.config.prod.js",
+    "test": "jest --coverage --no-cache",
+    "deploy": "rm -rf ../fs/*.{ico,html,css,js}; cp -R build/* ../fs/"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Oleg Antonyan",
+  "license": "MIT",
   "dependencies": {
-    "babel-plugin-transform-react-jsx": "^6.24.1",
-    "babel-preset-env": "^1.7.0",
-    "components": "^0.1.0",
     "hyperapp": "^1.2.9",
-    "parcel-bundler": "^1.10.3",
-    "purecss": "^1.0.0",
-    "src": "^1.1.2"
+    "hyperapp-redux-devtools": "^1.1.6",
+    "purecss": "^1.0.0"
   },
   "devDependencies": {
-    "babel-core": "^6.26.3"
+    "babel-cli": "^6.22.2",
+    "babel-core": "^6.22.1",
+    "babel-eslint": "^8.2.5",
+    "babel-loader": "^7.1.2",
+    "babel-minify-webpack-plugin": "^0.2.0",
+    "babel-plugin-dynamic-import-webpack": "^1.0.2",
+    "babel-plugin-transform-react-jsx": "^6.22.0",
+    "babel-preset-env": "^1.6.1",
+    "css-loader": "^0.28.0",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jest": "^21.7.0",
+    "eslint-plugin-react": "^7.5.1",
+    "extract-text-webpack-plugin": "^3.0.0",
+    "html-webpack-plugin": "^3.2.0",
+    "imports": "^1.0.0",
+    "jest": "^22.1.4",
+    "node-libs-browser": "^2.0.0",
+    "script-ext-html-webpack-plugin": "^2.0.1",
+    "uglifyjs-webpack-plugin": "^1.2.4",
+    "webpack": "^3.11.0",
+    "webpack-dev-server": "^2.4.2"
   }
 }
