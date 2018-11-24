@@ -7,6 +7,7 @@ export default ({ state, actions }) =>
     </div>
 
     <div class="content">
+      <p>Advanced wifi info, logs, web console maybe</p>
       <button class="pure-button pure-button-primary">Reboot</button>
     </div>
   </div>

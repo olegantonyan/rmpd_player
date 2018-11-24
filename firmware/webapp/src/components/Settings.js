@@ -1,7 +1,7 @@
 import { h } from 'hyperapp'
 
 export default ({ state, actions }) =>
-  <div id="settings">
+  <div id="settings" oncreate={actions.fetch_settings()}>
     <div class="header">
       <h1>Settings</h1>
     </div>
@@ -11,17 +11,27 @@ export default ({ state, actions }) =>
       <form class="pure-form pure-form-aligned">
         <fieldset>
           <div class="pure-control-group">
-          <label for="name">WiFi network</label>
-          <input id="name" type="text" placeholder="Username" />
+          <label for="wifi_ssid">WiFi SSID</label>
+          <input id="wifi_ssid"
+                 type="text"
+                 placeholder="WiFi SSID"
+                 value={(state.settings || {}).wifi_ssid}
+                 oninput={e => actions.update_settings({ wifi_ssid: e.target.value }) }
+          />
           </div>
 
           <div class="pure-control-group">
-            <label for="password">WiFi password</label>
-            <input id="password" type="password" placeholder="Password" />
+            <label for="wifi_pass">WiFi password</label>
+            <input id="wifi_pass"
+                   type="text"
+                   placeholder="WiFi password"
+                   value={(state.settings || {}).wifi_pass}
+                   oninput={e => actions.update_settings({ wifi_pass: e.target.value }) }
+            />
           </div>
 
           <div class="pure-controls">
-            <span class="pure-button pure-button-primary" onclick={() => actions.nav_menu_toggle(!state.nav_menu_open)}>Save</span>
+            <a class="pure-button pure-button-primary" onclick={() => actions.save_settings()}>Save</a>
           </div>
         </fieldset>
       </form>

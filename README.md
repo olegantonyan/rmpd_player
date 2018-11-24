@@ -1,5 +1,5 @@
-STM32F103
-WiFi ESP8266
-MicroSD FatFS
-UART debug, firmware update
-MP3 audio VLSI
+rmpd_player
+
+ESP32
+VS1011
+micro sd

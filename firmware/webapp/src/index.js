@@ -22,8 +22,11 @@ function onMount(main) {
    * Here is an example on CodePen: https://codepen.io/selfup/pen/jLMRjO
    */
 
-  //setTimeout(add, 1000);
+   //main.fetch_settings()
+
+  //setInterval(() => { main.fetch_settings() }, 1000)
   //setTimeout(sub, 2000);
+
 }
 
 let main;

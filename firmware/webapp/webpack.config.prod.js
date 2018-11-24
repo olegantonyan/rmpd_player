@@ -29,6 +29,7 @@ module.exports = () => ({
   entry: [
     './src/index.js',
     './styles/app.css',
+    './styles/side-menu.css',
     './node_modules/purecss/build/pure.css',
   ],
   output: {
