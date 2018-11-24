@@ -1,39 +1,36 @@
-const actions = {
+import { HOME, SYSTEM, SETTINGS } from "../routes"
+
+export default {
   nav_menu_toggle: value => state => ({ nav_menu_open: value }),
-  nav_route_to: value => state => ({ nav_current_route: value, nav_menu_open: false }),
-
-  fetch_settings: () => (state, actions) => {
-    fetch("/settings.json")
-      .then(data => data.json())
-      .then((data) => {
-        //setTimeout(() => { actions.fetch_settings() }, 1000)
-        if(state.settings === null) {
-          console.log(data)
-          actions.set_settings(data)
-        }
-      })
+  nav_route_to: value => (state, actions) => {
+    switch(value) {
+      case HOME:
+        break
+      case SYSTEM:
+        break
+      case SETTINGS:
+        actions.settings.fetch()
+        break
+    }
+    return { nav_current_route: value, nav_menu_open: false }
   },
-  set_settings: value => state => ({ settings: value }),
-  save_settings: () => (state, actions) => {
-    console.log("saving...")
-    console.log(state.settings)
 
-    fetch("/settings.json")
-      .then(data => data.json())
-      .then((data) => {
-        //setTimeout(() => { actions.fetch_settings() }, 1000)
-        if(state.settings != data) {
-          console.log(data)
-          actions.set_settings(data)
-        }
-      })
-
-  },
-  update_settings: value => state => {
-    return { settings: { wifi_ssid: (value.wifi_ssid === undefined ? state.settings.wifi_ssid : value.wifi_ssid),
-                         wifi_pass: (value.wifi_pass === undefined ? state.settings.wifi_pass : value.wifi_pass)
-                       } }
-  },
+  settings: {
+    fetch: () => (state, actions) => {
+      fetch("/settings.json")
+        .then(data => data.json())
+        .then((data) => actions.update(data))
+    },
+    save: () => (state, actions) => {
+      console.log("saving...")
+      fetch("/settings.json", { method: "POST", body: JSON.stringify(state), headers: { "Content-Type": "application/json" } })
+        .then(data => data.json())
+        .catch(error => console.error('Error:', error))
+        .then((data) => {
+          console.log("saved!", JSON.stringify(data))
+          //actions.fetch()
+        })
+    },
+    update: value => state => { return value },
+  }
 }
-
-export default actions

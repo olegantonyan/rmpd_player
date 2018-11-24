@@ -15,8 +15,9 @@ static const char *TAG = "web";
 static void send_file(FILE* f, httpd_req_t *req);
 static bool string_ends_with(const char *str, const char *suffix);
 static size_t file_size(FILE *f);
-static void set_common_headers(httpd_req_t *req);
 static esp_err_t root_get_handler(httpd_req_t *req);
+static esp_err_t settings_get_handler(httpd_req_t *req);
+static esp_err_t settings_post_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
 
 static httpd_uri_t root = {
@@ -25,12 +26,39 @@ static httpd_uri_t root = {
   .handler   = root_get_handler
 };
 
+static httpd_uri_t settings_get = {
+  .uri       = "/settings.json",
+  .method    = HTTP_GET,
+  .handler   = settings_get_handler
+};
+
+static httpd_uri_t settings_post = {
+  .uri       = "/settings.json",
+  .method    = HTTP_POST,
+  .handler   = settings_post_handler
+};
+
 bool web_init() {
   return start_webserver() != NULL;
 }
 
+static esp_err_t settings_get_handler(httpd_req_t *req) {
+
+  httpd_resp_set_type(req, "application/json");
+
+  const char* json = "{\"wifi_ssid\":\"ololo\",\"wifi_pass\":\"123\"}";
+  httpd_resp_send(req, json, strlen(json));
+
+  return ESP_OK;
+}
+
+static esp_err_t settings_post_handler(httpd_req_t *req) {
+  httpd_resp_set_type(req, "application/json");
+
+  return ESP_OK;
+}
+
 static esp_err_t root_get_handler(httpd_req_t *req) {
-  set_common_headers(req);
 
   if(strcmp("/", req->uri) == 0) {
     FILE* f = fopen(STORAGE_SPI_MOUNTPOINT "/index.html", "r");
@@ -108,19 +136,6 @@ static size_t file_size(FILE *f) {
   return sz;
 }
 
-static void set_common_headers(httpd_req_t *req) {
-  time_t now = time(NULL);
-  struct tm timeinfo = { 0 };
-  localtime_r(&now, &timeinfo);
-  if (timeinfo.tm_year >= (2018 - 1900)) {
-    char buffer[64] = { 0 };
-    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
-    httpd_resp_set_hdr(req, "Date", buffer);
-  }
-
-  httpd_resp_set_hdr(req, "Server", "esp_http_server");
-}
-
 static httpd_handle_t start_webserver() {
   httpd_handle_t server = NULL;
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -130,6 +145,8 @@ static httpd_handle_t start_webserver() {
     ESP_LOGI(TAG, "error starting server!");
     return NULL;
   }
+  httpd_register_uri_handler(server, &settings_get);
+  httpd_register_uri_handler(server, &settings_post);
   httpd_register_uri_handler(server, &root);
   return server;
 }
