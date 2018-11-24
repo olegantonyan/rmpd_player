@@ -9,6 +9,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_http_server.h"
+#include "cJSON.h"
 
 static const char *TAG = "web";
 
@@ -27,13 +28,13 @@ static httpd_uri_t root = {
 };
 
 static httpd_uri_t settings_get = {
-  .uri       = "/settings.json",
+  .uri       = "/api/settings.json",
   .method    = HTTP_GET,
   .handler   = settings_get_handler
 };
 
 static httpd_uri_t settings_post = {
-  .uri       = "/settings.json",
+  .uri       = "/api/settings.json",
   .method    = HTTP_POST,
   .handler   = settings_post_handler
 };
@@ -46,8 +47,23 @@ static esp_err_t settings_get_handler(httpd_req_t *req) {
 
   httpd_resp_set_type(req, "application/json");
 
-  const char* json = "{\"wifi_ssid\":\"ololo\",\"wifi_pass\":\"123\"}";
-  httpd_resp_send(req, json, strlen(json));
+  cJSON *root = cJSON_CreateObject();
+  cJSON_AddItemToObject(root, "wifi_ssid", cJSON_CreateString("ololo ssid"));
+  cJSON_AddItemToObject(root, "wifi_pass", cJSON_CreateString("ololo pass"));
+
+  char* json = malloc(1024);
+  
+  if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
+    httpd_resp_send(req, json, strlen(json));
+  } else {
+    ESP_LOGE(TAG, "failed to build json response");
+    httpd_resp_set_status(req, "<h1>" HTTPD_500 "</h1>");
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, HTTPD_500, strlen(HTTPD_500));
+  }
+
+  free(json);
+  cJSON_Delete(root);
 
   return ESP_OK;
 }

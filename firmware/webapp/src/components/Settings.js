@@ -14,7 +14,7 @@ export default ({ state, actions }) =>
           <label for="wifi_ssid">WiFi SSID</label>
           <input id="wifi_ssid"
                  type="text"
-                 placeholder="WiFi SSID"
+                 placeholder=""
                  value={state.settings.wifi_ssid}
                  oninput={e => actions.settings.update({ wifi_ssid: e.target.value }) }
           />
@@ -24,7 +24,7 @@ export default ({ state, actions }) =>
             <label for="wifi_pass">WiFi password</label>
             <input id="wifi_pass"
                    type="text"
-                   placeholder="WiFi password"
+                   placeholder=""
                    value={state.settings.wifi_pass}
                    oninput={e => actions.settings.update({ wifi_pass: e.target.value }) }
             />

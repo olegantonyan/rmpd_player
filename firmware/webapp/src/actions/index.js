@@ -17,13 +17,13 @@ export default {
 
   settings: {
     fetch: () => (state, actions) => {
-      fetch("/settings.json")
+      fetch("/api/settings.json")
         .then(data => data.json())
         .then((data) => actions.update(data))
     },
     save: () => (state, actions) => {
       console.log("saving...")
-      fetch("/settings.json", { method: "POST", body: JSON.stringify(state), headers: { "Content-Type": "application/json" } })
+      fetch("/api/settings.json", { method: "POST", body: JSON.stringify(state), headers: { "Content-Type": "application/json" } })
         .then(data => data.json())
         .catch(error => console.error('Error:', error))
         .then((data) => {
