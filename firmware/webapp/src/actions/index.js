@@ -27,8 +27,7 @@ export default {
         .then(data => data.json())
         .catch(error => console.error('Error:', error))
         .then((data) => {
-          console.log("saved!", JSON.stringify(data))
-          //actions.fetch()
+          actions.update(data)
         })
     },
     update: value => state => { return value },

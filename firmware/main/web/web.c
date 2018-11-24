@@ -10,6 +10,7 @@
 #include "esp_err.h"
 #include "esp_http_server.h"
 #include "cJSON.h"
+#include "storage/nvs.h"
 
 static const char *TAG = "web";
 
@@ -20,6 +21,7 @@ static esp_err_t root_get_handler(httpd_req_t *req);
 static esp_err_t settings_get_handler(httpd_req_t *req);
 static esp_err_t settings_post_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
+static void render_settings(httpd_req_t *req);
 
 static httpd_uri_t root = {
   .uri       = "/*",
@@ -43,46 +45,93 @@ bool web_init() {
   return start_webserver() != NULL;
 }
 
-static esp_err_t settings_get_handler(httpd_req_t *req) {
-
+static void render_settings(httpd_req_t *req) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *root = cJSON_CreateObject();
-  cJSON_AddItemToObject(root, "wifi_ssid", cJSON_CreateString("ololo ssid"));
-  cJSON_AddItemToObject(root, "wifi_pass", cJSON_CreateString("ololo pass"));
+  char ssid[64] = { 0 };
+  nvs_read_string("wifi_ssid", ssid, sizeof(ssid));
+  char pass[64] = { 0 };
+  nvs_read_string("wifi_pass", pass, sizeof(pass));
+  cJSON_AddItemToObject(root, "wifi_ssid", cJSON_CreateString(ssid));
+  cJSON_AddItemToObject(root, "wifi_pass", cJSON_CreateString(pass));
 
   char* json = malloc(1024);
-  
+
   if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
     httpd_resp_send(req, json, strlen(json));
   } else {
     ESP_LOGE(TAG, "failed to build json response");
-    httpd_resp_set_status(req, "<h1>" HTTPD_500 "</h1>");
-    httpd_resp_set_type(req, "text/html");
-    httpd_resp_send(req, HTTPD_500, strlen(HTTPD_500));
+    httpd_resp_send_500(req);
   }
 
   free(json);
   cJSON_Delete(root);
+}
 
+static esp_err_t settings_get_handler(httpd_req_t *req) {
+  render_settings(req);
   return ESP_OK;
 }
 
 static esp_err_t settings_post_handler(httpd_req_t *req) {
-  httpd_resp_set_type(req, "application/json");
+  bool ok = true;
 
-  return ESP_OK;
+  if (req->content_len > 2048) {
+    ESP_LOGE(TAG, "too big request body %d", req->content_len);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  char *buffer = malloc(req->content_len);
+  int ret = httpd_req_recv(req, buffer, req->content_len);
+  if (ret <= 0) {
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+  buffer[ret] = '\0';
+
+  cJSON *json = cJSON_Parse(buffer);
+  if (json == NULL) {
+    const char *error_ptr = cJSON_GetErrorPtr();
+    if (error_ptr != NULL) {
+      ESP_LOGE(TAG, "json parse error: %s", error_ptr);
+      ok = false;
+      goto exit;
+    }
+  } else {
+    const cJSON *ssid = cJSON_GetObjectItemCaseSensitive(json, "wifi_ssid");
+    if (!cJSON_IsString(ssid) || (ssid->valuestring == NULL)) {
+      ok = false;
+      goto exit;
+    }
+    const cJSON *pass = cJSON_GetObjectItemCaseSensitive(json, "wifi_pass");
+    if (!cJSON_IsString(pass) || (pass->valuestring == NULL)) {
+      ok = false;
+      goto exit;
+    }
+    ok = nvs_save_string("wifi_ssid", ssid->valuestring) && nvs_save_string("wifi_pass", pass->valuestring);
+  }
+
+exit:
+  free(buffer);
+  cJSON_Delete(json);
+  if (ok) {
+    render_settings(req);
+    return ESP_OK;
+  } else {
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
 }
 
 static esp_err_t root_get_handler(httpd_req_t *req) {
-
   if(strcmp("/", req->uri) == 0) {
     FILE* f = fopen(STORAGE_SPI_MOUNTPOINT "/index.html", "r");
     if (f == NULL) {
         ESP_LOGE(TAG, "cannot open index.html");
-        httpd_resp_set_status(req, "<h1>" HTTPD_404 "</h1>");
-        httpd_resp_set_type(req, "text/html");
-        httpd_resp_send(req, HTTPD_404, strlen(HTTPD_404));
+        httpd_resp_send_404(req);
         return ESP_OK;
     }
     httpd_resp_set_type(req, "text/html");
@@ -99,9 +148,7 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
   strncat(fname, req->uri + 1, fname_size - strlen(fname));
   FILE* f = fopen(fname, "r");
   if(f == NULL) {
-    httpd_resp_set_status(req, HTTPD_404);
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_send(req, HTTPD_404, strlen(HTTPD_404));
+    httpd_resp_send_404(req);
     free(fname);
     return ESP_OK;
   }
