@@ -25,10 +25,7 @@ export default {
       console.log("saving...")
       fetch("/api/settings.json", { method: "POST", body: JSON.stringify(state), headers: { "Content-Type": "application/json" } })
         .then(data => data.json())
-        .catch(error => console.error('Error:', error))
-        .then((data) => {
-          actions.update(data)
-        })
+        .then((data) => actions.update(data))
     },
     update: value => state => { return value },
   }
