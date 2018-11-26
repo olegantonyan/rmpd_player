@@ -10,10 +10,9 @@
 #include "esp_log.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
+#include "storage/nvs.h"
 
-#define STA_SSID      "flhome"
-#define STA_PASS      "password_changed"
-#define MAX_CONN       5
+// TODO use device uniq ID to set these
 #define AP_SSID       "rmpd_player"
 #define AP_PASS       "12345678"
 #define HOSTNAME      "rmpd_player"
@@ -45,6 +44,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
     ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d", MAC2STR(event->event_info.sta_disconnected.mac), event->event_info.sta_disconnected.aid);
     break;
   case SYSTEM_EVENT_STA_DISCONNECTED:
+    vTaskDelay(5000);
     esp_wifi_connect();
     //xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
     break;
@@ -71,7 +71,7 @@ static void softap() {
         .ssid = AP_SSID,
         .ssid_len = strlen(AP_SSID),
         .password = AP_PASS,
-        .max_connection = MAX_CONN,
+        .max_connection = 5,
         .authmode = WIFI_AUTH_WPA_WPA2_PSK
       },
     };
@@ -80,18 +80,18 @@ static void softap() {
     }
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
     tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, HOSTNAME);
-    ESP_LOGI(TAG, "softap SSID:%s password:%s", STA_SSID, STA_PASS);
+    ESP_LOGI(TAG, "softap SSID:%s password:%s", AP_PASS, AP_PASS);
 }
 
-static void sta() {
-  wifi_config_t wifi_config = {
-    .sta = {
-      .ssid = STA_SSID,
-      .password = STA_PASS
-    },
-  };
+bool wifi_sta_connect() {
+  wifi_config_t wifi_config;
+
+  nvs_read_string("wifi_ssid", (char *)wifi_config.sta.ssid, sizeof(wifi_config.sta.ssid));
+  nvs_read_string("wifi_pass", (char *)wifi_config.sta.password, sizeof(wifi_config.sta.password));
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-  ESP_LOGI(TAG, "connect to ap SSID:%s password:%s", STA_SSID, STA_PASS);
+  ESP_LOGI(TAG, "connect to ap SSID:%s password:%s", wifi_config.sta.ssid, wifi_config.sta.password);
+
+  return true;
 }
 
 bool wifi_init() {
@@ -107,7 +107,7 @@ bool wifi_init() {
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA) );
 
   softap();
-  sta();
+  wifi_sta_connect();
   ESP_ERROR_CHECK(esp_wifi_start());
 
   return true;

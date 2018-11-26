@@ -11,6 +11,7 @@
 #include "esp_http_server.h"
 #include "cJSON.h"
 #include "storage/nvs.h"
+#include "wifi/wifi.h"
 
 static const char *TAG = "web";
 
@@ -119,6 +120,7 @@ exit:
   cJSON_Delete(json);
   if (ok) {
     render_settings(req);
+    wifi_sta_connect();
     return ESP_OK;
   } else {
     httpd_resp_send_500(req);

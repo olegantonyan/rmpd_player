@@ -22,7 +22,6 @@ export default {
         .then((data) => actions.update(data))
     },
     save: () => (state, actions) => {
-      console.log("saving...")
       fetch("/api/settings.json", { method: "POST", body: JSON.stringify(state), headers: { "Content-Type": "application/json" } })
         .then(data => data.json())
         .then((data) => actions.update(data))
