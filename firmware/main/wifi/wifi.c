@@ -27,6 +27,12 @@ const int WIFI_CONNECTED_BIT = BIT0;
 
 static const char *TAG = "wifi";
 
+static void reconnect_thread(void * args) {
+  // HACK: sometims it does not connect (raseon:201) on startup. this shit seem to work
+  wifi_sta_connect();
+  vTaskDelete(NULL);
+}
+
 static esp_err_t event_handler(void *ctx, system_event_t *event) {
   switch(event->event_id) {
   case SYSTEM_EVENT_STA_START:
@@ -44,7 +50,8 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
     ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d", MAC2STR(event->event_info.sta_disconnected.mac), event->event_info.sta_disconnected.aid);
     break;
   case SYSTEM_EVENT_STA_DISCONNECTED:
-    vTaskDelay(5000);
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    xTaskCreate(reconnect_thread, "reconnect_thread", 4096, NULL, 5, NULL);
     esp_wifi_connect();
     //xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
     break;
