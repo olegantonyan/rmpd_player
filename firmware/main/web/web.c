@@ -10,7 +10,7 @@
 #include "esp_err.h"
 #include "esp_http_server.h"
 #include "cJSON.h"
-#include "storage/nvs.h"
+#include "config/config.h"
 #include "wifi/wifi.h"
 
 static const char *TAG = "web";
@@ -50,10 +50,10 @@ static void render_settings(httpd_req_t *req) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *root = cJSON_CreateObject();
-  char ssid[64] = { 0 };
-  nvs_read_string("wifi_ssid", ssid, sizeof(ssid));
-  char pass[64] = { 0 };
-  nvs_read_string("wifi_pass", pass, sizeof(pass));
+
+  char *ssid = config_wifi_ssid();
+  char *pass = config_wifi_pass();
+
   cJSON_AddItemToObject(root, "wifi_ssid", cJSON_CreateString(ssid));
   cJSON_AddItemToObject(root, "wifi_pass", cJSON_CreateString(pass));
 
@@ -112,7 +112,11 @@ static esp_err_t settings_post_handler(httpd_req_t *req) {
       ok = false;
       goto exit;
     }
-    ok = nvs_save_string("wifi_ssid", ssid->valuestring) && nvs_save_string("wifi_pass", pass->valuestring);
+    if (strlen(ssid->valuestring) > 31 || strlen(pass->valuestring) > 63) {
+      ok = false;
+      goto exit;
+    }
+    ok = config_save_wifi_ssid(ssid->valuestring) && config_save_wifi_pass(pass->valuestring);
   }
 
 exit:

@@ -6,20 +6,12 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
-//static const char *TAG = "nvs";
-
 static nvs_handle open();
 static void close(nvs_handle handle);
+static bool nvs_init();
 
-bool nvs_init() {
-  esp_err_t ret = nvs_flash_init();
-  if (ret == ESP_ERR_NVS_NO_FREE_PAGES) {
-    ESP_ERROR_CHECK(nvs_flash_erase());
-    ret = nvs_flash_init();
-  }
-  ESP_ERROR_CHECK(ret);
-  return ret == ESP_OK;
-}
+static bool initialized = false;
+// TODO add mutex for writing or gatekeeper thread
 
 bool nvs_read_string(const char *key, char *string, size_t max_length) {
   nvs_handle h = open();
@@ -36,6 +28,7 @@ bool nvs_save_string(const char *key, char *string) {
 }
 
 static nvs_handle open() {
+  nvs_init();
   nvs_handle h;
   ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &h));
   return h;
@@ -43,4 +36,18 @@ static nvs_handle open() {
 
 static void close(nvs_handle handle) {
   nvs_close(handle);
+}
+
+static bool nvs_init() {
+  if (initialized) {
+    return true;
+  }
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES) {
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    ret = nvs_flash_init();
+  }
+  ESP_ERROR_CHECK(ret);
+  initialized = ret == ESP_OK;
+  return initialized;
 }
