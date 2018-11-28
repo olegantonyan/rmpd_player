@@ -22,10 +22,14 @@ export default {
         .then((data) => actions.update(data))
     },
     save: () => (state, actions) => {
-      fetch("/api/settings.json", { method: "POST", body: JSON.stringify(state), headers: { "Content-Type": "application/json" } })
+      actions.saving(true)
+      fetch("/api/settings.json", { method: "POST", body: JSON.stringify({wifi_ssid: state.wifi_ssid, wifi_pass: state.wifi_pass}), headers: { "Content-Type": "application/json" } })
         .then(data => data.json())
-        .then((data) => actions.update(data))
+        .catch(error => actions.saving(false))
+        .then((data) => { actions.update(data); actions.saving(false) })
+        .catch(error => actions.saving(false))
     },
     update: value => state => { return value },
+    saving: value => state => ({ saving: value })
   }
 }

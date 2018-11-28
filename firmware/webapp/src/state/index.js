@@ -7,6 +7,7 @@ export default {
 
   settings: {
     wifi_ssid: null,
-    wifi_pass: null
+    wifi_pass: null,
+    saving: false
   }
 };

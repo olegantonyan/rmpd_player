@@ -31,7 +31,9 @@ export default ({ state, actions }) =>
           </div>
 
           <div class="pure-controls">
-            <a class="pure-button pure-button-primary" onclick={() => actions.settings.save()}>Save</a>
+            <a class="pure-button pure-button-primary" onclick={() => actions.settings.save()} disabled={state.settings.saving}>
+              {state.settings.saving ? 'Saving...' : 'Save'}
+            </a>
           </div>
         </fieldset>
       </form>
