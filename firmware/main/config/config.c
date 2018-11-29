@@ -1,7 +1,5 @@
 #include "config/config.h"
 #include "storage/nvs.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
 
 #define MAX_WIFI_SSID_LENGTH 32
 #define MAX_WIFI_PASS_LENGTH 64
