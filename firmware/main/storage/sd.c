@@ -3,6 +3,8 @@
 #include <string.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
@@ -69,6 +71,26 @@ bool sd_init() {
       *pos = '\0';
   }
   ESP_LOGI(TAG, "Read from file: '%s'", line);
+
+
+
+
+
+  DIR *dp = opendir(STORAGE_SD_MOUNTPOINT);
+  if (dp == NULL) {
+    ESP_LOGE(TAG, "error opening directory");
+  } else {
+    while(true) {
+      struct dirent *ep = readdir(dp);
+      if (!ep) {
+        break;
+      }
+      printf("%s\n", ep->d_name);
+    }
+    closedir(dp);
+  }
+
+
 
   return true;
 }
