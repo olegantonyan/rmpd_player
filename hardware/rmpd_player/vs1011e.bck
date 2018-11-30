@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP VS1011E
+D VLSI VS1011E
+K VS1011 VS1011E
+F /home/oleg/projects/rmpd_player/doc/vlsi/vs1011.pdf
+$ENDCMP
+#
+#End Doc Library
