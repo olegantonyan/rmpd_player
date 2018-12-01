@@ -819,4 +819,78 @@ Wire Wire Line
 Wire Wire Line
 	7050 4900 7100 4900
 Connection ~ 6550 5950
+$Comp
+L Device:R R?
+U 1 1 5C020EC9
+P 1750 4000
+F 0 "R?" V 1850 4050 50  0000 L CNN
+F 1 "100k" V 1850 3850 50  0000 L CNN
+F 2 "" V 1680 4000 50  0001 C CNN
+F 3 "~" H 1750 4000 50  0001 C CNN
+	1    1750 4000
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 5C021253
+P 1750 4100
+F 0 "R?" V 1650 4150 50  0000 L CNN
+F 1 "100k" V 1650 3950 50  0000 L CNN
+F 2 "" V 1680 4100 50  0001 C CNN
+F 3 "~" H 1750 4100 50  0001 C CNN
+	1    1750 4100
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	2450 4000 1900 4000
+Wire Wire Line
+	2450 4100 1900 4100
+Wire Wire Line
+	1600 4000 1550 4000
+Wire Wire Line
+	1550 4000 1550 4100
+Wire Wire Line
+	1550 4100 1600 4100
+Text GLabel 1500 4000 0    50   Input ~ 0
+GND
+Wire Wire Line
+	1500 4000 1550 4000
+Connection ~ 1550 4000
+$Comp
+L Device:R R?
+U 1 1 5C03E022
+P 4650 4000
+F 0 "R?" V 4550 3900 50  0000 L CNN
+F 1 "100k" V 4550 4000 50  0000 L CNN
+F 2 "" V 4580 4000 50  0001 C CNN
+F 3 "~" H 4650 4000 50  0001 C CNN
+	1    4650 4000
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 5C03E122
+P 4650 4100
+F 0 "R?" V 4750 4000 50  0000 L CNN
+F 1 "100k" V 4750 4100 50  0000 L CNN
+F 2 "" V 4580 4100 50  0001 C CNN
+F 3 "~" H 4650 4100 50  0001 C CNN
+	1    4650 4100
+	0    1    1    0   
+$EndComp
+Text GLabel 4900 4000 2    50   Input ~ 0
+GND
+Wire Wire Line
+	4100 4000 4500 4000
+Wire Wire Line
+	4500 4100 4100 4100
+Wire Wire Line
+	4800 4000 4850 4000
+Wire Wire Line
+	4800 4100 4850 4100
+Wire Wire Line
+	4850 4100 4850 4000
+Connection ~ 4850 4000
+Wire Wire Line
+	4850 4000 4900 4000
 $EndSCHEMATC
