@@ -7,6 +7,7 @@ export default ({ state, actions }) =>
     </div>
 
     <div class="content">
-      <p>Now playing, wifi/server status, etc</p>
+      <p>Now playing: Dimmu Borgir - 51k</p>
+      <p>wifi/server status, etc</p>
     </div>
   </div>
