@@ -893,4 +893,96 @@ Wire Wire Line
 Connection ~ 4850 4000
 Wire Wire Line
 	4850 4000 4900 4000
+Text GLabel 6950 2250 2    50   Input ~ 0
+VS_XCS
+Wire Wire Line
+	6950 2250 6900 2250
+Text GLabel 6950 2150 2    50   Input ~ 0
+VS_SCLK
+Text GLabel 6950 2050 2    50   Input ~ 0
+VS_SO
+Text GLabel 6950 1450 2    50   Input ~ 0
+VS_SI
+Wire Wire Line
+	6950 1450 6900 1450
+Wire Wire Line
+	6950 2050 6900 2050
+Wire Wire Line
+	6950 2150 6900 2150
+Text GLabel 6950 1850 2    50   Input ~ 0
+VS_XRESET
+Text GLabel 6950 1550 2    50   Input ~ 0
+VS_DREQ
+Text GLabel 6950 2350 2    50   Input ~ 0
+VS_XDCS
+Wire Wire Line
+	6950 1550 6900 1550
+Wire Wire Line
+	6950 1850 6900 1850
+Wire Wire Line
+	6950 2350 6900 2350
+Text GLabel 2550 5750 0    50   Input ~ 0
+VDDA
+Text GLabel 3100 5750 2    50   Input ~ 0
+VDD
+$Comp
+L Device:C C?
+U 1 1 5C06DB73
+P 2700 5950
+F 0 "C?" H 2800 6050 50  0000 C CNN
+F 1 "100n" H 2800 5850 50  0000 C CNN
+F 2 "" H 2738 5800 50  0001 C CNN
+F 3 "~" H 2700 5950 50  0001 C CNN
+	1    2700 5950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C?
+U 1 1 5C06DC75
+P 2950 5950
+F 0 "C?" H 3050 6050 50  0000 C CNN
+F 1 "100n" H 3050 5850 50  0000 C CNN
+F 2 "" H 2988 5800 50  0001 C CNN
+F 3 "~" H 2950 5950 50  0001 C CNN
+	1    2950 5950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2550 5750 2700 5750
+Wire Wire Line
+	2950 5800 2950 5750
+Connection ~ 2950 5750
+Wire Wire Line
+	2950 5750 3100 5750
+Wire Wire Line
+	2700 5800 2700 5750
+Connection ~ 2700 5750
+Wire Wire Line
+	2700 5750 2950 5750
+$Comp
+L power:GND #PWR?
+U 1 1 5C092AF6
+P 2950 6200
+F 0 "#PWR?" H 2950 5950 50  0001 C CNN
+F 1 "GND" H 2955 6027 50  0000 C CNN
+F 2 "" H 2950 6200 50  0001 C CNN
+F 3 "" H 2950 6200 50  0001 C CNN
+	1    2950 6200
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GNDA #PWR?
+U 1 1 5C092B4B
+P 2700 6200
+F 0 "#PWR?" H 2700 5950 50  0001 C CNN
+F 1 "GNDA" H 2705 6027 50  0000 C CNN
+F 2 "" H 2700 6200 50  0001 C CNN
+F 3 "" H 2700 6200 50  0001 C CNN
+	1    2700 6200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2950 6100 2950 6200
+Wire Wire Line
+	2700 6100 2700 6200
 $EndSCHEMATC
