@@ -39,11 +39,19 @@ static void bus_init();
 static bool codec_init();
 
 void vs1011_play(FILE *fp) {
+
+//  uint8_t test[8] = { 0x53, 0xEF, 0x63, 126, 0,0,0,0};
+//  write_sdi(test, sizeof(test));
+//  return;
+
+
   size_t bytes_in_buffer = 0;
   size_t pos = 0;
   static uint8_t file_buffer[2048] = { 0 };
 
-  write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
+//  write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
+
+  write_sdi(file_buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
 
   while ((bytes_in_buffer = fread(file_buffer, 1, sizeof(file_buffer), fp)) > 0) {
     uint8_t *buf_play = file_buffer;
@@ -97,7 +105,7 @@ static void write_sci(uint8_t addr, uint16_t data) {
   t.tx_data[0] = data >> 8;
   t.tx_data[1] = data & 0xFF;
   wait_for_dreq();
-  ESP_ERROR_CHECK(spi_device_polling_transmit(command_spi, &t));
+  ESP_ERROR_CHECK(spi_device_transmit(command_spi, &t));
 }
 
 static uint16_t read_sci(uint8_t addr) {
@@ -108,7 +116,7 @@ static uint16_t read_sci(uint8_t addr) {
   t.addr = addr;
   t.length = sizeof(uint16_t) * 8;
   wait_for_dreq();
-  ESP_ERROR_CHECK(spi_device_polling_transmit(command_spi, &t));
+  ESP_ERROR_CHECK(spi_device_transmit(command_spi, &t));
   uint16_t result = (t.rx_data[0] << 8) | t.rx_data[1];
   return result;
 }
@@ -122,7 +130,9 @@ static void write_sdi(const uint8_t *buffer, size_t length) {
   t.length = length * 8;
   t.tx_buffer = buffer;
   wait_for_dreq();
-  ESP_ERROR_CHECK(spi_device_polling_transmit(data_spi, &t));
+  //gpio_set_level(VS_XDCS_GPIO, 0);
+  ESP_ERROR_CHECK(spi_device_transmit(data_spi, &t));
+  //gpio_set_level(VS_XDCS_GPIO, 1);
 }
 
 static uint8_t dreq() {
@@ -139,6 +149,9 @@ static void bus_init() {
   gpio_set_direction(VS_XRESET_GPIO, GPIO_MODE_OUTPUT);
   gpio_set_direction(VS_DREQ_GPIO, GPIO_MODE_INPUT);
 
+//gpio_set_direction(VS_XDCS_GPIO, GPIO_MODE_OUTPUT);
+//gpio_set_level(VS_XDCS_GPIO, 1);
+
   reset();
 
   spi_bus_config_t bus_cfg = {
@@ -147,18 +160,18 @@ static void bus_init() {
     .sclk_io_num = VS_SCLK_GPIO,
     .quadwp_io_num = -1,
     .quadhd_io_num = -1,
-    .max_transfer_sz = VS_MAX_CHUNK_SIZE
+    .flags = SPICOMMON_BUSFLAG_MASTER,
+    //.max_transfer_sz = VS_MAX_CHUNK_SIZE
   };
   ESP_ERROR_CHECK(spi_bus_initialize(VSPI_HOST, &bus_cfg, 1));
 
   spi_device_interface_config_t data_cfg = {
     .command_bits = 0,
     .address_bits = 0,
-    .clock_speed_hz = 6000000,
+    .clock_speed_hz = 2000000,
     .mode = 0,
     .spics_io_num = VS_XDCS_GPIO,
     .queue_size = 1,
-    //.flags = SPI_DEVICE_TXBIT_LSBFIRST,
   };
   ESP_ERROR_CHECK(spi_bus_add_device(VSPI_HOST, &data_cfg, &data_spi));
 
@@ -183,7 +196,7 @@ static bool codec_init() {
      reset we know what the status of the IC is. You need, depending
      on your application, either set or not set SM_SDISHARE. See the
      Datasheet for details. */
-  write_sci(SCI_MODE, SM_SDINEW | SM_RESET); // SM_TESTS // SM_DACT
+  write_sci(SCI_MODE, SM_SDINEW | SM_TESTS | SM_RESET); // SM_TESTS // SM_DACT
 
   /* A quick sanity check: write to two registers, then test if we
    get the same results. Note that if you use a too high SPI

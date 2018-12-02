@@ -22,7 +22,7 @@ bool player_init() {
 
 
   ESP_LOGI(TAG, "plaing file");
-  FILE *f = fopen(STORAGE_SD_MOUNTPOINT   "/Yamaha-V50-Synbass-1-C2.wav", "rb");
+  FILE *f = fopen(STORAGE_SD_MOUNTPOINT   "/08 - IRQ 7 PRINTER.mp3", "rb");
   if (f == NULL) {
     ESP_LOGE(TAG, "failed to open file for reading");
     return false;
