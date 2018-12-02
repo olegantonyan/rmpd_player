@@ -46,11 +46,17 @@ bool wifi_sta_connect() {
 
   wifi_config.sta.ssid[0] = '\0';
   wifi_config.sta.password[0] = '\0';
-  strcpy((char *)wifi_config.sta.ssid, config_wifi_ssid());
-  strcpy((char *)wifi_config.sta.password, config_wifi_pass());
+  if (config_wifi_ssid() != NULL) {
+    strcpy((char *)wifi_config.sta.ssid, config_wifi_ssid());
+  }
+  if (config_wifi_pass() != NULL) {
+    strcpy((char *)wifi_config.sta.password, config_wifi_pass());
+  }
 
-  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-  ESP_LOGI(TAG, "connect to ap SSID:%s password:%s", wifi_config.sta.ssid, wifi_config.sta.password);
+  if (wifi_config.sta.ssid) {
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_LOGI(TAG, "connect to ap SSID:%s password:%s", wifi_config.sta.ssid, wifi_config.sta.password);
+  }
 
   return true;
 }
@@ -99,19 +105,19 @@ static void dhcp_server_init() {
 }
 
 static void softap() {
-    wifi_config_t wifi_config = {
-      .ap = {
-        .ssid = AP_SSID,
-        .ssid_len = strlen(AP_SSID),
-        .password = AP_PASS,
-        .max_connection = 5,
-        .authmode = WIFI_AUTH_WPA_WPA2_PSK
-      },
-    };
-    if (strlen(AP_PASS) == 0) {
-        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
-    }
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
-    tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, HOSTNAME);
-    ESP_LOGI(TAG, "softap SSID:%s password:%s", AP_PASS, AP_PASS);
+  wifi_config_t wifi_config = {
+    .ap = {
+      .ssid = AP_SSID,
+      .ssid_len = strlen(AP_SSID),
+      .password = AP_PASS,
+      .max_connection = 5,
+      .authmode = WIFI_AUTH_WPA_WPA2_PSK
+    },
+  };
+  if (strlen(AP_PASS) == 0) {
+      wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+  }
+  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+  tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, HOSTNAME);
+  ESP_LOGI(TAG, "softap SSID:%s password:%s", AP_PASS, AP_PASS);
 }

@@ -497,44 +497,38 @@ Wire Wire Line
 $Comp
 L Device:R R?
 U 1 1 5C090195
-P 4400 1100
-F 0 "R?" H 4200 1150 50  0000 L CNN
-F 1 "10k" H 4200 1050 50  0000 L CNN
-F 2 "" V 4330 1100 50  0001 C CNN
-F 3 "~" H 4400 1100 50  0001 C CNN
-	1    4400 1100
+P 4400 1500
+F 0 "R?" H 4200 1550 50  0000 L CNN
+F 1 "10k" H 4200 1450 50  0000 L CNN
+F 2 "" V 4330 1500 50  0001 C CNN
+F 3 "~" H 4400 1500 50  0001 C CNN
+	1    4400 1500
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:C C?
 U 1 1 5C0902B0
-P 4400 1500
-F 0 "C?" H 4550 1450 50  0000 C CNN
-F 1 "100n" H 4600 1550 50  0000 C CNN
-F 2 "" H 4438 1350 50  0001 C CNN
-F 3 "~" H 4400 1500 50  0001 C CNN
-	1    4400 1500
+P 4400 1900
+F 0 "C?" H 4550 1850 50  0000 C CNN
+F 1 "100n" H 4600 1950 50  0000 C CNN
+F 2 "" H 4438 1750 50  0001 C CNN
+F 3 "~" H 4400 1900 50  0001 C CNN
+	1    4400 1900
 	-1   0    0    1   
 $EndComp
-Text GLabel 4400 1700 3    50   Input ~ 0
+Text GLabel 4400 2100 3    50   Input ~ 0
 GND
-Text GLabel 4400 900  1    50   Input ~ 0
+Text GLabel 4400 1300 1    50   Input ~ 0
 VDD
 Wire Wire Line
-	4400 900  4400 950 
-Wire Wire Line
-	4400 1700 4400 1650
-Wire Wire Line
-	4400 1250 4400 1300
-Wire Wire Line
-	4400 1300 4650 1300
-Wire Wire Line
-	4650 1300 4650 1700
-Wire Wire Line
-	4650 1700 5050 1700
-Connection ~ 4400 1300
-Wire Wire Line
 	4400 1300 4400 1350
+Wire Wire Line
+	4400 2100 4400 2050
+Wire Wire Line
+	4400 1650 4400 1700
+Connection ~ 4400 1700
+Wire Wire Line
+	4400 1700 4400 1750
 Wire Wire Line
 	6900 2650 7250 2650
 Wire Wire Line
@@ -921,9 +915,9 @@ Wire Wire Line
 	6950 1850 6900 1850
 Wire Wire Line
 	6950 2350 6900 2350
-Text GLabel 2550 5750 0    50   Input ~ 0
+Text GLabel 2600 5750 0    50   Input ~ 0
 VDDA
-Text GLabel 3100 5750 2    50   Input ~ 0
+Text GLabel 3050 5750 2    50   Input ~ 0
 VDD
 $Comp
 L Device:C C?
@@ -948,41 +942,25 @@ F 3 "~" H 2950 5950 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2550 5750 2700 5750
+	2600 5750 2700 5750
 Wire Wire Line
 	2950 5800 2950 5750
 Connection ~ 2950 5750
 Wire Wire Line
-	2950 5750 3100 5750
+	2950 5750 3050 5750
 Wire Wire Line
 	2700 5800 2700 5750
 Connection ~ 2700 5750
 Wire Wire Line
 	2700 5750 2950 5750
-$Comp
-L power:GND #PWR?
-U 1 1 5C092AF6
-P 2950 6200
-F 0 "#PWR?" H 2950 5950 50  0001 C CNN
-F 1 "GND" H 2955 6027 50  0000 C CNN
-F 2 "" H 2950 6200 50  0001 C CNN
-F 3 "" H 2950 6200 50  0001 C CNN
-	1    2950 6200
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GNDA #PWR?
-U 1 1 5C092B4B
-P 2700 6200
-F 0 "#PWR?" H 2700 5950 50  0001 C CNN
-F 1 "GNDA" H 2705 6027 50  0000 C CNN
-F 2 "" H 2700 6200 50  0001 C CNN
-F 3 "" H 2700 6200 50  0001 C CNN
-	1    2700 6200
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
-	2950 6100 2950 6200
+	2950 6100 2950 6150
 Wire Wire Line
-	2700 6100 2700 6200
+	2700 6100 2700 6150
+Wire Wire Line
+	4400 1700 5050 1700
+Text GLabel 2950 6150 3    50   Input ~ 0
+GND
+Text GLabel 2700 6150 3    50   Input ~ 0
+GNDA
 $EndSCHEMATC
