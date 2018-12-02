@@ -33,25 +33,18 @@ static void reset();
 static void write_sci(uint8_t addr, uint16_t data);
 static uint16_t read_sci(uint8_t addr);
 static void write_sdi(const uint8_t *buffer, size_t length);
-static uint8_t dreq();
 static void wait_for_dreq();
 static void bus_init();
 static bool codec_init();
 
 void vs1011_play(FILE *fp) {
-
-//  uint8_t test[8] = { 0x53, 0xEF, 0x63, 126, 0,0,0,0};
-//  write_sdi(test, sizeof(test));
-//  return;
-
-
   size_t bytes_in_buffer = 0;
   size_t pos = 0;
   static uint8_t file_buffer[2048] = { 0 };
 
-//  write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
+  write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
 
-  write_sdi(file_buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
+//  write_sdi(file_buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
 
   while ((bytes_in_buffer = fread(file_buffer, 1, sizeof(file_buffer), fp)) > 0) {
     uint8_t *buf_play = file_buffer;
@@ -62,11 +55,11 @@ void vs1011_play(FILE *fp) {
       bytes_in_buffer -= i;
       pos += i;
     }
-
-    uint16_t sample_rate = read_sci(SCI_AUDATA);;
-    uint16_t h1 = read_sci(SCI_HDAT1); // format
-    uint16_t h0 = read_sci(SCI_HDAT0); // format
-    printf("%uKiB %1ds %d    H0: 0x%X H1: 0x%X\n", pos / 1024, read_sci(SCI_DECODE_TIME), sample_rate, h0, h1);
+    // TODO callback to player with position
+    //uint16_t sample_rate = read_sci(SCI_AUDATA);;
+    //uint16_t h1 = read_sci(SCI_HDAT1); // format
+    //uint16_t h0 = read_sci(SCI_HDAT0); // format
+    //printf("%uKiB %1ds %d    H0: 0x%X H1: 0x%X\n", pos / 1024, read_sci(SCI_DECODE_TIME), sample_rate, h0, h1);
   }
 
   /* Earlier we collected endFillByte. Now, just in case the file was
@@ -91,7 +84,7 @@ bool vs1011_init() {
 
 static void reset() {
   gpio_set_level(VS_XRESET_GPIO, 0);
-  vTaskDelay(100 / portTICK_PERIOD_MS);
+  taskYIELD();
   gpio_set_level(VS_XRESET_GPIO, 1);
 }
 
@@ -130,17 +123,11 @@ static void write_sdi(const uint8_t *buffer, size_t length) {
   t.length = length * 8;
   t.tx_buffer = buffer;
   wait_for_dreq();
-  //gpio_set_level(VS_XDCS_GPIO, 0);
   ESP_ERROR_CHECK(spi_device_transmit(data_spi, &t));
-  //gpio_set_level(VS_XDCS_GPIO, 1);
-}
-
-static uint8_t dreq() {
-  return gpio_get_level(VS_DREQ_GPIO);
 }
 
 static void wait_for_dreq() {
-  while(dreq() == 0) {
+  while(gpio_get_level(VS_DREQ_GPIO) == 0) {
     taskYIELD();
   }
 }
@@ -148,9 +135,6 @@ static void wait_for_dreq() {
 static void bus_init() {
   gpio_set_direction(VS_XRESET_GPIO, GPIO_MODE_OUTPUT);
   gpio_set_direction(VS_DREQ_GPIO, GPIO_MODE_INPUT);
-
-//gpio_set_direction(VS_XDCS_GPIO, GPIO_MODE_OUTPUT);
-//gpio_set_level(VS_XDCS_GPIO, 1);
 
   reset();
 
@@ -161,14 +145,14 @@ static void bus_init() {
     .quadwp_io_num = -1,
     .quadhd_io_num = -1,
     .flags = SPICOMMON_BUSFLAG_MASTER,
-    //.max_transfer_sz = VS_MAX_CHUNK_SIZE
+    .max_transfer_sz = VS_MAX_CHUNK_SIZE
   };
   ESP_ERROR_CHECK(spi_bus_initialize(VSPI_HOST, &bus_cfg, 1));
 
   spi_device_interface_config_t data_cfg = {
     .command_bits = 0,
     .address_bits = 0,
-    .clock_speed_hz = 2000000,
+    .clock_speed_hz = 4000000,
     .mode = 0,
     .spics_io_num = VS_XDCS_GPIO,
     .queue_size = 1,
@@ -196,7 +180,7 @@ static bool codec_init() {
      reset we know what the status of the IC is. You need, depending
      on your application, either set or not set SM_SDISHARE. See the
      Datasheet for details. */
-  write_sci(SCI_MODE, SM_SDINEW | SM_TESTS | SM_RESET); // SM_TESTS // SM_DACT
+  write_sci(SCI_MODE, SM_SDINEW | SM_RESET); // SM_TESTS // SM_DACT
 
   /* A quick sanity check: write to two registers, then test if we
    get the same results. Note that if you use a too high SPI
