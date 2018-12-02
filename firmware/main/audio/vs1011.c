@@ -20,13 +20,7 @@ static const char *TAG = "vs1011";
 #define VS_XCS_GPIO 5
 #define VS_XDCS_GPIO 17
 #define VS_XTAL_FREQ 12000000 // 12288000
-
-/* Note: code SS_VER=2 is used for both VS1002 and VS1011e */
-static const uint16_t CHIP_NUMBER[16] = {
-  1001, 1011, 1011, 1003, 1053, 1033, 1063, 1103,
-  0, 0, 0, 0, 0, 0, 0, 0
-};
-
+#define VS_MAX_CHUNK_SIZE 32
 
 static spi_device_handle_t data_spi;
 static spi_device_handle_t command_spi;
@@ -34,9 +28,76 @@ static spi_device_handle_t command_spi;
 static void reset();
 static void write_sci(uint8_t addr, uint16_t data);
 static uint16_t read_sci(uint8_t addr);
+static void write_sdi(const uint8_t *buffer, size_t length);
 static bool dreq();
+static void wait_for_dreq();
+static void bus_init();
+static bool codec_init();
+
+void vs1011_play(FILE *fp) {
+
+}
 
 bool vs1011_init() {
+  bus_init();
+  return codec_init();
+}
+
+static void reset() {
+  gpio_set_level(VS_XRESET_GPIO, 0);
+  vTaskDelay(100 / portTICK_PERIOD_MS);
+  gpio_set_level(VS_XRESET_GPIO, 1);
+}
+
+static void write_sci(uint8_t addr, uint16_t data) {
+  spi_transaction_t t;
+  memset(&t, 0, sizeof(t));
+  t.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_USE_TXDATA;
+  t.cmd = 2;
+  t.addr = addr;
+  t.length = sizeof(data) * 8;
+  t.tx_data[0] = data >> 8;
+  t.tx_data[1] = data & 0xFF;
+  wait_for_dreq();
+  ESP_ERROR_CHECK(spi_device_polling_transmit(command_spi, &t));
+}
+
+static uint16_t read_sci(uint8_t addr) {
+  spi_transaction_t t;
+  memset(&t, 0, sizeof(t));
+  t.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_USE_TXDATA;
+  t.cmd = 3;
+  t.addr = addr;
+  t.length = sizeof(uint16_t) * 8;
+  wait_for_dreq();
+  ESP_ERROR_CHECK(spi_device_polling_transmit(command_spi, &t));
+  uint16_t result = (t.rx_data[0] << 8) | t.rx_data[1];
+  return result;
+}
+
+static void write_sdi(const uint8_t *buffer, size_t length) {
+  if (length > VS_MAX_CHUNK_SIZE) {
+    return;
+  }
+  spi_transaction_t t;
+  memset(&t, 0, sizeof(t));
+  t.length = length;
+  t.tx_buffer = buffer;
+  wait_for_dreq();
+  ESP_ERROR_CHECK(spi_device_polling_transmit(data_spi, &t));
+}
+
+static bool dreq() {
+  return gpio_get_level(VS_DREQ_GPIO) == 1;
+}
+
+static void wait_for_dreq() {
+  while(!dreq()) {
+    taskYIELD();
+  }
+}
+
+static void bus_init() {
   gpio_set_direction(VS_XRESET_GPIO, GPIO_MODE_OUTPUT);
   gpio_set_direction(VS_DREQ_GPIO, GPIO_MODE_INPUT);
 
@@ -48,7 +109,7 @@ bool vs1011_init() {
     .sclk_io_num = VS_SCLK_GPIO,
     .quadwp_io_num = -1,
     .quadhd_io_num = -1,
-    .max_transfer_sz = 32
+    .max_transfer_sz = VS_MAX_CHUNK_SIZE
   };
   ESP_ERROR_CHECK(spi_bus_initialize(VSPI_HOST, &bus_cfg, 1));
 
@@ -71,7 +132,9 @@ bool vs1011_init() {
     .queue_size = 1,
   };
   ESP_ERROR_CHECK(spi_bus_add_device(VSPI_HOST, &command_cfg, &command_spi));
+}
 
+static bool codec_init() {
   /* Start initialization with a dummy read, which makes sure our
      microcontoller chips selects and everything are where they
      are supposed to be and that VS10xx's SCI bus is in a known state. */
@@ -95,6 +158,11 @@ bool vs1011_init() {
   write_sci(SCI_AICTRL1, 0);
   write_sci(SCI_AICTRL2, 0);
 
+  /* Note: code SS_VER=2 is used for both VS1002 and VS1011e */
+  const uint16_t CHIP_NUMBER[16] = {
+    1001, 1011, 1011, 1003, 1053, 1033, 1063, 1103,
+    0, 0, 0, 0, 0, 0, 0, 0
+  };
   /* Check VS10xx type */
   uint16_t chip_id = (read_sci(SCI_STATUS) >> 4) & 0x0F;
   if (CHIP_NUMBER[chip_id]) {
@@ -119,49 +187,4 @@ bool vs1011_init() {
   ESP_LOGI(TAG, "initialization sequence completed");
 
   return true;
-}
-
-static void reset() {
-  gpio_set_level(VS_XRESET_GPIO, 0);
-  vTaskDelay(100 / portTICK_PERIOD_MS);
-  gpio_set_level(VS_XRESET_GPIO, 1);
-}
-
-static void write_sci(uint8_t addr, uint16_t data) {
-  spi_transaction_t t;
-  memset(&t, 0, sizeof(t));
-  t.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_USE_TXDATA;
-  t.cmd = 2;
-  t.addr = addr;
-  t.length = sizeof(data) * 8;
-  //uint8_t * buf = (uint8_t *)heap_caps_malloc(2, MALLOC_CAP_DMA);
-  //buf[0] = data >> 8;
-  //buf[1] = data & 0xFF;
-  //t.tx_buffer = buf;
-  t.tx_data[0] = data >> 8;
-  t.tx_data[1] = data & 0xFF;
-  while(!dreq()) {
-    taskYIELD();
-  }
-  ESP_ERROR_CHECK(spi_device_polling_transmit(command_spi, &t));
-}
-
-static uint16_t read_sci(uint8_t addr) {
-  spi_transaction_t t;
-  memset(&t, 0, sizeof(t));
-  t.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_USE_TXDATA;
-  t.cmd = 3;
-  t.addr = addr;
-  t.length = sizeof(uint16_t) * 8;
-  while(!dreq()) {
-    taskYIELD();
-  }
-  ESP_ERROR_CHECK(spi_device_polling_transmit(command_spi, &t));
-
-  uint16_t result = (t.rx_data[0] << 8) | t.rx_data[1];
-  return result;
-}
-
-static bool dreq() {
-  return gpio_get_level(VS_DREQ_GPIO) == 1;
 }
