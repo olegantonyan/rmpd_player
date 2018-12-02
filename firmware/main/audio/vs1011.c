@@ -12,6 +12,10 @@
 
 static const char *TAG = "vs1011";
 
+#ifndef MIN
+  #define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+
 #define VS_SO_GPIO 19
 #define VS_SI_GPIO 23
 #define VS_SCLK_GPIO 18
@@ -29,13 +33,47 @@ static void reset();
 static void write_sci(uint8_t addr, uint16_t data);
 static uint16_t read_sci(uint8_t addr);
 static void write_sdi(const uint8_t *buffer, size_t length);
-static bool dreq();
+static uint8_t dreq();
 static void wait_for_dreq();
 static void bus_init();
 static bool codec_init();
 
 void vs1011_play(FILE *fp) {
+  size_t bytes_in_buffer = 0;
+  size_t pos = 0;
+  static uint8_t file_buffer[2048] = { 0 };
 
+  write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
+
+  while ((bytes_in_buffer = fread(file_buffer, 1, sizeof(file_buffer), fp)) > 0) {
+    uint8_t *buf_play = file_buffer;
+    while (bytes_in_buffer) {
+      size_t i = MIN(VS_MAX_CHUNK_SIZE, bytes_in_buffer);
+      write_sdi(buf_play, i);
+      buf_play += i;
+      bytes_in_buffer -= i;
+      pos += i;
+    }
+
+    uint16_t sample_rate = read_sci(SCI_AUDATA);;
+    uint16_t h1 = read_sci(SCI_HDAT1); // format
+    uint16_t h0 = read_sci(SCI_HDAT0); // format
+    printf("%uKiB %1ds %d    H0: 0x%X H1: 0x%X\n", pos / 1024, read_sci(SCI_DECODE_TIME), sample_rate, h0, h1);
+  }
+
+  /* Earlier we collected endFillByte. Now, just in case the file was
+   broken, or if a cancel playback command has been given, write
+   lots of endFillBytes. */
+  memset(file_buffer, 0, sizeof(file_buffer));
+  for (size_t i = 0; i < sizeof(file_buffer); i += VS_MAX_CHUNK_SIZE) {
+    write_sdi(file_buffer, VS_MAX_CHUNK_SIZE);
+  }
+
+  /* If SM_OUTOFWAV is on at this point, there is some weirdness going
+   on. Reset the IC just in case. */
+  if (read_sci(SCI_MODE) & SM_OUTOFWAV) {
+    codec_init();
+  }
 }
 
 bool vs1011_init() {
@@ -81,18 +119,18 @@ static void write_sdi(const uint8_t *buffer, size_t length) {
   }
   spi_transaction_t t;
   memset(&t, 0, sizeof(t));
-  t.length = length;
+  t.length = length * 8;
   t.tx_buffer = buffer;
   wait_for_dreq();
   ESP_ERROR_CHECK(spi_device_polling_transmit(data_spi, &t));
 }
 
-static bool dreq() {
-  return gpio_get_level(VS_DREQ_GPIO) == 1;
+static uint8_t dreq() {
+  return gpio_get_level(VS_DREQ_GPIO);
 }
 
 static void wait_for_dreq() {
-  while(!dreq()) {
+  while(dreq() == 0) {
     taskYIELD();
   }
 }
@@ -119,7 +157,8 @@ static void bus_init() {
     .clock_speed_hz = 6000000,
     .mode = 0,
     .spics_io_num = VS_XDCS_GPIO,
-    .queue_size = 7,
+    .queue_size = 1,
+    //.flags = SPI_DEVICE_TXBIT_LSBFIRST,
   };
   ESP_ERROR_CHECK(spi_bus_add_device(VSPI_HOST, &data_cfg, &data_spi));
 
@@ -144,7 +183,7 @@ static bool codec_init() {
      reset we know what the status of the IC is. You need, depending
      on your application, either set or not set SM_SDISHARE. See the
      Datasheet for details. */
-  write_sci(SCI_MODE, SM_SDINEW | SM_SDISHARE | SM_TESTS | SM_RESET);
+  write_sci(SCI_MODE, SM_SDINEW | SM_RESET); // SM_TESTS // SM_DACT
 
   /* A quick sanity check: write to two registers, then test if we
    get the same results. Note that if you use a too high SPI
@@ -182,7 +221,8 @@ static bool codec_init() {
   write_sci(SCI_CLOCKF, HZ_TO_SCI_CLOCKF(VS_XTAL_FREQ));
 
   /* Set volume level at -6 dB of maximum */
-  write_sci(SCI_VOL, 0x0C0C);
+//  write_sci(SCI_VOL, 0x0C0C);
+//  write_sci(SCI_VOL, 0); // max vol
 
   ESP_LOGI(TAG, "initialization sequence completed");
 
