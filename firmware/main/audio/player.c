@@ -92,6 +92,7 @@ static size_t file_size(FILE *f) {
 }
 
 static void player_thread(void * args) {
+  vTaskDelay(100 / portTICK_PERIOD_MS); // wait 100ms in MUTE state (@see app note)
   while(true) {
     player_message_t message;
     if(xQueueReceive(queue, &message, portMAX_DELAY)) {

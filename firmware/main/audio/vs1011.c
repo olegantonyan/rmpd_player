@@ -53,7 +53,7 @@ static audio_format_t audio_format();
 void vs1011_play(FILE *fp) {
   xEventGroupClearBits(event_group, VS1011STOP_BIT);
 
-  //vs1011_mute(false);
+  vs1011_mute(false);
 
   size_t bytes_in_buffer = 0;
   size_t pos = 0;
