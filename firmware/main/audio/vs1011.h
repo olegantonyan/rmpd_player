@@ -10,5 +10,6 @@
 bool vs1011_init();
 void vs1011_play(FILE *fp);
 void vs1011_stop();
+void vs1011_mute(bool mute);
 
 #endif

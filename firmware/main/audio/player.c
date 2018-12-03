@@ -65,6 +65,7 @@ bool player_init() {
     ESP_LOGE(TAG, "cannot initialize audio driver");
     return false;
   }
+  //vs1011_mute(true);
 
   queue = xQueueCreate(5, sizeof(player_message_t));
   if (queue == NULL) {

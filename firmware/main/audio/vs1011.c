@@ -24,6 +24,7 @@ static const char *TAG = "vs1011";
 #define VS_DREQ_GPIO 22
 #define VS_XCS_GPIO 5
 #define VS_XDCS_GPIO 17
+#define VS_MUTE_GPIO 16
 #define VS_XTAL_FREQ 12000000 // 12288000
 #define VS_MAX_CHUNK_SIZE 32
 
@@ -51,6 +52,8 @@ static audio_format_t audio_format();
 
 void vs1011_play(FILE *fp) {
   xEventGroupClearBits(event_group, VS1011STOP_BIT);
+
+  //vs1011_mute(false);
 
   size_t bytes_in_buffer = 0;
   size_t pos = 0;
@@ -93,6 +96,8 @@ void vs1011_play(FILE *fp) {
     }
   }
 
+  vs1011_mute(true);
+
   /* If SM_OUTOFWAV is on at this point, there is some weirdness going
    on. Reset the IC just in case. */
   if (read_sci(SCI_MODE) & SM_OUTOFWAV) {
@@ -102,6 +107,10 @@ void vs1011_play(FILE *fp) {
 
 void vs1011_stop() {
   xEventGroupSetBits(event_group, VS1011STOP_BIT);
+}
+
+void vs1011_mute(bool mute) {
+  gpio_set_level(VS_MUTE_GPIO, mute ? 0 : 1);
 }
 
 bool vs1011_init() {
@@ -181,6 +190,9 @@ static void wait_for_dreq() {
 static void bus_init() {
   gpio_set_direction(VS_XRESET_GPIO, GPIO_MODE_OUTPUT);
   gpio_set_direction(VS_DREQ_GPIO, GPIO_MODE_INPUT);
+  gpio_set_direction(VS_MUTE_GPIO, GPIO_MODE_OUTPUT);
+
+  vs1011_mute(true);
 
   reset();
 
