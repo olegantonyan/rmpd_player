@@ -9,5 +9,6 @@
 
 bool vs1011_init();
 void vs1011_play(FILE *fp);
+void vs1011_stop();
 
 #endif

@@ -4,6 +4,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "driver/spi_master.h"
 #include "soc/gpio_struct.h"
@@ -26,8 +27,18 @@ static const char *TAG = "vs1011";
 #define VS_XTAL_FREQ 12000000 // 12288000
 #define VS_MAX_CHUNK_SIZE 32
 
+typedef enum {
+  af_unknown,
+  af_riff,
+  af_mp1,
+  af_mp2,
+  af_mp3,
+} audio_format_t;
+
 static spi_device_handle_t data_spi;
 static spi_device_handle_t command_spi;
+static EventGroupHandle_t event_group;
+const EventBits_t VS1011STOP_BIT = BIT0;
 
 static void reset();
 static void write_sci(uint8_t addr, uint16_t data);
@@ -36,11 +47,15 @@ static void write_sdi(const uint8_t *buffer, size_t length);
 static void wait_for_dreq();
 static void bus_init();
 static bool codec_init();
+static audio_format_t audio_format();
 
 void vs1011_play(FILE *fp) {
+  xEventGroupClearBits(event_group, VS1011STOP_BIT);
+
   size_t bytes_in_buffer = 0;
   size_t pos = 0;
   static uint8_t file_buffer[2048] = { 0 };
+  memset(file_buffer, 0, sizeof(file_buffer));
 
   write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
 
@@ -55,19 +70,27 @@ void vs1011_play(FILE *fp) {
       bytes_in_buffer -= i;
       pos += i;
     }
+
     // TODO callback to player with position
     //uint16_t sample_rate = read_sci(SCI_AUDATA);;
     //uint16_t h1 = read_sci(SCI_HDAT1); // format
     //uint16_t h0 = read_sci(SCI_HDAT0); // format
     //printf("%uKiB %1ds %d    H0: 0x%X H1: 0x%X\n", pos / 1024, read_sci(SCI_DECODE_TIME), sample_rate, h0, h1);
-  }
 
-  /* Earlier we collected endFillByte. Now, just in case the file was
-   broken, or if a cancel playback command has been given, write
-   lots of endFillBytes. */
-  memset(file_buffer, 0, sizeof(file_buffer));
-  for (size_t i = 0; i < sizeof(file_buffer); i += VS_MAX_CHUNK_SIZE) {
-    write_sdi(file_buffer, VS_MAX_CHUNK_SIZE);
+    if (xEventGroupGetBits(event_group) & VS1011STOP_BIT) {
+      audio_format_t af = audio_format();
+      if (af != af_mp3 && af != af_unknown) {
+        write_sci(SCI_MODE, read_sci(SCI_MODE) | SM_OUTOFWAV);
+        memset(file_buffer, 0, sizeof(file_buffer));
+        for(uint32_t i = 0; i < 1000; i++) {
+          write_sdi(file_buffer, VS_MAX_CHUNK_SIZE);
+          if (!(read_sci(SCI_MODE) & SM_OUTOFWAV)) {
+            break;
+          }
+        }
+      }
+      break;
+    }
   }
 
   /* If SM_OUTOFWAV is on at this point, there is some weirdness going
@@ -77,7 +100,16 @@ void vs1011_play(FILE *fp) {
   }
 }
 
+void vs1011_stop() {
+  xEventGroupSetBits(event_group, VS1011STOP_BIT);
+}
+
 bool vs1011_init() {
+  event_group = xEventGroupCreate();
+  if (event_group == NULL) {
+    ESP_LOGE(TAG, "cannot create event group");
+    return false;
+  }
   bus_init();
   return codec_init();
 }
@@ -124,6 +156,20 @@ static void write_sdi(const uint8_t *buffer, size_t length) {
   t.tx_buffer = buffer;
   wait_for_dreq();
   ESP_ERROR_CHECK(spi_device_transmit(data_spi, &t));
+}
+
+static audio_format_t audio_format() {
+  uint16_t h1 = read_sci(SCI_HDAT1);
+  if (h1 == 0x7665) {
+    return af_riff;
+  } else if ((h1 & 0xFFE6) == 0xFFE2) {
+    return af_mp3;
+  } else if ((h1 & 0xFFE6) == 0xFFE4) {
+    return af_mp2;
+  } else if ((h1 & 0xFFE6) == 0xFFE6) {
+    return af_mp1;
+  }
+  return af_unknown;
 }
 
 static void wait_for_dreq() {
