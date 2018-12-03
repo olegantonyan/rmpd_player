@@ -391,8 +391,6 @@ Wire Wire Line
 Connection ~ 1700 5850
 Wire Wire Line
 	1700 5850 1700 6050
-Text Notes 800  6400 0    50   ~ 0
-Connect GND and GNDA close to VS1011
 $Comp
 L Device:R R?
 U 1 1 5C03EBF3
@@ -917,7 +915,7 @@ Wire Wire Line
 	6950 2350 6900 2350
 Text GLabel 2600 5750 0    50   Input ~ 0
 VDDA
-Text GLabel 3050 5750 2    50   Input ~ 0
+Text GLabel 3550 5750 2    50   Input ~ 0
 VDD
 $Comp
 L Device:C C?
@@ -933,33 +931,33 @@ $EndComp
 $Comp
 L Device:C C?
 U 1 1 5C06DC75
-P 2950 5950
-F 0 "C?" H 3050 6050 50  0000 C CNN
-F 1 "100n" H 3050 5850 50  0000 C CNN
-F 2 "" H 2988 5800 50  0001 C CNN
-F 3 "~" H 2950 5950 50  0001 C CNN
-	1    2950 5950
+P 3450 5950
+F 0 "C?" H 3550 6050 50  0000 C CNN
+F 1 "100n" H 3550 5850 50  0000 C CNN
+F 2 "" H 3488 5800 50  0001 C CNN
+F 3 "~" H 3450 5950 50  0001 C CNN
+	1    3450 5950
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	2600 5750 2700 5750
 Wire Wire Line
-	2950 5800 2950 5750
-Connection ~ 2950 5750
+	3450 5800 3450 5750
+Connection ~ 3450 5750
 Wire Wire Line
-	2950 5750 3050 5750
+	3450 5750 3550 5750
 Wire Wire Line
 	2700 5800 2700 5750
 Connection ~ 2700 5750
 Wire Wire Line
 	2700 5750 2950 5750
 Wire Wire Line
-	2950 6100 2950 6150
+	3450 6100 3450 6150
 Wire Wire Line
 	2700 6100 2700 6150
 Wire Wire Line
 	4400 1700 5050 1700
-Text GLabel 2950 6150 3    50   Input ~ 0
+Text GLabel 3450 6150 3    50   Input ~ 0
 GND
 Text GLabel 2700 6150 3    50   Input ~ 0
 GNDA
@@ -1130,4 +1128,166 @@ Text GLabel 6950 2450 2    50   Input ~ 0
 MUTE
 Wire Wire Line
 	6900 2450 6950 2450
+$Comp
+L Device:C C?
+U 1 1 5C08CC4A
+P 2950 5950
+F 0 "C?" H 3050 6050 50  0000 C CNN
+F 1 "100n" H 3050 5850 50  0000 C CNN
+F 2 "" H 2988 5800 50  0001 C CNN
+F 3 "~" H 2950 5950 50  0001 C CNN
+	1    2950 5950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C?
+U 1 1 5C08CCC0
+P 3200 5950
+F 0 "C?" H 3300 6050 50  0000 C CNN
+F 1 "100n" H 3300 5850 50  0000 C CNN
+F 2 "" H 3238 5800 50  0001 C CNN
+F 3 "~" H 3200 5950 50  0001 C CNN
+	1    3200 5950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2950 5800 2950 5750
+Connection ~ 2950 5750
+Wire Wire Line
+	2950 5750 3200 5750
+Wire Wire Line
+	3200 5800 3200 5750
+Connection ~ 3200 5750
+Wire Wire Line
+	3200 5750 3450 5750
+Text GLabel 2950 6150 3    50   Input ~ 0
+GNDA
+Text GLabel 3200 6150 3    50   Input ~ 0
+GND
+Wire Wire Line
+	2950 6100 2950 6150
+Wire Wire Line
+	3200 6100 3200 6150
+$Comp
+L Regulator_Linear:LM1117-3.3 U?
+U 1 1 5C0BDAEC
+P 2450 1750
+F 0 "U?" H 2450 1992 50  0000 C CNN
+F 1 "LM1117-3.3" H 2450 1901 50  0000 C CNN
+F 2 "" H 2450 1750 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/lm1117.pdf" H 2450 1750 50  0001 C CNN
+	1    2450 1750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:CP C?
+U 1 1 5C0BE156
+P 2050 2000
+F 0 "C?" H 1850 2050 50  0000 C CNN
+F 1 "10.0" H 1850 1950 50  0000 C CNN
+F 2 "" H 2088 1850 50  0001 C CNN
+F 3 "~" H 2050 2000 50  0001 C CNN
+	1    2050 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:CP C?
+U 1 1 5C0BE7B4
+P 2850 2000
+F 0 "C?" H 3050 2050 50  0000 C CNN
+F 1 "10.0" H 3050 1950 50  0000 C CNN
+F 2 "" H 2888 1850 50  0001 C CNN
+F 3 "~" H 2850 2000 50  0001 C CNN
+	1    2850 2000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2150 1750 2050 1750
+Wire Wire Line
+	2050 1750 2050 1850
+Wire Wire Line
+	2050 2150 2050 2200
+Wire Wire Line
+	2050 2200 2450 2200
+Wire Wire Line
+	2850 2200 2850 2150
+Wire Wire Line
+	2450 2050 2450 2200
+Connection ~ 2450 2200
+Wire Wire Line
+	2450 2200 2850 2200
+Wire Wire Line
+	2750 1750 2850 1750
+Wire Wire Line
+	2850 1750 2850 1850
+Text GLabel 2450 2250 3    50   Input ~ 0
+GND
+Wire Wire Line
+	2450 2250 2450 2200
+Text GLabel 3000 1750 2    50   Input ~ 0
+VDD
+Text GLabel 3000 1650 2    50   Input ~ 0
+VDDA
+Wire Wire Line
+	3000 1650 2850 1650
+Wire Wire Line
+	2850 1650 2850 1750
+Connection ~ 2850 1750
+Wire Wire Line
+	2850 1750 3000 1750
+$Comp
+L Connector:Barrel_Jack J?
+U 1 1 5C11E4C3
+P 950 1850
+F 0 "J?" H 1005 2175 50  0000 C CNN
+F 1 "Barrel_Jack" H 1005 2084 50  0000 C CNN
+F 2 "" H 1000 1810 50  0001 C CNN
+F 3 "~" H 1000 1810 50  0001 C CNN
+	1    950  1850
+	1    0    0    -1  
+$EndComp
+Connection ~ 2050 1750
+Wire Wire Line
+	1250 1950 1300 1950
+Wire Wire Line
+	1300 1950 1300 2200
+Connection ~ 2050 2200
+Wire Wire Line
+	1250 1750 1350 1750
+Wire Wire Line
+	1300 2200 1700 2200
+$Comp
+L Device:Fuse F?
+U 1 1 5C16C081
+P 1500 1750
+F 0 "F?" V 1697 1750 50  0000 C CNN
+F 1 "Fuse" V 1606 1750 50  0000 C CNN
+F 2 "" V 1430 1750 50  0001 C CNN
+F 3 "~" H 1500 1750 50  0001 C CNN
+	1    1500 1750
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	1650 1750 1700 1750
+$Comp
+L Device:D_Zener D?
+U 1 1 5C19A59E
+P 1700 2000
+F 0 "D?" V 1650 1800 50  0000 L CNN
+F 1 "5.1V" V 1750 1750 50  0000 L CNN
+F 2 "" H 1700 2000 50  0001 C CNN
+F 3 "~" H 1700 2000 50  0001 C CNN
+	1    1700 2000
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	1700 1750 1700 1850
+Connection ~ 1700 1750
+Wire Wire Line
+	1700 1750 2050 1750
+Wire Wire Line
+	1700 2150 1700 2200
+Connection ~ 1700 2200
+Wire Wire Line
+	1700 2200 2050 2200
 $EndSCHEMATC
