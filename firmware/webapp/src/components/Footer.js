@@ -1,6 +1,6 @@
 import { h } from "hyperapp"
 
-export default () =>
+export default ({ state, actions }) =>
   <footer class="footer">
-    <p>Now playing: Dimmu Borgir - 51k, uptime, current time, etc maybe</p>
+    <p>Now playing: {state.status.now_playing}</p>
   </footer>

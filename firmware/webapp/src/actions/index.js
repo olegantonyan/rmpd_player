@@ -31,5 +31,14 @@ export default {
     },
     update: value => state => { return value },
     saving: value => state => ({ saving: value })
+  },
+
+  status: {
+    fetch: () => (state, actions) => {
+      fetch("/api/status.json")
+        .then(data => data.json())
+        .then((data) => actions.update(data))
+    },
+    update: value => state => { return value },
   }
 }

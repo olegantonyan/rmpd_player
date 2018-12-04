@@ -10,5 +10,5 @@ export default (state, actions) =>
 
     <Container state={state} actions={actions} />
 
-    <Footer />
+    <Footer state={state} actions={actions} />
   </div>

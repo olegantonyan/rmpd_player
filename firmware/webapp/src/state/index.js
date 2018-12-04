@@ -9,5 +9,9 @@ export default {
     wifi_ssid: null,
     wifi_pass: null,
     saving: false
+  },
+
+  status: {
+    now_playing: "",
   }
 };

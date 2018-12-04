@@ -12,6 +12,7 @@
 #include "cJSON.h"
 #include "config/config.h"
 #include "wifi/wifi.h"
+#include "audio/player.h"
 
 static const char *TAG = "web";
 
@@ -21,6 +22,7 @@ static size_t file_size(FILE *f);
 static esp_err_t root_get_handler(httpd_req_t *req);
 static esp_err_t settings_get_handler(httpd_req_t *req);
 static esp_err_t settings_post_handler(httpd_req_t *req);
+static esp_err_t status_get_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
 static void render_settings(httpd_req_t *req);
 
@@ -40,6 +42,12 @@ static httpd_uri_t settings_post = {
   .uri       = "/api/settings.json",
   .method    = HTTP_POST,
   .handler   = settings_post_handler
+};
+
+static httpd_uri_t status_get = {
+  .uri       = "/api/status.json",
+  .method    = HTTP_GET,
+  .handler   = status_get_handler
 };
 
 bool web_init() {
@@ -132,6 +140,32 @@ exit:
   }
 }
 
+static esp_err_t status_get_handler(httpd_req_t *req) {
+  httpd_resp_set_type(req, "application/json");
+
+  cJSON *root = cJSON_CreateObject();
+
+  char now_playing[800] = { 0 };
+  if (player_get_now_playing(now_playing, sizeof(now_playing))) {
+    cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString(now_playing));
+  } else {
+    cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString("nothing"));
+  }
+
+  char* json = malloc(1024);
+
+  if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
+    httpd_resp_send(req, json, strlen(json));
+  } else {
+    ESP_LOGE(TAG, "failed to build json response");
+    httpd_resp_send_500(req);
+  }
+
+  free(json);
+  cJSON_Delete(root);
+  return ESP_OK;
+}
+
 static esp_err_t root_get_handler(httpd_req_t *req) {
   if(strcmp("/", req->uri) == 0) {
     FILE* f = fopen(STORAGE_SPI_MOUNTPOINT "/index.html", "r");
@@ -216,6 +250,7 @@ static httpd_handle_t start_webserver() {
   }
   httpd_register_uri_handler(server, &settings_get);
   httpd_register_uri_handler(server, &settings_post);
+  httpd_register_uri_handler(server, &status_get);
   httpd_register_uri_handler(server, &root);
   return server;
 }
