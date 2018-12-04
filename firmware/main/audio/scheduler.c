@@ -37,18 +37,21 @@ static void scheduler_thread(void * args) {
         if (!ep) {
           break;
         }
+
         if (string_ends_with(ep->d_name, ".mp3")) {
-          char *fullname = (char *)malloc(strlen(STORAGE_SD_MOUNTPOINT) + strlen(ep->d_name) + 10);
-          fullname[0] = '\0';
-          strcat(fullname, STORAGE_SD_MOUNTPOINT);
-          strcat(fullname, "/");
-          strcat(fullname, ep->d_name);
+          char fullname[1024] = { 0 };
+          snprintf(fullname, sizeof(fullname), "%s/%s", STORAGE_SD_MOUNTPOINT, ep->d_name);
+          ESP_LOGI(TAG, "starting '%s'", fullname);
           player_start_blocking(fullname);
-          free(fullname);
+        } else {
+          ESP_LOGI(TAG, "'%s' is not mp3", ep->d_name);
         }
+        taskYIELD();
       }
       closedir(dp);
     }
+
+    taskYIELD();
   }
 }
 

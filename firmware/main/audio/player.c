@@ -11,7 +11,6 @@
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_log.h"
-#include "storage/sd.h"
 
 static const char *TAG = "player";
 
