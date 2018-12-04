@@ -119,5 +119,5 @@ static void softap() {
   }
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
   tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, HOSTNAME);
-  ESP_LOGI(TAG, "softap SSID:%s password:%s", AP_PASS, AP_PASS);
+  ESP_LOGI(TAG, "softap SSID:%s password:%s", AP_SSID, AP_PASS);
 }
