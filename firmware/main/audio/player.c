@@ -173,10 +173,13 @@ static bool play(const char *fname) {
 }
 
 static void set_now_playing(char *str) {
-  size_t i = strlen(str);
-  do {
-    i--;
-  } while (str[i] != '/' && i > 0);
+  size_t i = 0;
+  if (str != NULL) {
+    i = strlen(str);
+    do {
+      i--;
+    } while (str[i] != '/' && i > 0);
+  }
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   if (i != 0) {
     state.now_playing = str + i + 1;
