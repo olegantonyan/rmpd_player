@@ -16,7 +16,7 @@ static const char *TAG = "ntp";
 static void thread(void * args);
 
 bool ntp_init() {
-  return xTaskCreate(thread, "ntp", 4096, NULL, 5, NULL) == pdPASS;
+  return xTaskCreate(thread, "ntp", 4096, NULL, 10, NULL) == pdPASS;
 }
 
 static void thread(void * args) {

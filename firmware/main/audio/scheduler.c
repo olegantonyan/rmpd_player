@@ -22,7 +22,7 @@ static bool string_ends_with(const char *str, const char *suffix);
 bool scheduler_start() {
   player_init();
 
-  return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 5, NULL) == pdPASS;
+  return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
 }
 
 static void scheduler_thread(void * args) {
