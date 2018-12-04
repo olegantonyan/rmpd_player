@@ -28,10 +28,13 @@ typedef struct {
   char *filename; // XXX: dynamically allocated
 } player_message_t;
 
-static player_state_t state = STOPPED;
+static struct {
+  player_state_t state;
+  SemaphoreHandle_t mutex;
+  char *now_playing; // XXX: points to dynamically allocated string from player_message_t
+} state = { STOPPED, NULL, NULL };
 
 static QueueHandle_t queue = NULL;
-static SemaphoreHandle_t state_mutex = NULL;
 
 const EventBits_t STATE_CHANGED_BIT = BIT0;
 static EventGroupHandle_t event_group;
@@ -42,6 +45,7 @@ static bool play(const char *fname);
 static void set_state(player_state_t new_state);
 static player_state_t get_state();
 static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
+static void set_now_playing(char *str);
 
 bool player_start(const char *fname, bool async) {
   if (get_state() == PLAYING) {
@@ -81,6 +85,18 @@ bool player_stop() {
   return wait_for_state(STOPPED, portMAX_DELAY);
 }
 
+bool player_get_now_playing(char *buffer, size_t length) {
+  bool result = false;
+  xSemaphoreTake(state.mutex, portMAX_DELAY);
+  if (state.now_playing != NULL) {
+    buffer[0] = '\0';
+    strncpy(buffer, state.now_playing, length);
+    result = true;
+  }
+  xSemaphoreGive(state.mutex);
+  return result;
+}
+
 bool player_init() {
   bool vs_ok = vs1011_init();
   if (!vs_ok) {
@@ -93,8 +109,8 @@ bool player_init() {
     ESP_LOGE(TAG, "cannot create queue");
     return false;
   }
-  state_mutex = xSemaphoreCreateMutex();
-  if (state_mutex == NULL) {
+  state.mutex = xSemaphoreCreateMutex();
+  if (state.mutex == NULL) {
     ESP_LOGE(TAG, "cannot create mutex");
     return false;
   }
@@ -122,15 +138,18 @@ static void player_thread(void * args) {
     if(xQueueReceive(queue, &message, portMAX_DELAY)) {
       switch(message.type) {
         case PLAYER_START:
+          set_now_playing(message.filename);
           set_state(PLAYING);
           play(message.filename);
           set_state(STOPPED);
+          set_now_playing(NULL);
           break;
         default:
           break;
       }
       if (message.filename != NULL) {
         free(message.filename);
+        set_now_playing(NULL); // just in case
       }
     }
   }
@@ -153,20 +172,27 @@ static bool play(const char *fname) {
   return true;
 }
 
+static void set_now_playing(char *str) {
+  xSemaphoreTake(state.mutex, portMAX_DELAY);
+  state.now_playing = str;
+  xSemaphoreGive(state.mutex);
+}
+
+
 static void set_state(player_state_t new_state) {
   player_state_t old_state = get_state();
-  xSemaphoreTake(state_mutex, portMAX_DELAY);
-  state = new_state;
-  xSemaphoreGive(state_mutex);
+  xSemaphoreTake(state.mutex, portMAX_DELAY);
+  state.state = new_state;
+  xSemaphoreGive(state.mutex);
   if (old_state != new_state) {
     xEventGroupSetBits(event_group, STATE_CHANGED_BIT);
   }
 }
 
 static player_state_t get_state() {
-  xSemaphoreTake(state_mutex, portMAX_DELAY);
-  player_state_t result = state;
-  xSemaphoreGive(state_mutex);
+  xSemaphoreTake(state.mutex, portMAX_DELAY);
+  player_state_t result = state.state;
+  xSemaphoreGive(state.mutex);
   return result;
 }
 
