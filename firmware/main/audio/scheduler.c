@@ -41,10 +41,10 @@ static void scheduler_thread(void * args) {
         if (string_ends_with(ep->d_name, ".mp3")) {
           char fullname[1024] = { 0 };
           snprintf(fullname, sizeof(fullname), "%s/%s", STORAGE_SD_MOUNTPOINT, ep->d_name);
-          ESP_LOGI(TAG, "starting '%s'", fullname);
-          player_start_blocking(fullname);
+          ESP_LOGD(TAG, "starting '%s'", fullname);
+          player_start(fullname, false);
         } else {
-          ESP_LOGI(TAG, "'%s' is not mp3", ep->d_name);
+          ESP_LOGD(TAG, "'%s' is not mp3", ep->d_name);
         }
         taskYIELD();
       }

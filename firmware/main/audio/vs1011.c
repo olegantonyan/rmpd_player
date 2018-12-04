@@ -105,7 +105,7 @@ void vs1011_stop() {
   xEventGroupSetBits(event_group, VS1011STOP_BIT);
 }
 
-void vs1011_mute(bool mute) {
+void vs1011_transient_mute(bool mute) {
   gpio_set_level(VS_MUTE_GPIO, mute ? 0 : 1);
 }
 
@@ -188,7 +188,7 @@ static void bus_init() {
   gpio_set_direction(VS_DREQ_GPIO, GPIO_MODE_INPUT);
   gpio_set_direction(VS_MUTE_GPIO, GPIO_MODE_OUTPUT);
 
-  vs1011_mute(true);
+  vs1011_transient_mute(true);
 
   reset();
 

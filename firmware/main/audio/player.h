@@ -5,8 +5,7 @@
 #include <stdint.h>
 
 bool player_init();
-bool player_start(const char *fname);
-bool player_start_blocking(const char *fname);
+bool player_start(const char *fname, bool async);
 bool player_stop();
 
 #endif

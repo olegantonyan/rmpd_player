@@ -43,7 +43,7 @@ static void set_state(player_state_t new_state);
 static player_state_t get_state();
 static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
 
-bool player_start(const char *fname) {
+bool player_start(const char *fname, bool async) {
   if (get_state() == PLAYING) {
     player_stop();
   }
@@ -61,11 +61,12 @@ bool player_start(const char *fname) {
   }
   m.filename[0] = '\0';
   strcpy(m.filename, fname);
-  return xQueueSend(queue, &m, portMAX_DELAY) == pdTRUE;
-}
 
-bool player_start_blocking(const char *fname) { // this should probably be removed with more sophistacated scheduler
-  if (!player_start(fname)) {
+  BaseType_t result = xQueueSend(queue, &m, portMAX_DELAY);
+  if (async) {
+    return result == pdTRUE;
+  }
+  if (result != pdTRUE) {
     return false;
   }
   if (!wait_for_state(PLAYING, portMAX_DELAY)) {
@@ -115,7 +116,7 @@ static size_t file_size(FILE *f) {
 
 static void player_thread(void * args) {
   vTaskDelay(100 / portTICK_PERIOD_MS); // wait 100ms in MUTE state (@see app note)
-  vs1011_mute(false);
+  vs1011_transient_mute(false);
   while(true) {
     player_message_t message;
     if(xQueueReceive(queue, &message, portMAX_DELAY)) {
