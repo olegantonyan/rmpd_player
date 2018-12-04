@@ -53,8 +53,6 @@ static audio_format_t audio_format();
 void vs1011_play(FILE *fp) {
   xEventGroupClearBits(event_group, VS1011STOP_BIT);
 
-  vs1011_mute(false);
-
   size_t bytes_in_buffer = 0;
   size_t pos = 0;
   static uint8_t file_buffer[2048] = { 0 };
@@ -95,8 +93,6 @@ void vs1011_play(FILE *fp) {
       break;
     }
   }
-
-  vs1011_mute(true);
 
   /* If SM_OUTOFWAV is on at this point, there is some weirdness going
    on. Reset the IC just in case. */

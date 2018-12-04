@@ -3,7 +3,7 @@
 #include "clock/ntp.h"
 #include "storage/spi.h"
 #include "storage/sd.h"
-#include "audio/player.h"
+#include "audio/scheduler.h"
 
 void app_main() {
   spiffs_init();
@@ -11,5 +11,5 @@ void app_main() {
   wifi_init();
   ntp_init();
   web_init();
-  player_init();
+  scheduler_start();
 }

@@ -391,8 +391,6 @@ Wire Wire Line
 Connection ~ 1700 5850
 Wire Wire Line
 	1700 5850 1700 6050
-Text Notes 800  6400 0    50   ~ 0
-Connect GND and GNDA close to VS1011
 $Comp
 L Device:R R?
 U 1 1 5C03EBF3

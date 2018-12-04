@@ -56,8 +56,7 @@ bool sd_init() {
   // Card has been initialized, print its properties
   sdmmc_card_print_info(stdout, card);
 
-
-  FILE *f = fopen(STORAGE_SD_MOUNTPOINT "/hello.txt", "r");
+  /*FILE *f = fopen(STORAGE_SD_MOUNTPOINT "/hello.txt", "r");
   if (f == NULL) {
     ESP_LOGE(TAG, "Failed to open file for reading");
     return false;
@@ -71,10 +70,7 @@ bool sd_init() {
       *pos = '\0';
   }
   ESP_LOGI(TAG, "Read from file: '%s'", line);
-
-
-
-
+*/
 
   DIR *dp = opendir(STORAGE_SD_MOUNTPOINT);
   if (dp == NULL) {
@@ -85,12 +81,10 @@ bool sd_init() {
       if (!ep) {
         break;
       }
-      printf("%s\n", ep->d_name);
+      ESP_LOGI(TAG, "%s", ep->d_name);
     }
     closedir(dp);
   }
-
-
 
   return true;
 }
