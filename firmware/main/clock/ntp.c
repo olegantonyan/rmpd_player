@@ -10,12 +10,15 @@
 #include "esp_log.h"
 #include "lwip/err.h"
 #include "lwip/apps/sntp.h"
+#include "clock/ds3231.h"
 
 static const char *TAG = "ntp";
 
 static void thread(void * args);
+static void thread1(void * args);
 
 bool ntp_init() {
+  xTaskCreate(thread1, "rtc", 4096, NULL, 10, NULL);
   return xTaskCreate(thread, "ntp", 4096, NULL, 10, NULL) == pdPASS;
 }
 
@@ -24,6 +27,8 @@ static void thread(void * args) {
   sntp_setservername(0, "pool.ntp.org");
   sntp_init();
 
+  ds3231_init();
+
   time_t now = 0;
   struct tm timeinfo = { 0 };
 
@@ -31,8 +36,17 @@ static void thread(void * args) {
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     time(&now);
     localtime_r(&now, &timeinfo);
-    //ESP_LOGI(TAG, "time: %s", ctime(&now));
   }
   ESP_LOGI(TAG, "time synchronized: %s", ctime(&now));
   vTaskDelete(NULL);
+}
+
+static void thread1(void * args) {
+  while(true) {
+    vTaskDelay(1500 / portTICK_PERIOD_MS);
+    time_t rtc = ds3231_get_time();
+    ESP_LOGI(TAG, "ds3231 time: %s", ctime(&rtc));
+  }
+
+
 }
