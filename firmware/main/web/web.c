@@ -151,6 +151,7 @@ static esp_err_t status_get_handler(httpd_req_t *req) {
   } else {
     cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString("nothing"));
   }
+  cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
 
   char* json = malloc(1024);
 

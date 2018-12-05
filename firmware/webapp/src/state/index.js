@@ -13,5 +13,6 @@ export default {
 
   status: {
     now_playing: "",
+    percent_pos: 0
   }
 };

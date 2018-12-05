@@ -7,6 +7,6 @@ export default ({ state, actions }) =>
     </div>
 
     <div class="content">
-      <h2>{state.status.now_playing}</h2>
+      <h2>{state.status.now_playing} ({state.status.percent_pos}%)</h2>
     </div>
   </div>

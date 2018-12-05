@@ -32,7 +32,9 @@ static struct {
   player_state_t state;
   SemaphoreHandle_t mutex;
   char *now_playing; // XXX: points to dynamically allocated string from player_message_t
-} state = { STOPPED, NULL, NULL };
+  uint32_t pos_total;
+  uint32_t pos_current;
+} state = { STOPPED, NULL, NULL, 0, 0 };
 
 static QueueHandle_t queue = NULL;
 
@@ -40,12 +42,12 @@ const EventBits_t STATE_CHANGED_BIT = BIT0;
 static EventGroupHandle_t event_group;
 
 static void player_thread(void * args);
-static size_t file_size(FILE *f);
 static bool play(const char *fname);
 static void set_state(player_state_t new_state);
 static player_state_t get_state();
 static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
 static void set_now_playing(char *str);
+static void vs1011_callback(uint32_t position, uint32_t total);
 
 bool player_start(const char *fname, bool async) {
   if (get_state() == PLAYING) {
@@ -97,6 +99,13 @@ bool player_get_now_playing(char *buffer, size_t length) {
   return result;
 }
 
+uint8_t player_get_position_percents() {
+  if (state.pos_total == 0) {
+    return 0;
+  }
+  return (uint8_t)((state.pos_current / (float)state.pos_total) * 100.0);
+}
+
 bool player_init() {
   bool vs_ok = vs1011_init();
   if (!vs_ok) {
@@ -121,13 +130,6 @@ bool player_init() {
   }
 
   return xTaskCreate(player_thread, "player", 4096, NULL, 5, NULL) == pdPASS;
-}
-
-static size_t file_size(FILE *f) {
-  fseek(f, 0, SEEK_END);
-  size_t sz = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  return sz;
 }
 
 static void player_thread(void * args) {
@@ -166,7 +168,7 @@ static bool play(const char *fname) {
     ESP_LOGE(TAG, "failed to open file '%s' for reading", fname);
     return false;
   }
-  vs1011_play(f);
+  vs1011_play(f, vs1011_callback);
   ESP_LOGI(TAG, "end playing file '%s'", fname);
   fclose(f);
   return true;
@@ -213,4 +215,9 @@ static bool wait_for_state(player_state_t desired_state, TickType_t ticks) {
   xEventGroupClearBits(event_group, STATE_CHANGED_BIT);
   xEventGroupWaitBits(event_group, STATE_CHANGED_BIT, pdTRUE, pdFALSE, ticks);
   return get_state() == desired_state;
+}
+
+static void vs1011_callback(uint32_t position, uint32_t total) {
+  state.pos_total = total;
+  state.pos_current = position;
 }

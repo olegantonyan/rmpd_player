@@ -49,16 +49,22 @@ static void wait_for_dreq();
 static void bus_init();
 static bool codec_init();
 static audio_format_t audio_format();
+static size_t file_size(FILE *f);
 
-void vs1011_play(FILE *fp) {
+void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) {
   xEventGroupClearBits(event_group, VS1011STOP_BIT);
 
   size_t bytes_in_buffer = 0;
-  size_t pos = 0;
+  uint32_t pos = 0;
+  uint32_t filesize = file_size(fp);
   static uint8_t file_buffer[2048] = { 0 };
   memset(file_buffer, 0, sizeof(file_buffer));
 
   write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
+
+  if (callback != NULL) {
+    callback(pos, filesize);
+  }
 
 //  write_sdi(file_buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
 
@@ -70,6 +76,10 @@ void vs1011_play(FILE *fp) {
       buf_play += i;
       bytes_in_buffer -= i;
       pos += i;
+    }
+
+    if (callback != NULL) {
+      callback(pos, filesize);
     }
 
     // TODO callback to player with position
@@ -92,6 +102,10 @@ void vs1011_play(FILE *fp) {
       }
       break;
     }
+  }
+
+  if (callback != NULL) {
+    callback(0, 0);
   }
 
   /* If SM_OUTOFWAV is on at this point, there is some weirdness going
@@ -117,6 +131,13 @@ bool vs1011_init() {
   }
   bus_init();
   return codec_init();
+}
+
+static size_t file_size(FILE *f) {
+  fseek(f, 0, SEEK_END);
+  size_t sz = ftell(f);
+  fseek(f, 0, SEEK_SET);
+  return sz;
 }
 
 static void reset() {
