@@ -66,8 +66,6 @@ time_t ds3231_get_time() {
     return 0;
   }
 
-  ESP_LOGI(TAG, "seconds: %d", bcd2dec(data[0]));
-
   timeinfo.tm_sec = bcd2dec(data[0]);
   timeinfo.tm_min = bcd2dec(data[1]);
   if (data[2] & DS3231_12HOUR_FLAG) {
@@ -110,6 +108,7 @@ static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size) {
   i2c_master_start(cmd);
   i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_WRITE, true);
   i2c_master_write_byte(cmd, reg, true);
+  i2c_master_start(cmd);
   i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_READ, true);
   i2c_master_read(cmd, buffer, size, I2C_MASTER_LAST_NACK);
   i2c_master_stop(cmd);
