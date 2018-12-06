@@ -3,6 +3,7 @@
 #include "driver/i2c.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include <string.h>
@@ -45,6 +46,8 @@ static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size);
 static bool i2c_write(uint8_t reg, uint8_t *data, size_t size);
 static void set_system_time(time_t secs);
 
+static SemaphoreHandle_t mutex = NULL;
+
 bool ds3231_init() {
   i2c_config_t conf;
   conf.mode = I2C_MODE_MASTER;
@@ -57,6 +60,11 @@ bool ds3231_init() {
   esp_err_t ret = i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0);
   if (ret != ESP_OK) {
     ESP_LOGE(TAG, "i2c master driver init error: %s", esp_err_to_name(ret));
+    return false;
+  }
+  mutex = xSemaphoreCreateMutex();
+  if (mutex == NULL) {
+    ESP_LOGE(TAG, "cannot create mutex");
     return false;
   }
   time_t now = ds3231_get_time();
@@ -119,6 +127,7 @@ static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size) {
     return false;
   }
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
   i2c_master_start(cmd);
@@ -132,6 +141,7 @@ static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size) {
   esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 
   i2c_cmd_link_delete(cmd);
+  xSemaphoreGive(mutex);
   if (ret != ESP_OK) {
     ESP_LOGE(TAG, "i2c master read error: %s", esp_err_to_name(ret));
     return false;
@@ -144,6 +154,7 @@ static bool i2c_write(uint8_t reg, uint8_t *data, size_t size) {
     return false;
   }
 
+  xSemaphoreTake(mutex, portMAX_DELAY);
   i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
   i2c_master_start(cmd);
@@ -155,6 +166,7 @@ static bool i2c_write(uint8_t reg, uint8_t *data, size_t size) {
   esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 
   i2c_cmd_link_delete(cmd);
+  xSemaphoreGive(mutex);
   if (ret != ESP_OK) {
     ESP_LOGE(TAG, "i2c master write error: %s", esp_err_to_name(ret));
     return false;
