@@ -152,6 +152,12 @@ static esp_err_t status_get_handler(httpd_req_t *req) {
     cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString("nothing"));
   }
   cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
+  time_t now = time(NULL);
+  struct tm timeinfo = { 0 };
+  localtime_r(&now, &timeinfo);
+  char time_buf[80] = { 0 };
+  strftime(time_buf, sizeof(time_buf), "%H:%M:%S %d-%m-%Y %Z", &timeinfo);
+  cJSON_AddItemToObject(root, "time", cJSON_CreateString(time_buf));
 
   char* json = malloc(1024);
 

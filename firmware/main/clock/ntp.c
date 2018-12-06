@@ -6,6 +6,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/queue.h"
 #include "esp_system.h"
 #include "esp_log.h"
 #include "lwip/err.h"
@@ -15,38 +16,55 @@
 static const char *TAG = "ntp";
 
 static void thread(void * args);
-static void thread1(void * args);
+
+static QueueHandle_t queue = NULL;
+
+// https://github.com/espressif/esp-idf/pull/1668/files
+void sntp_setsystemtime(u32_t t) {
+  xQueueSend(queue, &t, portMAX_DELAY);
+}
+void sntp_setsystemtime_us(u32_t t, u32_t us) {
+  (void)us;
+  sntp_setsystemtime(t);
+}
 
 bool ntp_init() {
-  xTaskCreate(thread1, "rtc", 4096, NULL, 10, NULL);
+  queue = xQueueCreate(1, sizeof(uint32_t));
+  if (queue == NULL) {
+    ESP_LOGE(TAG, "cannot create queue");
+    return false;
+  }
+
   return xTaskCreate(thread, "ntp", 4096, NULL, 10, NULL) == pdPASS;
 }
 
 static void thread(void * args) {
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, "pool.ntp.org");
+  sntp_setservername(1, "time.google.com");
+  sntp_setservername(2, "time-a-g.nist.gov ");
+  sntp_setservername(3, "time-b-g.nist.gov");
+  sntp_setservername(4, "time-c-g.nist.gov");
+  sntp_setservername(5, "time-d-g.nist.gov");
+  sntp_setservername(6, "time-d-g.nist.gov");
+  sntp_setservername(7, "2.opensuse.pool.ntp.org");
+  sntp_setservername(8, "utcnist.colorado.edu ");
+  sntp_setservername(9, "time.windows.com");
   sntp_init();
 
-  ds3231_init();
+  uint32_t result;
+  if(xQueueReceive(queue, &result, portMAX_DELAY)) {
+    struct timeval tv = { .tv_sec = result, .tv_usec = 0 };
+    settimeofday(&tv, NULL);
 
-  time_t now = 0;
-  struct tm timeinfo = { 0 };
-
-  while(timeinfo.tm_year < (2018 - 1900)) {
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    time(&now);
+    time_t now = time(NULL);
+    struct tm timeinfo = { 0 };
     localtime_r(&now, &timeinfo);
+    if (!ds3231_set_time(&timeinfo)) {
+      ESP_LOGI(TAG, "error setting RTC time");
+    }
+    ESP_LOGI(TAG, "time synchronized: %s", ctime(&now));
   }
-  ESP_LOGI(TAG, "time synchronized: %s", ctime(&now));
+
   vTaskDelete(NULL);
-}
-
-static void thread1(void * args) {
-  while(true) {
-    vTaskDelay(1500 / portTICK_PERIOD_MS);
-    time_t rtc = ds3231_get_time();
-    ESP_LOGI(TAG, "ds3231 time: %s", ctime(&rtc));
-  }
-
-
 }

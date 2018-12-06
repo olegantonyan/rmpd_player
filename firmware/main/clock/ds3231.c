@@ -5,6 +5,8 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "esp_system.h"
+#include <string.h>
+#include <sys/time.h>
 
 #define SCL_GPIO 26
 #define SDA_GPIO 27
@@ -40,6 +42,8 @@ static const char *TAG = "ds3231";
 static uint8_t bcd2dec(uint8_t val);
 static uint8_t dec2bcd(uint8_t val);
 static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size);
+static bool i2c_write(uint8_t reg, uint8_t *data, size_t size);
+static void set_system_time(time_t secs);
 
 bool ds3231_init() {
   i2c_config_t conf;
@@ -54,6 +58,10 @@ bool ds3231_init() {
   if (ret != ESP_OK) {
     ESP_LOGE(TAG, "i2c master driver init error: %s", esp_err_to_name(ret));
     return false;
+  }
+  time_t now = ds3231_get_time();
+  if (now > 30) {
+    set_system_time(now);
   }
   return true;
 }
@@ -79,15 +87,23 @@ time_t ds3231_get_time() {
   timeinfo.tm_wday = bcd2dec(data[3]) - 1;
   timeinfo.tm_mday = bcd2dec(data[4]);
   timeinfo.tm_mon  = bcd2dec(data[5] & DS3231_MONTH_MASK) - 1;
-  timeinfo.tm_year = bcd2dec(data[6]) + 2000;
-  timeinfo.tm_isdst = 0;
+  timeinfo.tm_year = bcd2dec(data[6]) + 100;
+  timeinfo.tm_isdst = -1;
 
   return mktime(&timeinfo);
 }
 
-bool ds3231_set_time(time_t time) {
-  // TODO
-  return true;
+bool ds3231_set_time(struct tm *timeinfo) {
+  uint8_t data[7] = { 0 };
+  data[0] = dec2bcd(timeinfo->tm_sec);
+  data[1] = dec2bcd(timeinfo->tm_min);
+  data[2] = dec2bcd(timeinfo->tm_hour);
+  data[3] = dec2bcd(timeinfo->tm_wday + 1);
+  data[4] = dec2bcd(timeinfo->tm_mday);
+  data[5] = dec2bcd(timeinfo->tm_mon + 1);
+  data[6] = dec2bcd(timeinfo->tm_year - 100);
+
+  return i2c_write(DS3231_ADDR_TIME, data, sizeof(data));
 }
 
 static uint8_t bcd2dec(uint8_t val) {
@@ -99,7 +115,7 @@ static uint8_t dec2bcd(uint8_t val) {
 }
 
 static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size) {
-  if (size == 0) {
+  if (size == 0 || !buffer) {
     return false;
   }
 
@@ -121,4 +137,32 @@ static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size) {
     return false;
   }
   return true;
+}
+
+static bool i2c_write(uint8_t reg, uint8_t *data, size_t size) {
+  if (size == 0 || !data) {
+    return false;
+  }
+
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_write(cmd, data, size, true);
+  i2c_master_stop(cmd);
+
+  esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+
+  i2c_cmd_link_delete(cmd);
+  if (ret != ESP_OK) {
+    ESP_LOGE(TAG, "i2c master write error: %s", esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+static void set_system_time(time_t secs) {
+  struct timeval tv = { .tv_sec = secs, .tv_usec = 0 };
+  settimeofday(&tv, NULL);
 }

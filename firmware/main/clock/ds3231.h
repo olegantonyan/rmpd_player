@@ -7,6 +7,6 @@
 
 bool ds3231_init();
 time_t ds3231_get_time();
-bool ds3231_set_time(time_t time);
+bool ds3231_set_time(struct tm *timeinfo);
 
 #endif
