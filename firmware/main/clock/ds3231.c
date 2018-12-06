@@ -45,10 +45,13 @@ static uint8_t dec2bcd(uint8_t val);
 static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size);
 static bool i2c_write(uint8_t reg, uint8_t *data, size_t size);
 static void set_system_time(time_t secs);
+static void start_condition();
 
 static SemaphoreHandle_t mutex = NULL;
 
 bool ds3231_init() {
+  start_condition();
+
   i2c_config_t conf;
   conf.mode = I2C_MODE_MASTER;
   conf.sda_io_num = SDA_GPIO;
@@ -177,4 +180,12 @@ static bool i2c_write(uint8_t reg, uint8_t *data, size_t size) {
 static void set_system_time(time_t secs) {
   struct timeval tv = { .tv_sec = secs, .tv_usec = 0 };
   settimeofday(&tv, NULL);
+}
+
+static void start_condition() {
+  gpio_set_direction(SCL_GPIO, GPIO_MODE_OUTPUT);
+  gpio_set_direction(SDA_GPIO, GPIO_MODE_OUTPUT);
+  gpio_set_level(SDA_GPIO, 0);
+  gpio_set_level(SCL_GPIO, 1);
+  vTaskDelay(5 / portTICK_RATE_MS);
 }
