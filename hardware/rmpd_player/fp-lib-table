@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name ESP32-Footprints)(type KiCad)(uri /home/oleg/projects/rmpd_player/hardware/ESP32-Footprints)(options "")(descr ""))
+  (lib (name microsd)(type KiCad)(uri ${KIPRJMOD}/microsd.pretty)(options "")(descr ""))
+)
