@@ -20,7 +20,7 @@ U 1 1 5C001F56
 P 6000 2200
 F 0 "U4" H 5975 3587 60  0000 C CNN
 F 1 "ESP32-WROOM" H 5975 3481 60  0000 C CNN
-F 2 "ESP32-footprints-Lib:ESP32-WROOM" H 6350 3550 60  0001 C CNN
+F 2 "microsd:ESP32-WROOM" H 6350 3550 60  0001 C CNN
 F 3 "" H 5550 2650 60  0001 C CNN
 	1    6000 2200
 	1    0    0    -1  
@@ -768,20 +768,8 @@ Wire Wire Line
 Wire Wire Line
 	6600 5950 6450 5950
 Connection ~ 6450 5950
-Wire Wire Line
-	6600 4400 6700 4400
-Wire Wire Line
-	6700 4400 6700 4550
-Wire Wire Line
-	6700 4550 6750 4550
 Connection ~ 6600 4400
-Wire Wire Line
-	6450 5100 6700 5100
 Connection ~ 6450 5100
-Wire Wire Line
-	6600 5950 6950 5950
-Wire Wire Line
-	6950 5950 6950 5450
 Connection ~ 6600 5950
 $Comp
 L Device:R R2
@@ -956,15 +944,9 @@ F 3 "http://www.infineon.com/dgdl/Infineon-BC847SERIES_BC848SERIES_BC849SERIES_B
 	-1   0    0    -1  
 $EndComp
 Wire Wire Line
-	6700 4400 7900 4400
-Wire Wire Line
 	7900 4400 7900 4500
-Connection ~ 6700 4400
 Wire Wire Line
 	8300 5400 8300 5100
-Wire Wire Line
-	7900 5950 7250 5950
-Connection ~ 6950 5950
 Wire Wire Line
 	8300 5800 8300 5950
 Wire Wire Line
@@ -1265,7 +1247,7 @@ U 1 1 5C087D5D
 P 1950 1600
 F 0 "U1" H 1650 1250 50  0000 C CNN
 F 1 "DS3231M" H 1650 1150 50  0000 C CNN
-F 2 "Package_SO:SOIC-16W_7.5x10.3mm_P1.27mm" H 1950 1000 50  0001 C CNN
+F 2 "Housings_SOIC:SOIC-16W_7.5x10.3mm_Pitch1.27mm" H 1950 1000 50  0001 C CNN
 F 3 "http://datasheets.maximintegrated.com/en/ds/DS3231.pdf" H 2220 1650 50  0001 C CNN
 	1    1950 1600
 	1    0    0    -1  
@@ -1399,7 +1381,7 @@ U 1 1 5C2C64F7
 P 9600 1950
 F 0 "J5" H 9550 2667 50  0000 C CNN
 F 1 "MICRO_SD" H 9550 2576 50  0000 C CNN
-F 2 "" H 10750 2250 50  0001 C CNN
+F 2 "microsd:Conn_uSDcard" H 10750 2250 50  0001 C CNN
 F 3 "http://katalog.we-online.de/em/datasheet/693072010801.pdf" H 9600 1950 50  0001 C CNN
 	1    9600 1950
 	1    0    0    -1  
@@ -1426,42 +1408,40 @@ F 3 "~" H 6950 3900 50  0001 C CNN
 	1    6950 3900
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	6600 4400 6750 4400
+Wire Wire Line
+	6600 5950 7100 5950
+Wire Wire Line
+	6450 5100 6750 5100
 $Comp
-L Connector:Conn_Coaxial J4
-U 1 1 5C0DDCCD
-P 6950 4550
-F 0 "J4" H 6950 4850 50  0000 L CNN
-F 1 "LINE_OUT_R" H 6800 4750 50  0000 L CNN
-F 2 "" H 6950 4550 50  0001 C CNN
-F 3 " ~" H 6950 4550 50  0001 C CNN
-	1    6950 4550
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector:Conn_Coaxial J6
-U 1 1 5C0DDDB1
-P 6950 5250
-F 0 "J6" H 6900 5550 50  0000 L CNN
-F 1 "LINE_OUT_L" H 6800 5450 50  0000 L CNN
-F 2 "" H 6950 5250 50  0001 C CNN
-F 3 " ~" H 6950 5250 50  0001 C CNN
-	1    6950 5250
+L Connector:Conn_Coaxial_x2 J4
+U 1 1 5C0CC33D
+P 7100 4650
+F 0 "J4" H 7200 4450 50  0000 L CNN
+F 1 "LINE_OUT" H 7200 4350 50  0000 L CNN
+F 2 "microsd:2RCA" H 7100 4550 50  0001 C CNN
+F 3 " ~" H 7100 4550 50  0001 C CNN
+	1    7100 4650
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	6750 5250 6700 5250
+	6900 4550 6750 4550
 Wire Wire Line
-	6700 5250 6700 5100
-Connection ~ 6700 5100
+	6750 4550 6750 4400
+Connection ~ 6750 4400
 Wire Wire Line
-	6700 5100 8300 5100
+	6750 4400 7900 4400
 Wire Wire Line
-	6950 4750 6950 4800
+	6900 4750 6750 4750
 Wire Wire Line
-	6950 4800 7250 4800
+	6750 4750 6750 5100
+Connection ~ 6750 5100
 Wire Wire Line
-	7250 4800 7250 5950
-Connection ~ 7250 5950
+	6750 5100 8300 5100
 Wire Wire Line
-	7250 5950 6950 5950
+	7100 4950 7100 5950
+Connection ~ 7100 5950
+Wire Wire Line
+	7100 5950 7900 5950
 $EndSCHEMATC
