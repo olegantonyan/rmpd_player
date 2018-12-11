@@ -1,3 +1,5 @@
+# NOTE: run ./build_mkspiffs.sh first
+
 MKSPIFFS := $(IDF_PATH)/../mkspiffs/mkspiffs
 SPIFFS_DIR := fs
 SPIFFS_TARGET := build/fs.bin
@@ -10,10 +12,5 @@ fs: clean_fs
 	echo "building spiffs image"
 	$(MKSPIFFS) -c $(SPIFFS_DIR) -b 4096 -p 256 -s $(SPIFFS_SIZE) $(SPIFFS_TARGET)
 
-#flash_fs: fs
-#	$(IDF_PATH)/components/esptool_py/esptool/esptool.py --chip esp32 --port $(CONFIG_ESPTOOLPY_PORT) --baud $(CONFIG_ESPTOOLPY_BAUD) --before default_reset --after hard_reset write_flash -z $(SPIFFS_ADDRESS) $(SPIFFS_TARGET)
-
 clean_fs:
 	rm -f $(SPIFFS_TARGET)
-
-# NOTE: run ./build_mkspiffs.sh first

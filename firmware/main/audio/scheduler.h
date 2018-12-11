@@ -4,6 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-bool scheduler_start();
+bool scheduler_init();
 
 #endif

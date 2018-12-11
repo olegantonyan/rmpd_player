@@ -19,7 +19,7 @@ static const char *TAG = "scheduler";
 static void scheduler_thread(void * args);
 static bool string_ends_with(const char *str, const char *suffix);
 
-bool scheduler_start() {
+bool scheduler_init() {
   player_init();
 
   return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
