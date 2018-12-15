@@ -129,11 +129,11 @@ bool player_init() {
       return false;
   }
 
-  return xTaskCreate(player_thread, "player", 4096, NULL, 5, NULL) == pdPASS;
+  return xTaskCreate(player_thread, "player", 4096, NULL, 15, NULL) == pdPASS;
 }
 
 static void player_thread(void * args) {
-  vTaskDelay(100 / portTICK_PERIOD_MS); // wait 100ms in MUTE state (@see app note)
+  vTaskDelay(100 / portTICK_PERIOD_MS); // wait 100ms in MUTE state (@see vs1011 app note)
   vs1011_transient_mute(false);
   while(true) {
     player_message_t message;

@@ -57,7 +57,7 @@ void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) 
   size_t bytes_in_buffer = 0;
   uint32_t pos = 0;
   uint32_t filesize = file_size(fp);
-  static uint8_t file_buffer[2048] = { 0 };
+  static uint8_t file_buffer[4096] = { 0 };
   memset(file_buffer, 0, sizeof(file_buffer));
 
   write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
