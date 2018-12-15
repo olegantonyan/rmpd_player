@@ -1,0 +1,48 @@
+Component,Description,Part,References,Value,Footprint,Quantity Per PCB,Datasheet
+1,Single-cell battery,Battery_Cell,BT1,CR2032,Keystone_103_1x20mm-CoinCell,1,~
+2,Polarized capacitor,CP,C12 C15 C17 C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 C33 C34 C35 C36,10.0,CP_Radial_D5.0mm_P2.50mm,22,~
+3,Unpolarized capacitor,C,C3 C4 C5 C6 C7 C8 C9,100n,C_0805_HandSoldering,7,~
+4,Unpolarized capacitor,C,C11 C13,10n,C_0805_HandSoldering,2,~
+5,Unpolarized capacitor,C,C1 C2,33pF,C_0805_HandSoldering,2,~
+6,Unpolarized capacitor,C,C14 C16,3n3,C_0805_HandSoldering,2,~
+7,Unpolarized capacitor,C,C10,47n,C_0805_HandSoldering,1,~
+8,Zener diode,D_Zener,D1,5.1V,D_A-405_P7.62mm_Horizontal,1,~
+9,Fuse,Fuse,F1,Fuse,Fuse_SMD1206_HandSoldering,1,~
+10,"double coaxial connector (BNC, SMA, SMB, SMC, Cinch/RCA, ...)",Conn_Coaxial_x2,J4,LINE_OUT,2RCA,1, ~
+11,"Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)",Conn_01x04,J3,LINE_OUT_INT_1,Pin_Header_Straight_1x04_Pitch2.54mm,1,~
+12,"Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)",Conn_01x04,J7,LINE_OUT_INT_2,Pin_Header_Straight_1x04_Pitch2.54mm,1,~
+13,Micro SD Card Socket,Micro_SD_Card,J5,MICRO_SD,Conn_uSDcard,1,http://katalog.we-online.de/em/datasheet/693072010801.pdf
+14,DC Barrel Jack,Barrel_Jack,J1,POWER,BARREL_JACK,1,~
+15,"Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)",Conn_01x02,J6,POWER_INT,Pin_Header_Straight_1x02_Pitch2.54mm,1,~
+16,"Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)",Conn_01x06,J2,PROG,Pin_Header_Straight_1x06_Pitch2.54mm,1,~
+17,"Generic connector, single row, 01x07, script generated (kicad-library-utils/schlib/autogen/connector/)",Conn_01x07,J8,RESERV,Pin_Header_Straight_1x07_Pitch2.54mm,1,~
+18,"0.1A Ic, 30V Vce, NPN Transistor, SOT-23",BC848,Q1 Q2,BC848,SOT-23,2,http://www.infineon.com/dgdl/Infineon-BC847SERIES_BC848SERIES_BC849SERIES_BC850SERIES-DS-v01_01-en.pdf?fileId=db3a304314dca389011541d4630a1657
+19,"0.1A Ic, 30V Vce, PNP Transistor, SOT-23",BC858,Q3 Q4,BC858,SOT-23,2,http://www.fairchildsemi.com/ds/BC/BC856.pdf
+20,Resistor,R,R8,10,R_0805_HandSoldering,1,~
+21,Resistor,R,R2 R3 R4 R6 R7 R24 R43 R44 R45 R46 R47 R48,100k,R_0805_HandSoldering,12,~
+22,Resistor,R,R5 R13 R14 R15 R16 R17 R18 R19 R20 R21 R22 R23 R37 R38 R39 R40 R41 R42,10k,R_0805_HandSoldering,18,~
+23,Resistor,R,R1,1M,R_0805_HandSoldering,1,~
+24,Resistor,R,R9 R10,20,R_0805_HandSoldering,2,~
+25,Resistor,R,R11 R12,470,R_0805_HandSoldering,2,~
+26,Resistor,R,R25 R26 R27 R28 R29 R30 R31 R32 R33 R34 R35 R36,4k7,R_0805_HandSoldering,12,~
+27,Extremely Accurate I2C-Integrated RTC/TCXO/Crystal SOIC-16,DS3231M,U1,DS3231M,SOIC-16W_7.5x10.3mm_Pitch1.27mm,1,http://datasheets.maximintegrated.com/en/ds/DS3231.pdf
+28,,ESP32-WROOM,U4,ESP32-WROOM,ESP32-WROOM,1,
+29,"800mA Low-Dropout Linear Regulator, 3.3V fixed output, TO-220/TO-252/TO-263/SOT-223",LM1117-3.3,U3,LM1117-3.3,SOT-223,1,http://www.ti.com/lit/ds/symlink/lm1117.pdf
+30,"Dual General Purpose, Operational Amplifier, DIP-8/SOIC-8/SSOP-8",RC4558,U5 U6 U7,RC4558,SO-8,3,http://www.ti.com/lit/ds/symlink/rc4558.pdf
+31,VLSI VS1011E,VS1011E,U2,VS1011E,LQFP-48_7x7mm_Pitch0.5mm,1,/home/oleg/projects/rmpd_player/doc/vlsi/vs1011.pdf
+32,Two pin crystal,Crystal,Y1,12.288MHz,Crystal_HC18-U_Vertical,1,~
+
+
+
+
+
+Component Groups:,32
+Component Count:,107
+Fitted Components:,107
+Number of PCBs:,1
+Total components:,107
+Schematic Version:,
+Schematic Date:,
+BoM Date:,Fri 14 Dec 2018 20:56:59 EET
+Schematic Source:,/home/oleg/projects/rmpd_player/hardware/rmpd_player/rmpd_player.sch
+KiCad Version:,Eeschema 5.0.1-5.0.1
