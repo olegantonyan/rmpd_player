@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source /home/oleg/projects/rmpd_player/hardware/rmpd_player/rmpd_player.sch)
-    (date "Sat 15 Dec 2018 10:22:17 EET")
+    (date "Sat 15 Dec 2018 16:36:17 EET")
     (tool "Eeschema 5.0.1-5.0.1")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
