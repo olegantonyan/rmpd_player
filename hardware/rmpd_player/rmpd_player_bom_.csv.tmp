@@ -1,7 +1,7 @@
 Component,Description,Part,References,Value,Footprint,Quantity Per PCB,Datasheet
 1,Single-cell battery,Battery_Cell,BT1,CR2032,Keystone_103_1x20mm-CoinCell,1,~
 2,Polarized capacitor,CP,C12 C15 C17 C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 C33 C34 C35 C36,10.0,CP_Radial_D5.0mm_P2.50mm,22,~
-3,Unpolarized capacitor,C,C3 C4 C5 C6 C7 C8 C9 C37 C38 C39,100n,C_0805_HandSoldering,10,~
+3,Unpolarized capacitor,C,C3 C4 C5 C6 C7 C8 C9,100n,C_0805_HandSoldering,7,~
 4,Unpolarized capacitor,C,C11 C13,10n,C_0805_HandSoldering,2,~
 5,Unpolarized capacitor,C,C1 C2,33pF,C_0805_HandSoldering,2,~
 6,Unpolarized capacitor,C,C14 C16,3n3,C_0805_HandSoldering,2,~
@@ -37,12 +37,12 @@ Component,Description,Part,References,Value,Footprint,Quantity Per PCB,Datasheet
 
 
 Component Groups:,32
-Component Count:,110
-Fitted Components:,110
+Component Count:,107
+Fitted Components:,107
 Number of PCBs:,1
-Total components:,110
+Total components:,107
 Schematic Version:,
 Schematic Date:,
-BoM Date:,Sat 15 Dec 2018 10:22:20 EET
+BoM Date:,Fri 14 Dec 2018 20:56:59 EET
 Schematic Source:,/home/oleg/projects/rmpd_player/hardware/rmpd_player/rmpd_player.sch
 KiCad Version:,Eeschema 5.0.1-5.0.1

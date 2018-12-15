@@ -855,53 +855,53 @@ Wire Wire Line
 	6200 1850 6150 1850
 Wire Wire Line
 	6200 2350 6150 2350
-Text GLabel 2500 5500 0    50   Input ~ 0
+Text GLabel 2700 5450 0    50   Input ~ 0
 VDDA
-Text GLabel 3450 5500 2    50   Input ~ 0
+Text GLabel 3650 5450 2    50   Input ~ 0
 VDD
 $Comp
 L Device:C C4
 U 1 1 5C06DB73
-P 2600 5700
-F 0 "C4" H 2700 5800 50  0000 C CNN
-F 1 "100n" H 2700 5600 50  0000 C CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 2638 5550 50  0001 C CNN
-F 3 "~" H 2600 5700 50  0001 C CNN
-	1    2600 5700
+P 2800 5650
+F 0 "C4" H 2900 5750 50  0000 C CNN
+F 1 "100n" H 2900 5550 50  0000 C CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 2838 5500 50  0001 C CNN
+F 3 "~" H 2800 5650 50  0001 C CNN
+	1    2800 5650
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:C C7
 U 1 1 5C06DC75
-P 3350 5700
-F 0 "C7" H 3450 5800 50  0000 C CNN
-F 1 "100n" H 3450 5600 50  0000 C CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3388 5550 50  0001 C CNN
-F 3 "~" H 3350 5700 50  0001 C CNN
-	1    3350 5700
+P 3550 5650
+F 0 "C7" H 3650 5750 50  0000 C CNN
+F 1 "100n" H 3650 5550 50  0000 C CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3588 5500 50  0001 C CNN
+F 3 "~" H 3550 5650 50  0001 C CNN
+	1    3550 5650
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2500 5500 2600 5500
+	2700 5450 2800 5450
 Wire Wire Line
-	3350 5550 3350 5500
-Connection ~ 3350 5500
+	3550 5500 3550 5450
+Connection ~ 3550 5450
 Wire Wire Line
-	3350 5500 3450 5500
+	3550 5450 3650 5450
 Wire Wire Line
-	2600 5550 2600 5500
-Connection ~ 2600 5500
+	2800 5500 2800 5450
+Connection ~ 2800 5450
 Wire Wire Line
-	2600 5500 2850 5500
+	2800 5450 3050 5450
 Wire Wire Line
-	3350 5850 3350 5900
+	3550 5800 3550 5850
 Wire Wire Line
-	2600 5850 2600 5900
+	2800 5800 2800 5850
 Wire Wire Line
 	3750 1700 4300 1700
-Text GLabel 3350 5900 3    50   Input ~ 0
+Text GLabel 3550 5850 3    50   Input ~ 0
 GND
-Text GLabel 2600 5900 3    50   Input ~ 0
+Text GLabel 2800 5850 3    50   Input ~ 0
 GNDA
 $Comp
 L Transistor_BJT:BC848 Q1
@@ -1043,43 +1043,43 @@ Wire Wire Line
 $Comp
 L Device:C C5
 U 1 1 5C08CC4A
-P 2850 5700
-F 0 "C5" H 2950 5800 50  0000 C CNN
-F 1 "100n" H 2950 5600 50  0000 C CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 2888 5550 50  0001 C CNN
-F 3 "~" H 2850 5700 50  0001 C CNN
-	1    2850 5700
+P 3050 5650
+F 0 "C5" H 3150 5750 50  0000 C CNN
+F 1 "100n" H 3150 5550 50  0000 C CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3088 5500 50  0001 C CNN
+F 3 "~" H 3050 5650 50  0001 C CNN
+	1    3050 5650
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:C C6
 U 1 1 5C08CCC0
-P 3100 5700
-F 0 "C6" H 3200 5800 50  0000 C CNN
-F 1 "100n" H 3200 5600 50  0000 C CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3138 5550 50  0001 C CNN
-F 3 "~" H 3100 5700 50  0001 C CNN
-	1    3100 5700
+P 3300 5650
+F 0 "C6" H 3400 5750 50  0000 C CNN
+F 1 "100n" H 3400 5550 50  0000 C CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3338 5500 50  0001 C CNN
+F 3 "~" H 3300 5650 50  0001 C CNN
+	1    3300 5650
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2850 5550 2850 5500
-Connection ~ 2850 5500
+	3050 5500 3050 5450
+Connection ~ 3050 5450
 Wire Wire Line
-	2850 5500 3100 5500
+	3050 5450 3300 5450
 Wire Wire Line
-	3100 5550 3100 5500
-Connection ~ 3100 5500
+	3300 5500 3300 5450
+Connection ~ 3300 5450
 Wire Wire Line
-	3100 5500 3350 5500
-Text GLabel 2850 5900 3    50   Input ~ 0
+	3300 5450 3550 5450
+Text GLabel 3050 5850 3    50   Input ~ 0
 GNDA
-Text GLabel 3100 5900 3    50   Input ~ 0
+Text GLabel 3300 5850 3    50   Input ~ 0
 GND
 Wire Wire Line
-	2850 5850 2850 5900
+	3050 5800 3050 5850
 Wire Wire Line
-	3100 5850 3100 5900
+	3300 5800 3300 5850
 $Comp
 L Regulator_Linear:LM1117-3.3 U3
 U 1 1 5C0BDAEC
@@ -1402,12 +1402,12 @@ $EndComp
 $Comp
 L Amplifier_Operational:RC4558 U5
 U 3 1 5C14ACCB
-P 1100 5600
-F 0 "U5" V 775 5600 50  0000 C CNN
-F 1 "RC4558" V 866 5600 50  0000 C CNN
-F 2 "Power_Integrations:SO-8" H 1100 5600 50  0001 C CNN
-F 3 "http://www.ti.com/lit/ds/symlink/rc4558.pdf" H 1100 5600 50  0001 C CNN
-	3    1100 5600
+P 7550 1050
+F 0 "U5" V 7225 1050 50  0000 C CNN
+F 1 "RC4558" V 7316 1050 50  0000 C CNN
+F 2 "Power_Integrations:SO-8" H 7550 1050 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/rc4558.pdf" H 7550 1050 50  0001 C CNN
+	3    7550 1050
 	0    1    1    0   
 $EndComp
 $Comp
@@ -1444,14 +1444,14 @@ Connection ~ 7050 5100
 Connection ~ 4750 5100
 Connection ~ 5050 4400
 Connection ~ 5050 5950
-Text GLabel 750  5500 0    50   Input ~ 0
+Text GLabel 7150 950  0    50   Input ~ 0
 GNDA
-Text GLabel 1450 5500 2    50   Input ~ 0
+Text GLabel 7950 950  2    50   Input ~ 0
 5V
 Wire Wire Line
-	750  5500 800  5500
+	7150 950  7200 950 
 Wire Wire Line
-	1400 5500 1450 5500
+	7850 950  7900 950 
 Wire Wire Line
 	9400 5100 9350 5100
 Wire Wire Line
@@ -1769,22 +1769,22 @@ $EndComp
 $Comp
 L Amplifier_Operational:RC4558 U6
 U 3 1 5C5B9DB3
-P 1100 5900
-F 0 "U6" V 775 5900 50  0000 C CNN
-F 1 "RC4558" V 866 5900 50  0000 C CNN
-F 2 "Power_Integrations:SO-8" H 1100 5900 50  0001 C CNN
-F 3 "http://www.ti.com/lit/ds/symlink/rc4558.pdf" H 1100 5900 50  0001 C CNN
-	3    1100 5900
+P 7550 1600
+F 0 "U6" V 7225 1600 50  0000 C CNN
+F 1 "RC4558" V 7316 1600 50  0000 C CNN
+F 2 "Power_Integrations:SO-8" H 7550 1600 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/rc4558.pdf" H 7550 1600 50  0001 C CNN
+	3    7550 1600
 	0    1    1    0   
 $EndComp
-Text GLabel 750  5800 0    50   Input ~ 0
+Text GLabel 7150 1500 0    50   Input ~ 0
 GNDA
-Text GLabel 1450 5800 2    50   Input ~ 0
+Text GLabel 7950 1500 2    50   Input ~ 0
 5V
 Wire Wire Line
-	750  5800 800  5800
+	7150 1500 7200 1500
 Wire Wire Line
-	1400 5800 1450 5800
+	7850 1500 7900 1500
 Wire Wire Line
 	9400 3150 9350 3150
 Wire Wire Line
@@ -2465,22 +2465,22 @@ Wire Wire Line
 $Comp
 L Amplifier_Operational:RC4558 U7
 U 3 1 5D07BA24
-P 1100 6200
-F 0 "U7" V 775 6200 50  0000 C CNN
-F 1 "RC4558" V 866 6200 50  0000 C CNN
-F 2 "Power_Integrations:SO-8" H 1100 6200 50  0001 C CNN
-F 3 "http://www.ti.com/lit/ds/symlink/rc4558.pdf" H 1100 6200 50  0001 C CNN
-	3    1100 6200
+P 7550 2150
+F 0 "U7" V 7225 2150 50  0000 C CNN
+F 1 "RC4558" V 7316 2150 50  0000 C CNN
+F 2 "Power_Integrations:SO-8" H 7550 2150 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/rc4558.pdf" H 7550 2150 50  0001 C CNN
+	3    7550 2150
 	0    1    1    0   
 $EndComp
-Text GLabel 750  6100 0    50   Input ~ 0
+Text GLabel 7150 2050 0    50   Input ~ 0
 GNDA
-Text GLabel 1450 6100 2    50   Input ~ 0
+Text GLabel 7950 2050 2    50   Input ~ 0
 5V
 Wire Wire Line
-	750  6100 800  6100
+	7150 2050 7200 2050
 Wire Wire Line
-	1400 6100 1450 6100
+	7850 2050 7900 2050
 $Comp
 L Connector_Generic:Conn_01x07 J8
 U 1 1 5D113E15
@@ -2521,4 +2521,79 @@ Wire Wire Line
 	4250 1900 4300 1900
 Wire Wire Line
 	4300 1800 4250 1800
+$Comp
+L Device:C C37
+U 1 1 5C262157
+P 7550 1100
+F 0 "C37" V 7600 1000 50  0000 C CNN
+F 1 "100n" V 7600 1250 50  0000 C CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 7588 950 50  0001 C CNN
+F 3 "~" H 7550 1100 50  0001 C CNN
+	1    7550 1100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	7200 950  7200 1100
+Wire Wire Line
+	7200 1100 7400 1100
+Connection ~ 7200 950 
+Wire Wire Line
+	7200 950  7250 950 
+Wire Wire Line
+	7700 1100 7900 1100
+Wire Wire Line
+	7900 1100 7900 950 
+Connection ~ 7900 950 
+Wire Wire Line
+	7900 950  7950 950 
+$Comp
+L Device:C C38
+U 1 1 5C429164
+P 7550 1650
+F 0 "C38" V 7600 1550 50  0000 C CNN
+F 1 "100n" V 7600 1800 50  0000 C CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 7588 1500 50  0001 C CNN
+F 3 "~" H 7550 1650 50  0001 C CNN
+	1    7550 1650
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:C C39
+U 1 1 5C429358
+P 7550 2200
+F 0 "C39" V 7600 2100 50  0000 C CNN
+F 1 "100n" V 7600 2350 50  0000 C CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 7588 2050 50  0001 C CNN
+F 3 "~" H 7550 2200 50  0001 C CNN
+	1    7550 2200
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	7400 1650 7200 1650
+Wire Wire Line
+	7200 1650 7200 1500
+Connection ~ 7200 1500
+Wire Wire Line
+	7200 1500 7250 1500
+Wire Wire Line
+	7700 1650 7900 1650
+Wire Wire Line
+	7900 1650 7900 1500
+Connection ~ 7900 1500
+Wire Wire Line
+	7900 1500 7950 1500
+Wire Wire Line
+	7200 2050 7200 2200
+Wire Wire Line
+	7200 2200 7400 2200
+Connection ~ 7200 2050
+Wire Wire Line
+	7200 2050 7250 2050
+Wire Wire Line
+	7700 2200 7900 2200
+Wire Wire Line
+	7900 2200 7900 2050
+Connection ~ 7900 2050
+Wire Wire Line
+	7900 2050 7950 2050
 $EndSCHEMATC
