@@ -1064,12 +1064,8 @@ F 3 "~" H 3300 5650 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	3050 5500 3050 5450
-Connection ~ 3050 5450
-Wire Wire Line
-	3050 5450 3300 5450
 Wire Wire Line
 	3300 5500 3300 5450
-Connection ~ 3300 5450
 Wire Wire Line
 	3300 5450 3550 5450
 Text GLabel 3050 5850 3    50   Input ~ 0
@@ -1140,10 +1136,6 @@ Text GLabel 3800 6800 2    50   Input ~ 0
 VDD
 Text GLabel 3800 6700 2    50   Input ~ 0
 VDDA
-Wire Wire Line
-	3800 6700 3650 6700
-Wire Wire Line
-	3650 6700 3650 6800
 Connection ~ 3650 6800
 Wire Wire Line
 	3650 6800 3800 6800

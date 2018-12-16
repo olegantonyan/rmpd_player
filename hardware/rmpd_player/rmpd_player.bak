@@ -1064,12 +1064,8 @@ F 3 "~" H 3300 5650 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	3050 5500 3050 5450
-Connection ~ 3050 5450
-Wire Wire Line
-	3050 5450 3300 5450
 Wire Wire Line
 	3300 5500 3300 5450
-Connection ~ 3300 5450
 Wire Wire Line
 	3300 5450 3550 5450
 Text GLabel 3050 5850 3    50   Input ~ 0
