@@ -5,6 +5,6 @@
 #include <stdint.h>
 
 bool wifi_init();
-bool wifi_sta_connect();
+bool wifi_reconfig();
 
 #endif

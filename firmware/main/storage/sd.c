@@ -72,7 +72,7 @@ bool sd_init() {
   ESP_LOGI(TAG, "Read from file: '%s'", line);
 */
 
-  DIR *dp = opendir(STORAGE_SD_MOUNTPOINT);
+/*  DIR *dp = opendir(STORAGE_SD_MOUNTPOINT);
   if (dp == NULL) {
     ESP_LOGE(TAG, "error opening directory");
   } else {
@@ -84,7 +84,7 @@ bool sd_init() {
       ESP_LOGI(TAG, "%s", ep->d_name);
     }
     closedir(dp);
-  }
+  }*/
 
   return true;
 }

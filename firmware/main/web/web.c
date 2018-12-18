@@ -132,7 +132,7 @@ exit:
   cJSON_Delete(json);
   if (ok) {
     render_settings(req);
-    wifi_sta_connect();
+    wifi_reconfig();
     return ESP_OK;
   } else {
     httpd_resp_send_500(req);
