@@ -2624,4 +2624,14 @@ Wire Wire Line
 	1050 5450 1050 5400
 Text GLabel 1050 5400 1    50   Input ~ 0
 VDD
+NoConn ~ 6150 1950
+NoConn ~ 5600 6800
+NoConn ~ 5600 7100
+NoConn ~ 4600 7200
+NoConn ~ 5500 3250
+NoConn ~ 5400 3250
+NoConn ~ 5300 3250
+NoConn ~ 5200 3250
+NoConn ~ 5100 3250
+NoConn ~ 5000 3250
 $EndSCHEMATC
