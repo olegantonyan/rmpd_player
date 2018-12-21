@@ -24,16 +24,6 @@ static void softap();
 static void station();
 static bool configure();
 
-static void reconnect_thread(void * args) {
-  // HACK: sometimes it does not connect (reason:201) on startup. this shit seem to work
-  //station();
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
-  //esp_wifi_connect();
-  //wifi_reconfig();
-  //station();
-  vTaskDelete(NULL);
-}
-
 bool wifi_init() {
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
   esp_wifi_set_ps(WIFI_PS_NONE); // Disable powersave
@@ -44,6 +34,7 @@ bool wifi_init() {
 }
 
 bool wifi_reconfig() {
+  // TODO not working
   //ESP_ERROR_CHECK(esp_wifi_stop());
   //ESP_ERROR_CHECK(esp_wifi_deinit());
   //return configure();
@@ -102,8 +93,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
   case SYSTEM_EVENT_STA_DISCONNECTED:
     ESP_LOGI(TAG, "disconnected");
     taskYIELD();
-    //vTaskDelay(2000 / portTICK_PERIOD_MS);
-    //xTaskCreate(reconnect_thread, "reconnect_thread", 4096, NULL, 5, NULL);
     esp_wifi_connect();
     break;
   default:
