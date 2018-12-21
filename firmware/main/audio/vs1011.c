@@ -4,6 +4,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "driver/spi_master.h"
@@ -40,6 +41,7 @@ static spi_device_handle_t data_spi;
 static spi_device_handle_t command_spi;
 static EventGroupHandle_t event_group;
 const EventBits_t VS1011STOP_BIT = BIT0;
+static SemaphoreHandle_t mutex = NULL;
 
 static void reset();
 static void write_sci(uint8_t addr, uint16_t data);
@@ -129,8 +131,22 @@ bool vs1011_init() {
     ESP_LOGE(TAG, "cannot create event group");
     return false;
   }
+  mutex = xSemaphoreCreateMutex();
+  if (mutex == NULL) {
+    ESP_LOGE(TAG, "cannot create mutex");
+    return false;
+  }
   bus_init();
   return codec_init();
+}
+
+void vs1011_set_volume(uint8_t percents) {
+  if(percents > 100) {
+    percents = 100;
+  }
+  // 0 max, 254 min
+  uint16_t value = 254 - percents * 254 / 100;
+  write_sci(SCI_VOL, value + value * 256);
 }
 
 static size_t file_size(FILE *f) {
@@ -147,6 +163,7 @@ static void reset() {
 }
 
 static void write_sci(uint8_t addr, uint16_t data) {
+  xSemaphoreTake(mutex, portMAX_DELAY);
   spi_transaction_t t;
   memset(&t, 0, sizeof(t));
   t.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_USE_TXDATA;
@@ -157,9 +174,11 @@ static void write_sci(uint8_t addr, uint16_t data) {
   t.tx_data[1] = data & 0xFF;
   wait_for_dreq();
   ESP_ERROR_CHECK(spi_device_transmit(command_spi, &t));
+  xSemaphoreGive(mutex);
 }
 
 static uint16_t read_sci(uint8_t addr) {
+  xSemaphoreTake(mutex, portMAX_DELAY);
   spi_transaction_t t;
   memset(&t, 0, sizeof(t));
   t.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_USE_TXDATA;
@@ -169,6 +188,7 @@ static uint16_t read_sci(uint8_t addr) {
   wait_for_dreq();
   ESP_ERROR_CHECK(spi_device_transmit(command_spi, &t));
   uint16_t result = (t.rx_data[0] << 8) | t.rx_data[1];
+  xSemaphoreGive(mutex);
   return result;
 }
 
@@ -176,12 +196,14 @@ static void write_sdi(const uint8_t *buffer, size_t length) {
   if (length > VS_MAX_CHUNK_SIZE) {
     return;
   }
+  xSemaphoreTake(mutex, portMAX_DELAY);
   spi_transaction_t t;
   memset(&t, 0, sizeof(t));
   t.length = length * 8;
   t.tx_buffer = buffer;
   wait_for_dreq();
   ESP_ERROR_CHECK(spi_device_transmit(data_spi, &t));
+  xSemaphoreGive(mutex);
 }
 
 static audio_format_t audio_format() {
@@ -291,10 +313,6 @@ static bool codec_init() {
    we do not exceed the maximum speeds mentioned in
    Chapter SPI Timing Diagram in the Datasheet. */
   write_sci(SCI_CLOCKF, HZ_TO_SCI_CLOCKF(VS_XTAL_FREQ));
-
-  /* Set volume level at -6 dB of maximum */
-//  write_sci(SCI_VOL, 0x0C0C);
-//  write_sci(SCI_VOL, 0); // max vol
 
   ESP_LOGI(TAG, "initialization sequence completed");
 

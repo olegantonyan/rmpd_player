@@ -132,6 +132,10 @@ bool player_init() {
   return xTaskCreate(player_thread, "player", 4096, NULL, 15, NULL) == pdPASS;
 }
 
+void player_set_volume(uint8_t percents) {
+  vs1011_set_volume(percents);
+}
+
 static void player_thread(void * args) {
   vTaskDelay(100 / portTICK_PERIOD_MS); // wait 100ms in MUTE state (@see vs1011 app note)
   vs1011_transient_mute(false);
