@@ -72,6 +72,7 @@ bool ds3231_init() {
   }
   time_t now = ds3231_get_time();
   if (now > 30) {
+    ESP_LOGI(TAG, "set hw clock to %s", ctime(&now));
     set_system_time(now);
   }
   return true;
@@ -134,10 +135,10 @@ static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size) {
   i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_WRITE, true);
-  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK);
+  i2c_master_write_byte(cmd, reg, I2C_MASTER_ACK);
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_READ, true);
+  i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_READ, I2C_MASTER_ACK);
   i2c_master_read(cmd, buffer, size, I2C_MASTER_LAST_NACK);
   i2c_master_stop(cmd);
 
@@ -161,9 +162,9 @@ static bool i2c_write(uint8_t reg, uint8_t *data, size_t size) {
   i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_WRITE, true);
-  i2c_master_write_byte(cmd, reg, true);
-  i2c_master_write(cmd, data, size, true);
+  i2c_master_write_byte(cmd, (DS3231_ADDRESS << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK);
+  i2c_master_write_byte(cmd, reg, I2C_MASTER_ACK);
+  i2c_master_write(cmd, data, size, I2C_MASTER_ACK);
   i2c_master_stop(cmd);
 
   esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);

@@ -44,9 +44,10 @@ bool wifi_init() {
 }
 
 bool wifi_reconfig() {
-  ESP_ERROR_CHECK(esp_wifi_stop());
-  ESP_ERROR_CHECK(esp_wifi_deinit());
-  return configure();
+  //ESP_ERROR_CHECK(esp_wifi_stop());
+  //ESP_ERROR_CHECK(esp_wifi_deinit());
+  //return configure();
+  return true;
 }
 
 static bool configure() {

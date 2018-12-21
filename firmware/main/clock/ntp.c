@@ -66,5 +66,6 @@ static void thread(void * args) {
     ESP_LOGI(TAG, "time synchronized: %s", ctime(&now));
   }
 
+  sntp_stop();
   vTaskDelete(NULL);
 }
