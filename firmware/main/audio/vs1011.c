@@ -11,6 +11,7 @@
 #include "soc/gpio_struct.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
+#include "util/files.h"
 
 static const char *TAG = "vs1011";
 
@@ -53,7 +54,6 @@ static void bus_init();
 static bool codec_init();
 static void IRAM_ATTR dreq_isr(void *arg);
 static audio_format_t audio_format();
-static size_t file_size(FILE *f);
 
 void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) {
   xEventGroupClearBits(event_group, VS1011STOP_BIT);
@@ -154,13 +154,6 @@ void vs1011_set_volume(uint8_t percents) {
   // 0 max, 254 min
   uint16_t value = 254 - percents * 254 / 100;
   write_sci(SCI_VOL, value + value * 256);
-}
-
-static size_t file_size(FILE *f) {
-  fseek(f, 0, SEEK_END);
-  size_t sz = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  return sz;
 }
 
 static void reset() {

@@ -13,11 +13,11 @@
 #include "esp_log.h"
 #include "storage/sd.h"
 #include <dirent.h>
+#include "util/files.h"
 
 static const char *TAG = "scheduler";
 
 static void scheduler_thread(void * args);
-static bool string_ends_with(const char *str, const char *suffix);
 
 bool scheduler_init() {
   player_init();
@@ -55,10 +55,4 @@ static void scheduler_thread(void * args) {
 
     taskYIELD();
   }
-}
-
-static bool string_ends_with(const char *str, const char *suffix) {
-  size_t str_len = strlen(str);
-  size_t suffix_len = strlen(suffix);
-  return (str_len >= suffix_len) && (0 == strcmp(str + (str_len - suffix_len), suffix));
 }

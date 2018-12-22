@@ -13,12 +13,11 @@
 #include "config/config.h"
 #include "wifi/wifi.h"
 #include "audio/player.h"
+#include "util/files.h"
 
 static const char *TAG = "web";
 
 static void send_file(FILE* f, httpd_req_t *req);
-static bool string_ends_with(const char *str, const char *suffix);
-static size_t file_size(FILE *f);
 static esp_err_t root_get_handler(httpd_req_t *req);
 static esp_err_t settings_get_handler(httpd_req_t *req);
 static esp_err_t settings_post_handler(httpd_req_t *req);
@@ -231,19 +230,6 @@ static void send_file(FILE* f, httpd_req_t *req) {
     httpd_resp_send_chunk(req, NULL, 0);
   }
   free(buffer);
-}
-
-static bool string_ends_with(const char *str, const char *suffix) {
-  size_t str_len = strlen(str);
-  size_t suffix_len = strlen(suffix);
-  return (str_len >= suffix_len) && (0 == strcmp(str + (str_len - suffix_len), suffix));
-}
-
-static size_t file_size(FILE *f) {
-  fseek(f, 0, SEEK_END);
-  size_t sz = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  return sz;
 }
 
 static httpd_handle_t start_webserver() {
