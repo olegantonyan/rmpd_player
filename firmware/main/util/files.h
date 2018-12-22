@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <sys/unistd.h>
-#include <sys/stat.h>
 #include <stdio.h>
 
 bool string_ends_with(const char *str, const char *suffix);
