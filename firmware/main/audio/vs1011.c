@@ -42,6 +42,7 @@ static spi_device_handle_t command_spi;
 static EventGroupHandle_t event_group;
 const EventBits_t VS1011STOP_BIT = BIT0;
 static SemaphoreHandle_t mutex = NULL;
+static SemaphoreHandle_t dreq_sema = NULL;
 
 static void reset();
 static void write_sci(uint8_t addr, uint16_t data);
@@ -50,6 +51,7 @@ static void write_sdi(const uint8_t *buffer, size_t length);
 static void wait_for_dreq();
 static void bus_init();
 static bool codec_init();
+static void IRAM_ATTR dreq_isr(void *arg);
 static audio_format_t audio_format();
 static size_t file_size(FILE *f);
 
@@ -134,6 +136,11 @@ bool vs1011_init() {
   mutex = xSemaphoreCreateMutex();
   if (mutex == NULL) {
     ESP_LOGE(TAG, "cannot create mutex");
+    return false;
+  }
+  dreq_sema = xSemaphoreCreateBinary();
+  if (dreq_sema == NULL) {
+    ESP_LOGE(TAG, "cannot create semaphore");
     return false;
   }
   bus_init();
@@ -221,15 +228,30 @@ static audio_format_t audio_format() {
 }
 
 static void wait_for_dreq() {
-  while(gpio_get_level(VS_DREQ_GPIO) == 0) {
-    taskYIELD();
+  if (gpio_get_level(VS_DREQ_GPIO) == 1) {
+    return;
+  }
+  xSemaphoreTake(dreq_sema, portMAX_DELAY);
+}
+
+static void IRAM_ATTR dreq_isr(void *_arg) {
+  BaseType_t hpt;
+  xSemaphoreGiveFromISR(dreq_sema, &hpt);
+  if (hpt == pdTRUE) {
+    portYIELD_FROM_ISR();
   }
 }
 
 static void bus_init() {
   gpio_set_direction(VS_XRESET_GPIO, GPIO_MODE_OUTPUT);
-  gpio_set_direction(VS_DREQ_GPIO, GPIO_MODE_INPUT);
   gpio_set_direction(VS_MUTE_GPIO, GPIO_MODE_OUTPUT);
+
+  gpio_set_direction(VS_DREQ_GPIO, GPIO_MODE_INPUT);
+  gpio_intr_enable(VS_DREQ_GPIO);
+  gpio_set_intr_type(VS_DREQ_GPIO, GPIO_PIN_INTR_POSEDGE);
+  gpio_install_isr_service(ESP_INTR_FLAG_LOWMED);
+  gpio_isr_handler_add(VS_DREQ_GPIO, dreq_isr, (void *)VS_DREQ_GPIO);
+
 
   vs1011_transient_mute(true);
 
