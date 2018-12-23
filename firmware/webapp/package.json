@@ -7,7 +7,7 @@
     "start": "webpack-dev-server",
     "build": "rm -rf build && webpack -p --config webpack.config.prod.js",
     "test": "jest --coverage --no-cache",
-    "deploy": "rm -rf ../fs/*.{ico,html,css,js}; cp -R build/* ../fs/"
+    "deploy": "rm -rf ../fs/*.{ico,html,css,js,svg,jpg,gif,png}; cp -R build/* ../fs/; cp -R static/* ../fs/"
   },
   "author": "Oleg Antonyan",
   "license": "MIT",

@@ -50,6 +50,7 @@ module.exports = () => ({
   },
   plugins,
   devServer: {
+    contentBase: path.resolve('static'),
     publicPath: '/',
     open: false,
   },

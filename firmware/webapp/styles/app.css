@@ -1,3 +1,12 @@
 footer {
   text-align: center;
 }
+
+#percent-position {
+  width: 100%;
+}
+
+.centering {
+  vertical-align: middle;
+  display: inline;
+}

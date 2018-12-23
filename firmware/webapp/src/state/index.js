@@ -12,7 +12,7 @@ export default {
   },
 
   status: {
-    now_playing: "",
+    now_playing: "fdsafsdaf",
     percent_pos: 0,
     time: ""
   }

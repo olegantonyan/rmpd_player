@@ -7,12 +7,28 @@ export default ({ state, actions }) =>
     </div>
 
     <div class="content">
-      <h2>{state.status.now_playing}</h2>
-      <input disabled type="range" min="0" max="100" value={state.status.percent_pos} class="slider" id="percent-position" />
+      <div class="player-control">
+        <h2>{state.status.now_playing}</h2>
+        <input disabled type="range" min="0" max="100" value={state.status.percent_pos} class="slider" id="percent-position"/>
 
-      <div class="slidecontainer">
-        <label for="volume-control">Volume</label>
-        <input type="range" min="1" max="100" value="100" class="slider" id="volume-control" />
+        <img src="skip_previous-24px.svg" class="centering" width="96" height="96" onclick={() => actions.home.prev()} />
+        <img src="skip_next-24px.svg" class="centering" width="96" height="96" onclick={() => actions.home.next()} />
+      </div>
+
+
+      <br />
+      <br />
+      <br />
+
+      <div class="audio-control">
+
+        <div class="slidecontainer">
+          <label for="volume-control" class="centering">Volume </label>
+          <img src="volume_mute-24px.svg" class="centering" />
+          <input type="range" min="1" max="100" value="100" class="slider" id="volume-control" class="centering" />
+          <img src="volume_up-24px.svg" class="centering" />
+        </div>
+
       </div>
     </div>
   </div>

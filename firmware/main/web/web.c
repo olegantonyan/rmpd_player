@@ -207,6 +207,8 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "application/javascript");
   } else if(string_ends_with(fname, ".ico")) {
     httpd_resp_set_type(req, "image/x-icon");
+  } else if(string_ends_with(fname, ".svg")) {
+    httpd_resp_set_type(req, "image/svg+xml");
   } else {
     httpd_resp_set_type(req, "application/octet-stream");
   }

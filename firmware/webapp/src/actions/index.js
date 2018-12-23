@@ -15,6 +15,15 @@ export default {
     return { nav_current_route: value, nav_menu_open: false }
   },
 
+  home: {
+    prev: () => (state, actions) => {
+      console.log("prev");
+    },
+    next: () => (state, actions) => {
+      console.log("next");
+    },
+  },
+
   settings: {
     fetch: () => (state, actions) => {
       fetch("/api/settings.json")

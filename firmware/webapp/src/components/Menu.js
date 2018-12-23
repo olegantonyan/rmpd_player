@@ -11,15 +11,24 @@ export default ({ state, actions }) =>
       <div class="pure-menu">
         <ul class="pure-menu-list">
           <li class={ state.nav_current_route === HOME ? "pure-menu-item pure-menu-selected" : "pure-menu-item"}>
-            <a class="pure-menu-link" onclick={() => actions.nav_route_to(HOME)}>Home</a>
+            <a class="pure-menu-link" onclick={() => actions.nav_route_to(HOME)}>
+              <img src="play_circle_filled-24px.svg" class="centering" />
+              <span class="centering"> Home</span>
+            </a>
           </li>
 
           <li class={ state.nav_current_route === SETTINGS ? "pure-menu-item pure-menu-selected" : "pure-menu-item"}>
-            <a class="pure-menu-link" onclick={() => actions.nav_route_to(SETTINGS)}>Settings</a>
+            <a class="pure-menu-link" onclick={() => actions.nav_route_to(SETTINGS)}>
+              <img src="settings_applications-24px.svg" class="centering" />
+              <span class="centering"> Settings</span>
+            </a>
           </li>
 
           <li class={ state.nav_current_route === SYSTEM ? "pure-menu-item pure-menu-selected" : "pure-menu-item"}>
-            <a class="pure-menu-link" onclick={() => actions.nav_route_to(SYSTEM)}>System</a>
+            <a class="pure-menu-link" onclick={() => actions.nav_route_to(SYSTEM)}>
+              <img src="memory-24px.svg" class="centering" />
+              <span class="centering"> System</span>
+            </a>
           </li>
         </ul>
       </div>
