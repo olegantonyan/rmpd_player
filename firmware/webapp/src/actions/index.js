@@ -49,5 +49,10 @@ export default {
         .then((data) => actions.update(data))
     },
     update: value => state => { return value },
+
+    update_volume: value => (state, actions) => {
+      fetch("/api/volume.json", { method: "POST", body: JSON.stringify({volume: Number(value)}), headers: { "Content-Type": "application/json" } })
+      return { volume: value }
+    },
   }
 }

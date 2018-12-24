@@ -14,6 +14,7 @@
 #include "wifi/wifi.h"
 #include "audio/player.h"
 #include "util/files.h"
+#include "audio/player.h"
 
 static const char *TAG = "web";
 
@@ -21,6 +22,7 @@ static void send_file(FILE* f, httpd_req_t *req);
 static esp_err_t root_get_handler(httpd_req_t *req);
 static esp_err_t settings_get_handler(httpd_req_t *req);
 static esp_err_t settings_post_handler(httpd_req_t *req);
+static esp_err_t volume_post_handler(httpd_req_t *req);
 static esp_err_t status_get_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
 static void render_settings(httpd_req_t *req);
@@ -47,6 +49,12 @@ static httpd_uri_t status_get = {
   .uri       = "/api/status.json",
   .method    = HTTP_GET,
   .handler   = status_get_handler
+};
+
+static httpd_uri_t volume_post = {
+  .uri       = "/api/volume.json",
+  .method    = HTTP_POST,
+  .handler   = volume_post_handler
 };
 
 bool web_init() {
@@ -79,6 +87,48 @@ static void render_settings(httpd_req_t *req) {
 
 static esp_err_t settings_get_handler(httpd_req_t *req) {
   render_settings(req);
+  return ESP_OK;
+}
+
+static esp_err_t volume_post_handler(httpd_req_t *req) {
+  if (req->content_len > 128) {
+    ESP_LOGE(TAG, "too big request body %d", req->content_len);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  char *buffer = malloc(req->content_len);
+  int ret = httpd_req_recv(req, buffer, req->content_len);
+  if (ret <= 0) {
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+  buffer[ret] = '\0';
+
+  cJSON *json = cJSON_Parse(buffer);
+  if (json == NULL) {
+    const char *error_ptr = cJSON_GetErrorPtr();
+    if (error_ptr != NULL) {
+      ESP_LOGE(TAG, "json parse error: %s", error_ptr);
+    }
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  const cJSON *volume = cJSON_GetObjectItemCaseSensitive(json, "volume");
+  if (!cJSON_IsNumber(volume)) {
+    ESP_LOGE(TAG, "error getting volume from json");
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+  player_set_volume(volume->valueint);
+
+  httpd_resp_send(req, "", strlen(""));
+
+  free(buffer);
   return ESP_OK;
 }
 
@@ -151,6 +201,7 @@ static esp_err_t status_get_handler(httpd_req_t *req) {
     cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString("nothing"));
   }
   cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
+  cJSON_AddItemToObject(root, "volume", cJSON_CreateNumber(0)); //TODO!
   time_t now = time(NULL);
   struct tm timeinfo = { 0 };
   localtime_r(&now, &timeinfo);
@@ -245,6 +296,7 @@ static httpd_handle_t start_webserver() {
   }
   httpd_register_uri_handler(server, &settings_get);
   httpd_register_uri_handler(server, &settings_post);
+  httpd_register_uri_handler(server, &volume_post);
   httpd_register_uri_handler(server, &status_get);
   httpd_register_uri_handler(server, &root);
   return server;

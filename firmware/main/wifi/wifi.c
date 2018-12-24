@@ -92,7 +92,9 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
     break;
   case SYSTEM_EVENT_STA_DISCONNECTED:
     ESP_LOGI(TAG, "disconnected");
-    taskYIELD();
+    for(int i = 0; i < 10; i++) {
+      taskYIELD();
+    }
     esp_wifi_connect();
     break;
   default:
