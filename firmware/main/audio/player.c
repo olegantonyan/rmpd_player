@@ -1,5 +1,6 @@
 #include "audio/vs1011.h"
 #include "audio/player.h"
+#include "config/config.h"
 
 #include <string.h>
 #include <sys/unistd.h>
@@ -129,11 +130,19 @@ bool player_init() {
       return false;
   }
 
+  player_set_volume(config_volume());
+
   return xTaskCreate(player_thread, "player", 4096, NULL, 15, NULL) == pdPASS;
 }
 
 void player_set_volume(uint8_t percents) {
+  if(percents > 100) {
+    percents = 100;
+  }
   vs1011_set_volume(percents);
+  if (percents != config_volume()) {
+    config_save_volume(percents);
+  }
 }
 
 static void player_thread(void * args) {

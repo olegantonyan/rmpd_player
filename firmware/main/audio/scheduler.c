@@ -20,9 +20,10 @@ static const char *TAG = "scheduler";
 static void scheduler_thread(void * args);
 
 bool scheduler_init() {
-  player_init();
-
-  //player_set_volume(95);
+  if (!player_init()) {
+    ESP_LOGE(TAG, "error initializing player");
+    return false;
+  }
 
   return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
 }

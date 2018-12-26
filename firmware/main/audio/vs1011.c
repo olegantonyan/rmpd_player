@@ -152,7 +152,7 @@ void vs1011_set_volume(uint8_t percents) {
     percents = 100;
   }
   uint8_t scaled_percents = 50 * percents / 100 + 50; // scale: 50 - min, 100 - max; vs1011 has weirg volume range
-  if(scaled_percents > 100) {
+  if(scaled_percents > 100) { // just in case
     scaled_percents = 100;
   }
 

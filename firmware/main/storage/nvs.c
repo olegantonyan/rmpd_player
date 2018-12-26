@@ -15,12 +15,15 @@ static void close(nvs_handle handle);
 static bool nvs_init();
 
 static bool initialized = false;
-// TODO add mutex for writing or gatekeeper thread
+static SemaphoreHandle_t mutex = NULL;
 
 bool nvs_read_string(const char *key, char *string, size_t max_length) {
+  nvs_init();
+  xSemaphoreTake(mutex, portMAX_DELAY);
   nvs_handle h = open();
   esp_err_t ret = nvs_get_str(h, key, string, &max_length);
   close(h);
+  xSemaphoreGive(mutex);
   if (ret != ESP_OK) {
     ESP_LOGE(TAG, "failed to read from nvs: %s", esp_err_to_name(ret));
   }
@@ -28,9 +31,39 @@ bool nvs_read_string(const char *key, char *string, size_t max_length) {
 }
 
 bool nvs_save_string(const char *key, char *string) {
+  nvs_init();
+  xSemaphoreTake(mutex, portMAX_DELAY);
   nvs_handle h = open();
   esp_err_t ret = nvs_set_str(h, key, string);
   close(h);
+  xSemaphoreGive(mutex);
+  if (ret != ESP_OK) {
+    ESP_LOGE(TAG, "failed to write to nvs: %s", esp_err_to_name(ret));
+  }
+  return ret == ESP_OK;
+}
+
+
+bool nvs_read_uint8(const char *key, uint8_t *value) {
+  nvs_init();
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  nvs_handle h = open();
+  esp_err_t ret = nvs_get_u8(h, key, value);
+  close(h);
+  xSemaphoreGive(mutex);
+  if (ret != ESP_OK) {
+    ESP_LOGE(TAG, "failed to read from nvs: %s", esp_err_to_name(ret));
+  }
+  return ret == ESP_OK;
+}
+
+bool nvs_save_uint8(const char *key, uint8_t value) {
+  nvs_init();
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  nvs_handle h = open();
+  esp_err_t ret = nvs_set_u8(h, key, value);
+  close(h);
+  xSemaphoreGive(mutex);
   if (ret != ESP_OK) {
     ESP_LOGE(TAG, "failed to write to nvs: %s", esp_err_to_name(ret));
   }
@@ -38,7 +71,6 @@ bool nvs_save_string(const char *key, char *string) {
 }
 
 static nvs_handle open() {
-  nvs_init();
   nvs_handle h;
   esp_err_t ret = nvs_open("storage", NVS_READWRITE, &h);
   if (ret != ESP_OK) {
@@ -55,6 +87,11 @@ static void close(nvs_handle handle) {
 static bool nvs_init() {
   if (initialized) {
     return true;
+  }
+  mutex = xSemaphoreCreateMutex();
+  if (mutex == NULL) {
+    ESP_LOGE(TAG, "cannot create mutex");
+    return false;
   }
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {

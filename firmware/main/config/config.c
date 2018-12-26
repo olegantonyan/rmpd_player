@@ -29,3 +29,18 @@ bool config_save_wifi_ssid(const char * arg) {
 bool config_save_wifi_pass(const char * arg) {
   return nvs_save_string("wifi_pass", (char *)arg);
 }
+
+uint8_t config_volume() {
+  uint8_t value = 0;
+  if (!nvs_read_uint8("volume", &value)) {
+    return 100;
+  }
+  if (value > 100) {
+    return 100;
+  }
+  return value;
+}
+
+bool config_save_volume(uint8_t arg) {
+  return nvs_save_uint8("volume", arg);
+}

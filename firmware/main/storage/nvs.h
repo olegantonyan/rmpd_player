@@ -8,4 +8,7 @@
 bool nvs_read_string(const char *key, char *string, size_t max_length);
 bool nvs_save_string(const char *key, char *string);
 
+bool nvs_read_uint8(const char *key, uint8_t *value);
+bool nvs_save_uint8(const char *key, uint8_t value);
+
 #endif

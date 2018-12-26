@@ -126,7 +126,7 @@ static esp_err_t volume_post_handler(httpd_req_t *req) {
   }
   player_set_volume(volume->valueint);
 
-  httpd_resp_send(req, "", strlen(""));
+  httpd_resp_send(req, "", strlen("")); // TODO render status maybe?
 
   free(buffer);
   return ESP_OK;
@@ -201,7 +201,7 @@ static esp_err_t status_get_handler(httpd_req_t *req) {
     cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString("nothing"));
   }
   cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
-  cJSON_AddItemToObject(root, "volume", cJSON_CreateNumber(0)); //TODO!
+  cJSON_AddItemToObject(root, "volume", cJSON_CreateNumber(config_volume()));
   time_t now = time(NULL);
   struct tm timeinfo = { 0 };
   localtime_r(&now, &timeinfo);
