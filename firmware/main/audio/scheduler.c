@@ -22,7 +22,7 @@ static void scheduler_thread(void * args);
 bool scheduler_init() {
   player_init();
 
-  player_set_volume(95);
+  //player_set_volume(95);
 
   return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
 }

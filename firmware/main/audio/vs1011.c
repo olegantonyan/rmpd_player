@@ -151,9 +151,15 @@ void vs1011_set_volume(uint8_t percents) {
   if(percents > 100) {
     percents = 100;
   }
+  uint8_t scaled_percents = 50 * percents / 100 + 50; // scale: 50 - min, 100 - max; vs1011 has weirg volume range
+  if(scaled_percents > 100) {
+    scaled_percents = 100;
+  }
+
   // 0 max, 254 min
-  uint16_t value = 254 - percents * 254 / 100;
-  write_sci(SCI_VOL, value + value * 256);
+  uint16_t value = 254 - scaled_percents * 254 / 100;
+  uint16_t reg = value + value * 256;
+  write_sci(SCI_VOL, reg);
 }
 
 static void reset() {
@@ -174,6 +180,7 @@ static void write_sci(uint8_t addr, uint16_t data) {
   t.tx_data[1] = data & 0xFF;
   wait_for_dreq();
   ESP_ERROR_CHECK(spi_device_transmit(command_spi, &t));
+  wait_for_dreq(); // once dreq is high again we're done
   xSemaphoreGive(mutex);
 }
 
@@ -203,6 +210,7 @@ static void write_sdi(const uint8_t *buffer, size_t length) {
   t.tx_buffer = buffer;
   wait_for_dreq();
   ESP_ERROR_CHECK(spi_device_transmit(data_spi, &t));
+  wait_for_dreq(); // once dreq is high again we're done
   xSemaphoreGive(mutex);
 }
 

@@ -97,7 +97,7 @@ static esp_err_t volume_post_handler(httpd_req_t *req) {
     return ESP_FAIL;
   }
 
-  char *buffer = malloc(req->content_len);
+  char *buffer = malloc(req->content_len + 4);
   int ret = httpd_req_recv(req, buffer, req->content_len);
   if (ret <= 0) {
     free(buffer);
@@ -141,7 +141,7 @@ static esp_err_t settings_post_handler(httpd_req_t *req) {
     return ESP_FAIL;
   }
 
-  char *buffer = malloc(req->content_len);
+  char *buffer = malloc(req->content_len + 4);
   int ret = httpd_req_recv(req, buffer, req->content_len);
   if (ret <= 0) {
     free(buffer);
