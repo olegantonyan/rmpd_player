@@ -132,6 +132,11 @@ bool player_init() {
 
   player_set_volume(config_volume());
 
+  vs1011_set_bass_freqlimit(13); // 2-15
+  vs1011_set_bass_amplitude(6); // 0-15, 0=off
+  vs1011_set_treble_freqlimit(10); // 0-15
+  vs1011_set_treble_amplitude(5); // -8-7, 0=off
+
   return xTaskCreate(player_thread, "player", 4096, NULL, 15, NULL) == pdPASS;
 }
 
