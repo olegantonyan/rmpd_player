@@ -238,7 +238,7 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
   }
 
   size_t fname_size = HTTPD_MAX_URI_LEN + strlen(STORAGE_SPI_MOUNTPOINT);
-  char *fname = malloc(fname_size);
+  char *fname = malloc(fname_size + 4);
   memset(fname, 0, fname_size);
   strcpy(fname, STORAGE_SPI_MOUNTPOINT);
   strcat(fname, "/");
