@@ -1,7 +1,7 @@
 import { h } from "hyperapp"
 
 import Container from "./Container"
-import { HOME, SYSTEM, SETTINGS } from "../routes"
+import { HOME, SYSTEM, SETTINGS, AUDIO } from "../routes"
 
 export default ({ state, actions }) =>
   <div>
@@ -13,7 +13,7 @@ export default ({ state, actions }) =>
           <li class={ state.nav_current_route === HOME ? "pure-menu-item pure-menu-selected" : "pure-menu-item"}>
             <a class="pure-menu-link" onclick={() => actions.nav_route_to(HOME)}>
               <img src="play_circle_filled-24px.svg" class="centering" />
-              <span class="centering"> Home</span>
+              <span class="centering"> Playpack</span>
             </a>
           </li>
 

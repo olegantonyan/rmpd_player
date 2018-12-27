@@ -44,3 +44,51 @@ uint8_t config_volume() {
 bool config_save_volume(uint8_t arg) {
   return nvs_save_uint8("volume", arg);
 }
+
+uint8_t config_bass_freqlimit() {
+  uint8_t value = 0;
+  if (!nvs_read_uint8("bass_freqlim", &value)) {
+    return 0;
+  }
+  return value;
+}
+
+uint8_t config_bass_amplitude() {
+  uint8_t value = 0;
+  if (!nvs_read_uint8("bass_amp", &value)) {
+    return 0;
+  }
+  return value;
+}
+
+uint8_t config_treble_freqlimit() {
+  uint8_t value = 0;
+  if (!nvs_read_uint8("treb_freqlim", &value)) {
+    return 0;
+  }
+  return value;
+}
+
+int8_t config_treble_amplitude() {
+  uint8_t value = 0;
+  if (!nvs_read_uint8("treb_amp", &value)) {
+    return 0;
+  }
+  return (int8_t)value;
+}
+
+bool config_save_bass_freqlimit(uint8_t arg) {
+  return nvs_save_uint8("bass_freqlim", arg);
+}
+
+bool config_save_bass_amplitude(uint8_t arg) {
+  return nvs_save_uint8("bass_amp", arg);
+}
+
+bool config_save_treble_freqlimit(uint8_t arg) {
+  return nvs_save_uint8("treb_freqlim", arg);
+}
+
+bool config_save_treble_amplitude(int8_t arg) {
+  return nvs_save_uint8("treb_amp", (uint8_t)arg);
+}

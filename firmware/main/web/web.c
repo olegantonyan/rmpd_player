@@ -22,6 +22,8 @@ static void send_file(FILE* f, httpd_req_t *req);
 static esp_err_t root_get_handler(httpd_req_t *req);
 static esp_err_t settings_get_handler(httpd_req_t *req);
 static esp_err_t settings_post_handler(httpd_req_t *req);
+static esp_err_t tone_get_handler(httpd_req_t *req);
+static esp_err_t tone_post_handler(httpd_req_t *req);
 static esp_err_t volume_post_handler(httpd_req_t *req);
 static esp_err_t status_get_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
@@ -55,6 +57,18 @@ static httpd_uri_t volume_post = {
   .uri       = "/api/volume.json",
   .method    = HTTP_POST,
   .handler   = volume_post_handler
+};
+
+static httpd_uri_t tone_post = {
+  .uri       = "/api/tone.json",
+  .method    = HTTP_POST,
+  .handler   = tone_post_handler
+};
+
+static httpd_uri_t tone_get = {
+  .uri       = "/api/tone.json",
+  .method    = HTTP_GET,
+  .handler   = tone_get_handler
 };
 
 bool web_init() {
@@ -223,6 +237,80 @@ static esp_err_t status_get_handler(httpd_req_t *req) {
   return ESP_OK;
 }
 
+static esp_err_t tone_get_handler(httpd_req_t *req) {
+  httpd_resp_set_type(req, "application/json");
+
+  cJSON *root = cJSON_CreateObject();
+
+  cJSON_AddItemToObject(root, "bass_frequency_limit", cJSON_CreateNumber(config_bass_freqlimit()));
+  cJSON_AddItemToObject(root, "bass_amplitude", cJSON_CreateNumber(config_bass_amplitude()));
+  cJSON_AddItemToObject(root, "treble_frequency_limit", cJSON_CreateNumber(config_treble_freqlimit()));
+  cJSON_AddItemToObject(root, "treble_amplitude", cJSON_CreateNumber(config_treble_amplitude()));
+
+  char* json = malloc(1024);
+
+  if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
+    httpd_resp_send(req, json, strlen(json));
+  } else {
+    ESP_LOGE(TAG, "failed to build json response");
+    httpd_resp_send_500(req);
+  }
+
+  free(json);
+  cJSON_Delete(root);
+
+  return ESP_OK;
+}
+
+static esp_err_t tone_post_handler(httpd_req_t *req) {
+  if (req->content_len > 256) {
+    ESP_LOGE(TAG, "too big request body %d", req->content_len);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  char *buffer = malloc(req->content_len + 4);
+  int ret = httpd_req_recv(req, buffer, req->content_len);
+  if (ret <= 0) {
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+  buffer[ret] = '\0';
+
+  cJSON *json = cJSON_Parse(buffer);
+  if (json == NULL) {
+    const char *error_ptr = cJSON_GetErrorPtr();
+    if (error_ptr != NULL) {
+      ESP_LOGE(TAG, "json parse error: %s", error_ptr);
+    }
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  const cJSON *bass_frequency_limit = cJSON_GetObjectItemCaseSensitive(json, "bass_frequency_limit");
+  if (cJSON_IsNumber(bass_frequency_limit)) {
+    player_set_bass_freqlimit(bass_frequency_limit->valueint);
+  }
+  const cJSON *bass_amplitude = cJSON_GetObjectItemCaseSensitive(json, "bass_amplitude");
+  if (cJSON_IsNumber(bass_amplitude)) {
+    player_set_bass_amplitude(bass_amplitude->valueint);
+  }
+  const cJSON *treble_frequency_limit = cJSON_GetObjectItemCaseSensitive(json, "treble_frequency_limit");
+  if (cJSON_IsNumber(treble_frequency_limit)) {
+    player_set_treble_freqlimit(treble_frequency_limit->valueint);
+  }
+  const cJSON *treble_amplitude = cJSON_GetObjectItemCaseSensitive(json, "treble_amplitude");
+  if (cJSON_IsNumber(treble_amplitude)) {
+    player_set_treble_amplitude(treble_amplitude->valueint);
+  }
+
+  free(buffer);
+  httpd_resp_send(req, "", strlen("")); // TODO render status maybe?
+  return ESP_OK;
+}
+
 static esp_err_t root_get_handler(httpd_req_t *req) {
   if(strcmp("/", req->uri) == 0) {
     FILE* f = fopen(STORAGE_SPI_MOUNTPOINT "/index.html", "r");
@@ -298,6 +386,8 @@ static httpd_handle_t start_webserver() {
   httpd_register_uri_handler(server, &settings_post);
   httpd_register_uri_handler(server, &volume_post);
   httpd_register_uri_handler(server, &status_get);
+  httpd_register_uri_handler(server, &tone_get);
+  httpd_register_uri_handler(server, &tone_post);
   httpd_register_uri_handler(server, &root);
   return server;
 }

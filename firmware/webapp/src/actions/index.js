@@ -10,6 +10,7 @@ export default {
         break
       case SETTINGS:
         actions.settings.fetch()
+        actions.audio.fetch()
         break
     }
     return { nav_current_route: value, nav_menu_open: false }
@@ -58,8 +59,16 @@ export default {
 
   audio: {
     update: value => state => {
-      console.log(value)
+      fetch("/api/tone.json", { method: "POST", body: JSON.stringify(value), headers: { "Content-Type": "application/json" } })
       return value
+    },
+
+    set: value => state => { return value },
+
+    fetch: () => (state, actions) => {
+      fetch("/api/tone.json")
+        .then(data => data.json())
+        .then((data) => actions.set(data))
     },
   }
 }

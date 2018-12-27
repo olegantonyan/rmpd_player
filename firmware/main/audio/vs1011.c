@@ -147,7 +147,7 @@ bool vs1011_init() {
   return codec_init();
 }
 
-void vs1011_set_volume(uint8_t percents) {
+uint16_t vs1011_set_volume(uint8_t percents) {
   if(percents > 100) {
     percents = 100;
   }
@@ -160,9 +160,10 @@ void vs1011_set_volume(uint8_t percents) {
   uint16_t value = 254 - scaled_percents * 254 / 100;
   uint16_t reg = value + value * 256;
   write_sci(SCI_VOL, reg);
+  return reg;
 }
 
-void vs1011_set_bass_freqlimit(uint8_t value) { // 2-15
+uint16_t vs1011_set_bass_freqlimit(uint8_t value) { // 2-15
   if (value < 2) {
     value = 2;
   }
@@ -172,27 +173,30 @@ void vs1011_set_bass_freqlimit(uint8_t value) { // 2-15
   uint16_t current = read_sci(SCI_BASS);
   uint16_t reg = (current & ~SB_FREQLIMIT_MASK) | ((value << SB_FREQLIMIT_B) & SB_FREQLIMIT_MASK);
   write_sci(SCI_BASS, reg);
+  return reg;
 }
 
-void vs1011_set_bass_amplitude(uint8_t value) {  // 0-15, 0=off
+uint16_t vs1011_set_bass_amplitude(uint8_t value) {  // 0-15, 0=off
   if (value > 15) {
     value = 15;
   }
   uint16_t current = read_sci(SCI_BASS);
   uint16_t reg = (current & ~SB_AMPLITUDE_MASK) | ((value << SB_AMPLITUDE_B) & SB_AMPLITUDE_MASK);
   write_sci(SCI_BASS, reg);
+  return reg;
 }
 
-void vs1011_set_treble_freqlimit(uint8_t value) { // 0-15
+uint16_t vs1011_set_treble_freqlimit(uint8_t value) { // 0-15
   if (value > 15) {
     value = 15;
   }
   uint16_t current = read_sci(SCI_BASS);
   uint16_t reg = (current & ~ST_FREQLIMIT_MASK) | ((value << ST_FREQLIMIT_B) & ST_FREQLIMIT_MASK);
   write_sci(SCI_BASS, reg);
+  return reg;
 }
 
-void vs1011_set_treble_amplitude(int8_t value) { // -8-7, 0=off
+uint16_t vs1011_set_treble_amplitude(int8_t value) { // -8-7, 0=off
   if (value < -8) {
     value = -8;
   }
@@ -202,6 +206,7 @@ void vs1011_set_treble_amplitude(int8_t value) { // -8-7, 0=off
   uint16_t current = read_sci(SCI_BASS);
   uint16_t reg = (current & ~ST_AMPLITUDE_MASK) | ((value << ST_AMPLITUDE_B) & ST_AMPLITUDE_MASK);
   write_sci(SCI_BASS, reg);
+  return reg;
 }
 
 static void reset() {

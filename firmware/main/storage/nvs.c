@@ -25,7 +25,7 @@ bool nvs_read_string(const char *key, char *string, size_t max_length) {
   close(h);
   xSemaphoreGive(mutex);
   if (ret != ESP_OK) {
-    ESP_LOGE(TAG, "failed to read from nvs: %s", esp_err_to_name(ret));
+    ESP_LOGE(TAG, "failed to read %s from nvs: %s", key, esp_err_to_name(ret));
   }
   return ret == ESP_OK;
 }
@@ -38,7 +38,7 @@ bool nvs_save_string(const char *key, char *string) {
   close(h);
   xSemaphoreGive(mutex);
   if (ret != ESP_OK) {
-    ESP_LOGE(TAG, "failed to write to nvs: %s", esp_err_to_name(ret));
+    ESP_LOGE(TAG, "failed to write %s to nvs: %s", key, esp_err_to_name(ret));
   }
   return ret == ESP_OK;
 }
@@ -52,7 +52,7 @@ bool nvs_read_uint8(const char *key, uint8_t *value) {
   close(h);
   xSemaphoreGive(mutex);
   if (ret != ESP_OK) {
-    ESP_LOGE(TAG, "failed to read from nvs: %s", esp_err_to_name(ret));
+    ESP_LOGE(TAG, "failed to read %s from nvs: %s", key, esp_err_to_name(ret));
   }
   return ret == ESP_OK;
 }
@@ -65,7 +65,7 @@ bool nvs_save_uint8(const char *key, uint8_t value) {
   close(h);
   xSemaphoreGive(mutex);
   if (ret != ESP_OK) {
-    ESP_LOGE(TAG, "failed to write to nvs: %s", esp_err_to_name(ret));
+    ESP_LOGE(TAG, "failed to write %s to nvs: %s", key, esp_err_to_name(ret));
   }
   return ret == ESP_OK;
 }

@@ -131,11 +131,10 @@ bool player_init() {
   }
 
   player_set_volume(config_volume());
-
-  vs1011_set_bass_freqlimit(13); // 2-15
-  vs1011_set_bass_amplitude(6); // 0-15, 0=off
-  vs1011_set_treble_freqlimit(10); // 0-15
-  vs1011_set_treble_amplitude(5); // -8-7, 0=off
+  player_set_bass_freqlimit(config_bass_freqlimit());
+  player_set_bass_amplitude(config_bass_amplitude());
+  player_set_treble_freqlimit(config_treble_freqlimit());
+  player_set_treble_amplitude(config_treble_amplitude());
 
   return xTaskCreate(player_thread, "player", 4096, NULL, 15, NULL) == pdPASS;
 }
@@ -147,6 +146,52 @@ void player_set_volume(uint8_t percents) {
   vs1011_set_volume(percents);
   if (percents != config_volume()) {
     config_save_volume(percents);
+  }
+}
+
+void player_set_bass_freqlimit(uint8_t value) { // 2-15          //  20Hz - 150Hz
+  if (value < 2) {
+    value = 2;
+  }
+  if (value > 15) {
+    value = 15;
+  }
+  vs1011_set_bass_freqlimit(value);
+  if (value != config_bass_freqlimit()) {
+    config_save_bass_freqlimit(value);
+  }
+}
+
+void player_set_bass_amplitude(uint8_t value) { // 0-15, 0=off   //  0dB  - 15dB
+  if (value > 15) {
+    value = 15;
+  }
+  vs1011_set_bass_amplitude(value);
+  if (value != config_bass_amplitude()) {
+    config_save_bass_amplitude(value);
+  }
+}
+
+void player_set_treble_freqlimit(uint8_t value) { // 0-15        //  0KHz - 15KHz
+  if (value > 15) {
+    value = 15;
+  }
+  vs1011_set_treble_freqlimit(value);
+  if (value != config_treble_freqlimit()) {
+    config_save_treble_freqlimit(value);
+  }
+}
+
+void player_set_treble_amplitude(int8_t value) { // -8-7, 0=off  // -12dB - 10.5dB
+  if (value < -8) {
+    value = -8;
+  }
+  if (value > 7) {
+    value = 7;
+  }
+  vs1011_set_treble_amplitude(value);
+  if (value != config_treble_amplitude()) {
+    config_save_treble_amplitude(value);
   }
 }
 
