@@ -16,5 +16,12 @@ export default {
     percent_pos: 0,
     time: "",
     volume: 0
+  },
+
+  audio: {
+    bass_frequency_limit: 0,
+    bass_amplitude: 0,
+    treble_frequency_limit: 0,
+    treble_amplitude: 0
   }
 };

@@ -54,5 +54,12 @@ export default {
       fetch("/api/volume.json", { method: "POST", body: JSON.stringify({volume: Number(value)}), headers: { "Content-Type": "application/json" } })
       return { volume: value }
     },
+  },
+
+  audio: {
+    update: value => state => {
+      console.log(value)
+      return value
+    },
   }
 }
