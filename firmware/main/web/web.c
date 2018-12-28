@@ -15,6 +15,7 @@
 #include "audio/player.h"
 #include "util/files.h"
 #include "audio/player.h"
+#include "audio/scheduler.h"
 
 static const char *TAG = "web";
 
@@ -26,8 +27,10 @@ static esp_err_t tone_get_handler(httpd_req_t *req);
 static esp_err_t tone_post_handler(httpd_req_t *req);
 static esp_err_t volume_post_handler(httpd_req_t *req);
 static esp_err_t status_get_handler(httpd_req_t *req);
+static esp_err_t playback_post_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
 static void render_settings(httpd_req_t *req);
+static void render_status(httpd_req_t *req);
 
 static httpd_uri_t root = {
   .uri       = "/*",
@@ -71,6 +74,12 @@ static httpd_uri_t tone_get = {
   .handler   = tone_get_handler
 };
 
+static httpd_uri_t playback_post = {
+  .uri       = "/api/playback.json",
+  .method    = HTTP_POST,
+  .handler   = playback_post_handler
+};
+
 bool web_init() {
   return start_webserver() != NULL;
 }
@@ -85,6 +94,39 @@ static void render_settings(httpd_req_t *req) {
 
   cJSON_AddItemToObject(root, "wifi_ssid", cJSON_CreateString(ssid));
   cJSON_AddItemToObject(root, "wifi_pass", cJSON_CreateString(pass));
+
+  char* json = malloc(1024);
+
+  if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
+    httpd_resp_send(req, json, strlen(json));
+  } else {
+    ESP_LOGE(TAG, "failed to build json response");
+    httpd_resp_send_500(req);
+  }
+
+  free(json);
+  cJSON_Delete(root);
+}
+
+static void render_status(httpd_req_t *req) {
+  httpd_resp_set_type(req, "application/json");
+
+  cJSON *root = cJSON_CreateObject();
+
+  char now_playing[800] = { 0 };
+  if (player_get_now_playing(now_playing, sizeof(now_playing))) {
+    cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString(now_playing));
+  } else {
+    cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString("nothing"));
+  }
+  cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
+  cJSON_AddItemToObject(root, "volume", cJSON_CreateNumber(config_volume()));
+  time_t now = time(NULL);
+  struct tm timeinfo = { 0 };
+  localtime_r(&now, &timeinfo);
+  char time_buf[80] = { 0 };
+  strftime(time_buf, sizeof(time_buf), "%H:%M:%S %d-%m-%Y %Z", &timeinfo);
+  cJSON_AddItemToObject(root, "time", cJSON_CreateString(time_buf));
 
   char* json = malloc(1024);
 
@@ -139,10 +181,9 @@ static esp_err_t volume_post_handler(httpd_req_t *req) {
     return ESP_FAIL;
   }
   player_set_volume(volume->valueint);
-
-  httpd_resp_send(req, "", strlen("")); // TODO render status maybe?
-
   free(buffer);
+
+  render_status(req);
   return ESP_OK;
 }
 
@@ -204,36 +245,7 @@ exit:
 }
 
 static esp_err_t status_get_handler(httpd_req_t *req) {
-  httpd_resp_set_type(req, "application/json");
-
-  cJSON *root = cJSON_CreateObject();
-
-  char now_playing[800] = { 0 };
-  if (player_get_now_playing(now_playing, sizeof(now_playing))) {
-    cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString(now_playing));
-  } else {
-    cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString("nothing"));
-  }
-  cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
-  cJSON_AddItemToObject(root, "volume", cJSON_CreateNumber(config_volume()));
-  time_t now = time(NULL);
-  struct tm timeinfo = { 0 };
-  localtime_r(&now, &timeinfo);
-  char time_buf[80] = { 0 };
-  strftime(time_buf, sizeof(time_buf), "%H:%M:%S %d-%m-%Y %Z", &timeinfo);
-  cJSON_AddItemToObject(root, "time", cJSON_CreateString(time_buf));
-
-  char* json = malloc(1024);
-
-  if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
-    httpd_resp_send(req, json, strlen(json));
-  } else {
-    ESP_LOGE(TAG, "failed to build json response");
-    httpd_resp_send_500(req);
-  }
-
-  free(json);
-  cJSON_Delete(root);
+  render_status(req);
   return ESP_OK;
 }
 
@@ -305,9 +317,49 @@ static esp_err_t tone_post_handler(httpd_req_t *req) {
   if (cJSON_IsNumber(treble_amplitude)) {
     player_set_treble_amplitude(treble_amplitude->valueint);
   }
-
   free(buffer);
-  httpd_resp_send(req, "", strlen("")); // TODO render status maybe?
+
+  render_status(req);
+  return ESP_OK;
+}
+
+static esp_err_t playback_post_handler(httpd_req_t *req) {
+  if (req->content_len > 128) {
+    ESP_LOGE(TAG, "too big request body %d", req->content_len);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  char *buffer = malloc(req->content_len + 4);
+  int ret = httpd_req_recv(req, buffer, req->content_len);
+  if (ret <= 0) {
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+  buffer[ret] = '\0';
+
+  cJSON *json = cJSON_Parse(buffer);
+  if (json == NULL) {
+    const char *error_ptr = cJSON_GetErrorPtr();
+    if (error_ptr != NULL) {
+      ESP_LOGE(TAG, "json parse error: %s", error_ptr);
+    }
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  const cJSON *action = cJSON_GetObjectItemCaseSensitive(json, "action");
+  if (cJSON_IsString(action) && (action->valuestring != NULL)) {
+    if(strcmp(action->valuestring, "next") == 0) {
+      scheduler_next();
+    } else if(strcmp(action->valuestring, "prev") == 0) {
+      scheduler_prev();
+    }
+  }
+  
+  render_status(req);
   return ESP_OK;
 }
 
@@ -388,6 +440,7 @@ static httpd_handle_t start_webserver() {
   httpd_register_uri_handler(server, &status_get);
   httpd_register_uri_handler(server, &tone_get);
   httpd_register_uri_handler(server, &tone_post);
+  httpd_register_uri_handler(server, &playback_post);
   httpd_register_uri_handler(server, &root);
   return server;
 }

@@ -28,6 +28,16 @@ bool scheduler_init() {
   return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
 }
 
+bool scheduler_next() {
+  ESP_LOGI(TAG, "next");
+  return true;
+}
+
+bool scheduler_prev() {
+  ESP_LOGI(TAG, "prev");
+  return true;
+}
+
 static void scheduler_thread(void * args) {
   while(true) {
 

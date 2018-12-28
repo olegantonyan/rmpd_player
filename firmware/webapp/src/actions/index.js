@@ -16,15 +16,6 @@ export default {
     return { nav_current_route: value, nav_menu_open: false }
   },
 
-  home: {
-    prev: () => (state, actions) => {
-      console.log("prev");
-    },
-    next: () => (state, actions) => {
-      console.log("next");
-    },
-  },
-
   settings: {
     fetch: () => (state, actions) => {
       fetch("/api/settings.json")
@@ -54,6 +45,17 @@ export default {
     update_volume: value => (state, actions) => {
       fetch("/api/volume.json", { method: "POST", body: JSON.stringify({volume: Number(value)}), headers: { "Content-Type": "application/json" } })
       return { volume: value }
+    },
+
+    prev: () => (state, actions) => {
+      fetch("/api/playback.json", { method: "POST", body: JSON.stringify({ action: "prev" }), headers: { "Content-Type": "application/json" } })
+        .then(data => data.json())
+        .then((data) => { actions.update(data) })
+    },
+    next: () => (state, actions) => {
+      fetch("/api/playback.json", { method: "POST", body: JSON.stringify({ action: "next" }), headers: { "Content-Type": "application/json" } })
+        .then(data => data.json())
+        .then((data) => { actions.update(data) })
     },
   },
 

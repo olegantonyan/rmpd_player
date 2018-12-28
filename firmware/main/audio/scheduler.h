@@ -5,5 +5,7 @@
 #include <stdint.h>
 
 bool scheduler_init();
+bool scheduler_next();
+bool scheduler_prev();
 
 #endif
