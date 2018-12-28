@@ -142,11 +142,13 @@ static void render_status(httpd_req_t *req) {
 }
 
 static esp_err_t settings_get_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
   render_settings(req);
   return ESP_OK;
 }
 
 static esp_err_t volume_post_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
   if (req->content_len > 128) {
     ESP_LOGE(TAG, "too big request body %d", req->content_len);
     httpd_resp_send_500(req);
@@ -188,6 +190,7 @@ static esp_err_t volume_post_handler(httpd_req_t *req) {
 }
 
 static esp_err_t settings_post_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
   bool ok = true;
 
   if (req->content_len > 2048) {
@@ -245,11 +248,13 @@ exit:
 }
 
 static esp_err_t status_get_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
   render_status(req);
   return ESP_OK;
 }
 
 static esp_err_t tone_get_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
   httpd_resp_set_type(req, "application/json");
 
   cJSON *root = cJSON_CreateObject();
@@ -275,6 +280,7 @@ static esp_err_t tone_get_handler(httpd_req_t *req) {
 }
 
 static esp_err_t tone_post_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
   if (req->content_len > 256) {
     ESP_LOGE(TAG, "too big request body %d", req->content_len);
     httpd_resp_send_500(req);
@@ -324,6 +330,7 @@ static esp_err_t tone_post_handler(httpd_req_t *req) {
 }
 
 static esp_err_t playback_post_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
   if (req->content_len > 128) {
     ESP_LOGE(TAG, "too big request body %d", req->content_len);
     httpd_resp_send_500(req);
@@ -358,12 +365,13 @@ static esp_err_t playback_post_handler(httpd_req_t *req) {
       scheduler_prev();
     }
   }
-  
+
   render_status(req);
   return ESP_OK;
 }
 
 static esp_err_t root_get_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
   if(strcmp("/", req->uri) == 0) {
     FILE* f = fopen(STORAGE_SPI_MOUNTPOINT "/index.html", "r");
     if (f == NULL) {
