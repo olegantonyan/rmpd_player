@@ -32,5 +32,12 @@ export default ({ state, actions }) =>
           </li>
         </ul>
       </div>
+
+      <div id="volume-control-block">
+        <label for="volume-control" class="centering">Volume</label>
+        <img src="volume_up-24px.svg" class="centering" />
+        <input type="range" class="vertical" orient="vertical" min="0" max="100" step="5" value={state.status.volume} class="slider" id="volume-control" class="centering" oninput={e => actions.status.update_volume(e.target.value)}/>
+        <span>{state.status.volume}%</span>
+      </div>
     </div>
   </div>

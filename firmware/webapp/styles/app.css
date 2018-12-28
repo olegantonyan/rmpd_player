@@ -10,3 +10,14 @@ footer {
   vertical-align: middle;
   display: inline;
 }
+
+input.vertical {
+	-webkit-appearance: slider-vertical;
+	writing-mode: bt-lr;
+}
+
+
+#volume-control-block {
+  position:absolute;
+  bottom:10px;
+}

@@ -2,9 +2,7 @@ import { h } from 'hyperapp'
 
 export default ({ state, actions }) =>
   <div id="home">
-    <div class="header">
-      <h1></h1>
-    </div>
+    <br />
 
     <div class="content">
       <div class="player-control">
