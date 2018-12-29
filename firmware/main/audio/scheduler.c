@@ -18,6 +18,7 @@
 static const char *TAG = "scheduler";
 
 static void scheduler_thread(void * args);
+static void recurse_dir(const char *path, uint8_t depth);
 
 bool scheduler_init() {
   if (!player_init()) {
@@ -39,31 +40,54 @@ bool scheduler_prev() {
 }
 
 static void scheduler_thread(void * args) {
+  DIR *dp = opendir(STORAGE_SD_MOUNTPOINT);
+  if (dp == NULL) {
+    ESP_LOGE(TAG, "cannot open root directory");
+    vTaskDelete(NULL);
+    return;
+  }
+  closedir(dp);
   while(true) {
-
-    DIR *dp = opendir(STORAGE_SD_MOUNTPOINT);
-    if (dp == NULL) {
-      ESP_LOGE(TAG, "error opening directory");
-    } else {
-      while(true) {
-        struct dirent *ep = readdir(dp);
-        if (!ep) {
-          break;
-        }
-
-        if (string_ends_with(ep->d_name, ".mp3")) {
-          char fullname[1024] = { 0 };
-          snprintf(fullname, sizeof(fullname), "%s/%s", STORAGE_SD_MOUNTPOINT, ep->d_name);
-          ESP_LOGD(TAG, "starting '%s'", fullname);
-          player_start(fullname, false);
-        } else {
-          ESP_LOGD(TAG, "'%s' is not mp3", ep->d_name);
-        }
-        taskYIELD();
-      }
-      closedir(dp);
-    }
-
+    recurse_dir(STORAGE_SD_MOUNTPOINT, 0);
     taskYIELD();
+  }
+}
+
+static void recurse_dir(const char *path, uint8_t depth) {
+  if (depth > 20) {
+    ESP_LOGW(TAG, "directory recurse max depth reached");
+    return;
+  }
+  DIR *dp = opendir(path);
+  if (dp == NULL) {
+    ESP_LOGE(TAG, "error opening directory %s", path);
+  } else {
+    while(true) {
+      struct dirent *ep = readdir(dp);
+      if (!ep) {
+        break;
+      }
+      if (ep->d_type == DT_DIR) {
+        if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0) {
+          continue;
+        }
+        size_t newpath_len = strlen(path) + strlen(ep->d_name) + 10;
+        char *newpath = malloc(newpath_len);
+        snprintf(newpath, newpath_len, "%s/%s", path, ep->d_name);
+        recurse_dir(newpath, depth + 1);
+        free(newpath);
+      } else if (string_ends_with(ep->d_name, ".mp3")) {
+        size_t name_len = strlen(path) + strlen(ep->d_name) + 10;
+        char *fullname = malloc(name_len);
+        snprintf(fullname, name_len, "%s/%s", path, ep->d_name);
+        ESP_LOGD(TAG, "starting '%s'", fullname);
+        player_start(fullname, false);
+        free(fullname);
+      } else {
+        ESP_LOGD(TAG, "'%s' is not mp3", ep->d_name);
+      }
+      taskYIELD();
+    }
+    closedir(dp);
   }
 }
