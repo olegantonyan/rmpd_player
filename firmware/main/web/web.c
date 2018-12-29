@@ -117,7 +117,7 @@ static void render_status(httpd_req_t *req) {
   if (player_get_now_playing(now_playing, sizeof(now_playing))) {
     cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString(now_playing));
   } else {
-    cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString("nothing"));
+    cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString(""));
   }
   cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
   cJSON_AddItemToObject(root, "volume", cJSON_CreateNumber(config_volume()));

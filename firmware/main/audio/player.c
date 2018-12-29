@@ -84,6 +84,9 @@ bool player_start(const char *fname, bool async) {
 
 bool player_stop() {
   ESP_LOGD(TAG, "stopping");
+  if (get_state() == STOPPED) {
+    return true;
+  }
   vs1011_stop();
   return wait_for_state(STOPPED, portMAX_DELAY);
 }
@@ -125,9 +128,9 @@ bool player_init() {
     return false;
   }
   event_group = xEventGroupCreate();
-    if (event_group == NULL) {
-      ESP_LOGE(TAG, "cannot create event group");
-      return false;
+  if (event_group == NULL) {
+    ESP_LOGE(TAG, "cannot create event group");
+    return false;
   }
 
   player_set_volume(config_volume());

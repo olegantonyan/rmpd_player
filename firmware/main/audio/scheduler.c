@@ -17,12 +17,23 @@
 
 static const char *TAG = "scheduler";
 
+static EventGroupHandle_t event_group;
+const EventBits_t PLAYER_STARTED_BIT = BIT0;
+
 static void scheduler_thread(void * args);
 static void recurse_dir(const char *path, uint8_t depth);
+static void play(const char *path);
+static void stop();
 
 bool scheduler_init() {
   if (!player_init()) {
     ESP_LOGE(TAG, "error initializing player");
+    return false;
+  }
+
+  event_group = xEventGroupCreate();
+  if (event_group == NULL) {
+    ESP_LOGE(TAG, "cannot create event group");
     return false;
   }
 
@@ -32,7 +43,7 @@ bool scheduler_init() {
 bool scheduler_next() {
   ESP_LOGD(TAG, "next");
   // this will force skip to the next track in scheduler_thread
-  player_stop();
+  stop();
   return true;
 }
 
@@ -83,7 +94,7 @@ static void recurse_dir(const char *path, uint8_t depth) {
         char *fullname = malloc(name_len);
         snprintf(fullname, name_len, "%s/%s", path, ep->d_name);
         ESP_LOGD(TAG, "starting '%s'", fullname);
-        player_start(fullname, false);
+        play(fullname);
         free(fullname);
       } else {
         ESP_LOGD(TAG, "'%s' is not mp3", ep->d_name);
@@ -92,4 +103,15 @@ static void recurse_dir(const char *path, uint8_t depth) {
     }
     closedir(dp);
   }
+}
+
+static void play(const char *path) {
+  xEventGroupSetBits(event_group, PLAYER_STARTED_BIT);
+  player_start(path, false);
+}
+
+static void stop() {
+  xEventGroupClearBits(event_group, PLAYER_STARTED_BIT);
+  player_stop();
+  xEventGroupWaitBits(event_group, PLAYER_STARTED_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
 }
