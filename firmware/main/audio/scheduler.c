@@ -17,9 +17,6 @@
 
 static const char *TAG = "scheduler";
 
-static EventGroupHandle_t event_group;
-const EventBits_t PLAYER_STARTED_BIT = BIT0;
-
 static void scheduler_thread(void * args);
 static void recurse_dir(const char *path, uint8_t depth);
 static void play(const char *path);
@@ -28,12 +25,6 @@ static void stop();
 bool scheduler_init() {
   if (!player_init()) {
     ESP_LOGE(TAG, "error initializing player");
-    return false;
-  }
-
-  event_group = xEventGroupCreate();
-  if (event_group == NULL) {
-    ESP_LOGE(TAG, "cannot create event group");
     return false;
   }
 
@@ -106,12 +97,9 @@ static void recurse_dir(const char *path, uint8_t depth) {
 }
 
 static void play(const char *path) {
-  xEventGroupSetBits(event_group, PLAYER_STARTED_BIT);
   player_start(path, false);
 }
 
 static void stop() {
-  xEventGroupClearBits(event_group, PLAYER_STARTED_BIT);
   player_stop();
-  xEventGroupWaitBits(event_group, PLAYER_STARTED_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
 }
