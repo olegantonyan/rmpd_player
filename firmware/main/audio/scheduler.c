@@ -30,12 +30,14 @@ bool scheduler_init() {
 }
 
 bool scheduler_next() {
-  ESP_LOGI(TAG, "next");
+  ESP_LOGD(TAG, "next");
+  // this will force skip to the next track in scheduler_thread
+  player_stop();
   return true;
 }
 
 bool scheduler_prev() {
-  ESP_LOGI(TAG, "prev");
+  ESP_LOGD(TAG, "prev");
   return true;
 }
 

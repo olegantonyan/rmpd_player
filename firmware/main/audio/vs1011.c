@@ -72,6 +72,8 @@ void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) 
 
 //  write_sdi(file_buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
 
+  vs1011_transient_mute(false);
+
   while ((bytes_in_buffer = fread(file_buffer, 1, sizeof(file_buffer), fp)) > 0) {
     uint8_t *buf_play = file_buffer;
     while (bytes_in_buffer) {
@@ -97,7 +99,7 @@ void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) 
       if (af != af_mp3 && af != af_unknown) {
         write_sci(SCI_MODE, read_sci(SCI_MODE) | SM_OUTOFWAV);
         memset(file_buffer, 0, sizeof(file_buffer));
-        for(uint32_t i = 0; i < 1000; i++) {
+        for(uint32_t i = 0; i < 512; i++) {
           write_sdi(file_buffer, VS_MAX_CHUNK_SIZE);
           if (!(read_sci(SCI_MODE) & SM_OUTOFWAV)) {
             break;
@@ -106,6 +108,12 @@ void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) 
       }
       break;
     }
+  }
+  vs1011_transient_mute(true);
+
+  memset(file_buffer, 0, sizeof(file_buffer));
+  for(uint32_t i = 0; i < 64; i++) {
+    write_sdi(file_buffer, VS_MAX_CHUNK_SIZE);
   }
 
   if (callback != NULL) {
