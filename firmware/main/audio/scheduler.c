@@ -19,6 +19,11 @@
 
 static const char *TAG = "scheduler";
 
+static SemaphoreHandle_t mutex = NULL;
+static uint16_t current_index = 0;
+static uint16_t next_index = 0;
+static uint16_t files_total = 0;
+
 static void scheduler_thread(void * args);
 static uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, void (*callback)(const char *fullname, uint16_t index));
 static void play(const char *path);
@@ -30,19 +35,40 @@ bool scheduler_init() {
     ESP_LOGE(TAG, "error initializing player");
     return false;
   }
+  mutex = xSemaphoreCreateMutex();
+  if (mutex == NULL) {
+    ESP_LOGE(TAG, "cannot create mutex");
+    return false;
+  }
 
   return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
 }
 
 bool scheduler_next() {
   ESP_LOGD(TAG, "next");
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  if (current_index >= (files_total - 1)) {
+    next_index = 0;
+  } else {
+    next_index = current_index + 1;
+  }
   // this will force skip to the next track in scheduler_thread
   stop();
+  xSemaphoreGive(mutex);
   return true;
 }
 
 bool scheduler_prev() {
   ESP_LOGD(TAG, "prev");
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  if (current_index == 0) {
+    next_index = files_total - 1;
+  } else {
+    next_index = current_index - 1;
+  }
+  // this will force skip to the next track in scheduler_thread
+  stop();
+  xSemaphoreGive(mutex);
   return true;
 }
 
@@ -62,6 +88,7 @@ static void scheduler_thread(void * args) {
     vTaskDelete(NULL);
     return;
   }
+  files_total = (uint16_t)total_mediafiles;
 
   while(true) {
     uint16_t index = 0;
@@ -120,8 +147,18 @@ static uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, vo
 }
 
 static void on_medifile_callback(const char *path, uint16_t index) {
-  ESP_LOGD(TAG, "index %u : %s", index, path);
-  play(path);
+  ESP_LOGD(TAG, "index %u next_index %u : %s", index, next_index, path);
+  if (index == next_index) {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    current_index = index;
+    if (next_index >= (files_total - 1)) {
+      next_index = 0;
+    } else {
+      next_index = current_index + 1;
+    }
+    xSemaphoreGive(mutex);
+    play(path);
+  }
 }
 
 static void play(const char *path) {
