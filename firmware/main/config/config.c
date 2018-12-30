@@ -92,3 +92,15 @@ bool config_save_treble_freqlimit(uint8_t arg) {
 bool config_save_treble_amplitude(int8_t arg) {
   return nvs_save_uint8("treb_amp", (uint8_t)arg);
 }
+
+bool config_random() {
+  uint8_t value = 0;
+  if (!nvs_read_uint8("random", &value)) {
+    return false;
+  }
+  return value == 0 ? false : true;
+}
+
+bool config_save_random(bool arg) {
+  return nvs_save_uint8("random", arg ? 1 : 0);
+}

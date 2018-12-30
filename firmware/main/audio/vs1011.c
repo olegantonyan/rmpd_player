@@ -88,8 +88,7 @@ void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) 
       callback(pos, filesize);
     }
 
-    // TODO callback to player with position
-    //uint16_t sample_rate = read_sci(SCI_AUDATA);;
+    //uint16_t sample_rate = read_sci(SCI_AUDATA);
     //uint16_t h1 = read_sci(SCI_HDAT1); // format
     //uint16_t h0 = read_sci(SCI_HDAT0); // format
     //printf("%uKiB %1ds %d    H0: 0x%X H1: 0x%X\n", pos / 1024, read_sci(SCI_DECODE_TIME), sample_rate, h0, h1);

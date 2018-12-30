@@ -121,6 +121,7 @@ static void render_status(httpd_req_t *req) {
   }
   cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
   cJSON_AddItemToObject(root, "volume", cJSON_CreateNumber(config_volume()));
+  cJSON_AddItemToObject(root, "random", cJSON_CreateBool(config_random()));
   time_t now = time(NULL);
   struct tm timeinfo = { 0 };
   localtime_r(&now, &timeinfo);
@@ -364,6 +365,12 @@ static esp_err_t playback_post_handler(httpd_req_t *req) {
     } else if(strcmp(action->valuestring, "prev") == 0) {
       scheduler_prev();
     }
+  }
+  const cJSON *random = cJSON_GetObjectItemCaseSensitive(json, "random");
+  if (cJSON_IsTrue(random)) {
+    scheduler_set_random(true);
+  } else if (cJSON_IsFalse(random)) {
+    scheduler_set_random(false);
   }
 
   render_status(req);

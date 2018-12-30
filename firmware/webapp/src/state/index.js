@@ -15,7 +15,8 @@ export default {
     now_playing: "",
     percent_pos: 0,
     time: "",
-    volume: 0
+    volume: 0,
+    random: false
   },
 
   audio: {

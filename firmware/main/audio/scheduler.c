@@ -16,6 +16,7 @@
 #include "storage/sd.h"
 #include <dirent.h>
 #include "util/files.h"
+#include "config/config.h"
 
 static const char *TAG = "scheduler";
 
@@ -43,7 +44,18 @@ bool scheduler_init() {
     return false;
   }
 
+  scheduler_set_random(config_random());
+
   return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
+}
+
+bool scheduler_set_random(bool arg) {
+  ESP_LOGI(TAG, "set random %d", (int)arg);
+
+  if (arg != config_random()) {
+    config_save_random(arg);
+  }
+  return true;
 }
 
 bool scheduler_next() {

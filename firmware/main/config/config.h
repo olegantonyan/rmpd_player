@@ -22,4 +22,7 @@ bool config_save_bass_amplitude(uint8_t arg);
 bool config_save_treble_freqlimit(uint8_t arg);
 bool config_save_treble_amplitude(int8_t arg);
 
+bool config_random();
+bool config_save_random(bool arg);
+
 #endif

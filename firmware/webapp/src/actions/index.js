@@ -59,6 +59,11 @@ export default {
         .then(data => data.json())
         .then((data) => { actions.update(data) })
     },
+    set_random: value => (state, actions) => {
+      fetch("/api/playback.json", { method: "POST", body: JSON.stringify({ random: value }), headers: { "Content-Type": "application/json", "Connection": "close" } })
+        .then(data => data.json())
+        .then((data) => { actions.update(data) })
+    }
   },
 
   audio: {
