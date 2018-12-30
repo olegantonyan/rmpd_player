@@ -19,13 +19,11 @@
 
 static const char *TAG = "scheduler";
 
-static uint32_t total_mediafiles = 0;
-
 static void scheduler_thread(void * args);
-static void recurse_dir(const char *path, uint8_t depth, void (*callback)(const char *fullname));
+static uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, void (*callback)(const char *fullname, uint16_t index));
 static void play(const char *path);
 static void stop();
-static void on_media_file_found(const char *path);
+static void on_medifile_callback(const char *path, uint16_t index);
 
 bool scheduler_init() {
   if (!player_init()) {
@@ -57,59 +55,73 @@ static void scheduler_thread(void * args) {
   }
   closedir(dp);
 
-  total_mediafiles = 0;
-  recurse_dir(STORAGE_SD_MOUNTPOINT, 0, on_media_file_found);
+  uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, NULL, NULL);
   ESP_LOGI(TAG, "total media files: %u", total_mediafiles);
+  if (total_mediafiles > 65535) {
+    ESP_LOGE(TAG, "too many media files");
+    vTaskDelete(NULL);
+    return;
+  }
 
   while(true) {
-    recurse_dir(STORAGE_SD_MOUNTPOINT, 0, play);
+    uint16_t index = 0;
+    recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback);
     taskYIELD();
   }
 }
 
-static void recurse_dir(const char *path, uint8_t depth, void (*callback)(const char *fullname)) {
+static uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, void (*callback)(const char *fullname, uint16_t index)) {
   if (depth > 10) {
     ESP_LOGW(TAG, "directory recurse max depth reached");
-    return;
+    return 0;
   }
+
   DIR *dp = opendir(path);
   if (dp == NULL) {
     ESP_LOGE(TAG, "error opening directory %s: %s", path, strerror(errno));
-  } else {
-    while(true) {
-      struct dirent *ep = readdir(dp);
-      if (!ep) {
-        break;
-      }
-      if (ep->d_type == DT_DIR) {
-        if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0) {
-          continue;
-        }
-        size_t newpath_len = strlen(path) + strlen(ep->d_name) + 10;
-        char *newpath = malloc(newpath_len);
-        snprintf(newpath, newpath_len, "%s/%s", path, ep->d_name);
-        recurse_dir(newpath, depth + 1, callback);
-        free(newpath);
-      } else if (string_ends_with(ep->d_name, ".mp3")) {
-        size_t name_len = strlen(path) + strlen(ep->d_name) + 10;
-        char *fullname = malloc(name_len);
-        snprintf(fullname, name_len, "%s/%s", path, ep->d_name);
-        if (callback != NULL) {
-          callback(fullname);
-        }
-        free(fullname);
-      } else {
-        ESP_LOGD(TAG, "'%s' is not mp3", ep->d_name);
-      }
-      taskYIELD();
-    }
-    closedir(dp);
+    return 0;
   }
+
+  uint32_t files_in_dir = 0;
+  while(true) {
+    struct dirent *ep = readdir(dp);
+    if (!ep) {
+      break;
+    }
+    if (ep->d_type == DT_DIR) {
+      if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0) {
+        continue;
+      }
+      size_t newpath_len = strlen(path) + strlen(ep->d_name) + 10;
+      char *newpath = malloc(newpath_len);
+      snprintf(newpath, newpath_len, "%s/%s", path, ep->d_name);
+      files_in_dir += recurse_dir(newpath, depth + 1, index, callback);
+      free(newpath);
+    } else if (string_ends_with(ep->d_name, ".mp3")) {
+      size_t name_len = strlen(path) + strlen(ep->d_name) + 10;
+      char *fullname = malloc(name_len);
+      snprintf(fullname, name_len, "%s/%s", path, ep->d_name);
+      if (callback != NULL && index != NULL) {
+        callback(fullname, *index);
+      }
+      files_in_dir++;
+      if (index != NULL) {
+        (*index)++;
+      }
+      free(fullname);
+    } else {
+      ESP_LOGD(TAG, "'%s' is not mp3", ep->d_name);
+    }
+    taskYIELD();
+  }
+  closedir(dp);
+
+  return files_in_dir;
 }
 
-static void on_media_file_found(const char *path) {
-  (void)path;
-  total_mediafiles++;
+static void on_medifile_callback(const char *path, uint16_t index) {
+  ESP_LOGD(TAG, "index %u : %s", index, path);
+  play(path);
 }
 
 static void play(const char *path) {
