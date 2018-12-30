@@ -19,10 +19,12 @@
 
 static const char *TAG = "scheduler";
 
-static SemaphoreHandle_t mutex = NULL;
-static uint16_t current_index = 0;
-static uint16_t next_index = 0;
-static uint16_t files_total = 0;
+static struct s_state {
+  SemaphoreHandle_t mutex;
+  uint16_t current;
+  uint16_t next;
+  uint16_t total;
+} state = { NULL, 0, 0, 0 };
 
 static void scheduler_thread(void * args);
 static uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, void (*callback)(const char *fullname, uint16_t index));
@@ -35,8 +37,8 @@ bool scheduler_init() {
     ESP_LOGE(TAG, "error initializing player");
     return false;
   }
-  mutex = xSemaphoreCreateMutex();
-  if (mutex == NULL) {
+  state.mutex = xSemaphoreCreateMutex();
+  if (state.mutex == NULL) {
     ESP_LOGE(TAG, "cannot create mutex");
     return false;
   }
@@ -46,29 +48,29 @@ bool scheduler_init() {
 
 bool scheduler_next() {
   ESP_LOGD(TAG, "next");
-  xSemaphoreTake(mutex, portMAX_DELAY);
-  if (current_index >= (files_total - 1)) {
-    next_index = 0;
+  xSemaphoreTake(state.mutex, portMAX_DELAY);
+  if (state.current >= (state.total - 1)) {
+    state.next = 0;
   } else {
-    next_index = current_index + 1;
+    state.next = state.current + 1;
   }
   // this will force skip to the next track in scheduler_thread
   stop();
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(state.mutex);
   return true;
 }
 
 bool scheduler_prev() {
   ESP_LOGD(TAG, "prev");
-  xSemaphoreTake(mutex, portMAX_DELAY);
-  if (current_index == 0) {
-    next_index = files_total - 1;
+  xSemaphoreTake(state.mutex, portMAX_DELAY);
+  if (state.current == 0) {
+    state.next = state.total - 1;
   } else {
-    next_index = current_index - 1;
+    state.next = state.current - 1;
   }
   // this will force skip to the next track in scheduler_thread
   stop();
-  xSemaphoreGive(mutex);
+  xSemaphoreGive(state.mutex);
   return true;
 }
 
@@ -88,7 +90,9 @@ static void scheduler_thread(void * args) {
     vTaskDelete(NULL);
     return;
   }
-  files_total = (uint16_t)total_mediafiles;
+  xSemaphoreTake(state.mutex, portMAX_DELAY);
+  state.total = (uint16_t)total_mediafiles;
+  xSemaphoreGive(state.mutex);
 
   while(true) {
     uint16_t index = 0;
@@ -147,16 +151,16 @@ static uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, vo
 }
 
 static void on_medifile_callback(const char *path, uint16_t index) {
-  ESP_LOGD(TAG, "index %u next_index %u : %s", index, next_index, path);
-  if (index == next_index) {
-    xSemaphoreTake(mutex, portMAX_DELAY);
-    current_index = index;
-    if (next_index >= (files_total - 1)) {
-      next_index = 0;
+  ESP_LOGD(TAG, "index %u next_index %u : %s", index, state.next, path);
+  if (index == state.next) {
+    xSemaphoreTake(state.mutex, portMAX_DELAY);
+    state.current = index;
+    if (state.next >= (state.total - 1)) {
+      state.next = 0;
     } else {
-      next_index = current_index + 1;
+      state.next = state.current + 1;
     }
-    xSemaphoreGive(mutex);
+    xSemaphoreGive(state.mutex);
     play(path);
   }
 }
