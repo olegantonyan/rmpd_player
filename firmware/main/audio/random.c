@@ -15,15 +15,20 @@ void random_init(uint16_t max) {
   maximum = max;
 }
 
+void random_reset() {
+  memset(trail, 0, sizeof(trail));
+  trail_index = 0;
+}
+
 uint16_t random_next() {
   uint16_t value = 0;
+  uint8_t tries = 200;
   do {
     value = rng();
-  } while(is_in_trail(value));
+  } while(is_in_trail(value) && tries-- > 0 );
   trail[trail_index++] = value;
   if (trail_index >= RANDOM_MAX_TRAIL) {
-    memset(trail, 0, sizeof(trail));
-    trail_index = 0;
+    random_reset();
   }
   return value;
 }

@@ -9,5 +9,6 @@
 
 void random_init(uint16_t max);
 uint16_t random_next();
+void random_reset();
 
 #endif

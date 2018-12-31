@@ -119,6 +119,7 @@ static void scheduler_thread(void * args) {
     uint16_t index = 0;
     recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback);
     taskYIELD();
+    random_reset();
   }
 }
 
