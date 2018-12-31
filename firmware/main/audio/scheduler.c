@@ -49,6 +49,10 @@ bool scheduler_init() {
   return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
 }
 
+bool scheduler_random() {
+  return config_random();
+}
+
 bool scheduler_set_random(bool arg) {
   ESP_LOGI(TAG, "set random %d", (int)arg);
 

@@ -8,5 +8,6 @@ bool scheduler_init();
 bool scheduler_next();
 bool scheduler_prev();
 bool scheduler_set_random(bool arg);
+bool scheduler_random();
 
 #endif
