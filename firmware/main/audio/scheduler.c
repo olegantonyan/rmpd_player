@@ -1,5 +1,6 @@
 #include "audio/scheduler.h"
 #include "audio/player.h"
+#include "audio/random.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -109,6 +110,7 @@ static void scheduler_thread(void * args) {
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   state.total = (uint16_t)total_mediafiles;
   xSemaphoreGive(state.mutex);
+  random_init(total_mediafiles - 1);
 
   while(true) {
     uint16_t index = 0;
