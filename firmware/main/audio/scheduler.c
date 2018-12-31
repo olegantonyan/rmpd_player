@@ -109,8 +109,11 @@ static void scheduler_thread(void * args) {
   }
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   state.total = (uint16_t)total_mediafiles;
+  random_init(state.total - 1);
+  if (scheduler_random()) {
+    state.next = random_next();
+  }
   xSemaphoreGive(state.mutex);
-  random_init(total_mediafiles - 1);
 
   while(true) {
     uint16_t index = 0;
@@ -173,10 +176,14 @@ static void on_medifile_callback(const char *path, uint16_t index) {
   if (index == state.next) {
     xSemaphoreTake(state.mutex, portMAX_DELAY);
     state.current = index;
-    if (state.next >= (state.total - 1)) {
-      state.next = 0;
+    if (scheduler_random()) {
+      state.next = random_next();
     } else {
-      state.next = state.current + 1;
+      if (state.next >= (state.total - 1)) {
+        state.next = 0;
+      } else {
+        state.next = state.current + 1;
+      }
     }
     xSemaphoreGive(state.mutex);
     play(path);
