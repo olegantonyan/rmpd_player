@@ -11,7 +11,6 @@
 #include "soc/gpio_struct.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
-#include "util/files.h"
 
 static const char *TAG = "vs1011";
 
@@ -55,27 +54,34 @@ static bool codec_init();
 static void IRAM_ATTR dreq_isr(void *arg);
 static audio_format_t audio_format();
 
-void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) {
+void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *ctx),
+                 size_t total_size,
+                 void *ctx,
+                 void (*callback)(uint32_t poistion, uint32_t total)
+               ) {
+  if (read_func == NULL) {
+    return;
+  }
+
   xEventGroupClearBits(event_group, VS1011STOP_BIT);
 
   size_t bytes_in_buffer = 0;
   uint32_t pos = 0;
-  uint32_t filesize = file_size(fp);
-  static uint8_t file_buffer[4096] = { 0 };
-  memset(file_buffer, 0, sizeof(file_buffer));
+  static uint8_t buffer[4096] = { 0 };
+  memset(buffer, 0, sizeof(buffer));
 
   write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
 
   if (callback != NULL) {
-    callback(pos, filesize);
+    callback(pos, total_size);
   }
 
-//  write_sdi(file_buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
+//  write_sdi(buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
 
   vs1011_transient_mute(false);
 
-  while ((bytes_in_buffer = fread(file_buffer, 1, sizeof(file_buffer), fp)) > 0) {
-    uint8_t *buf_play = file_buffer;
+  while ((bytes_in_buffer = read_func(buffer, sizeof(buffer), ctx)) > 0) {
+    uint8_t *buf_play = buffer;
     while (bytes_in_buffer) {
       size_t i = MIN(VS_MAX_CHUNK_SIZE, bytes_in_buffer);
       write_sdi(buf_play, i);
@@ -85,7 +91,7 @@ void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) 
     }
 
     if (callback != NULL) {
-      callback(pos, filesize);
+      callback(pos, total_size);
     }
 
     //uint16_t sample_rate = read_sci(SCI_AUDATA);
@@ -97,9 +103,9 @@ void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) 
       audio_format_t af = audio_format();
       if (af != af_mp3 && af != af_unknown) {
         write_sci(SCI_MODE, read_sci(SCI_MODE) | SM_OUTOFWAV);
-        memset(file_buffer, 0, sizeof(file_buffer));
+        memset(buffer, 0, sizeof(buffer));
         for(uint32_t i = 0; i < 512; i++) {
-          write_sdi(file_buffer, VS_MAX_CHUNK_SIZE);
+          write_sdi(buffer, VS_MAX_CHUNK_SIZE);
           if (!(read_sci(SCI_MODE) & SM_OUTOFWAV)) {
             break;
           }
@@ -110,9 +116,9 @@ void vs1011_play(FILE *fp, void (*callback)(uint32_t poistion, uint32_t total)) 
   }
   vs1011_transient_mute(true);
 
-  memset(file_buffer, 0, sizeof(file_buffer));
+  memset(buffer, 0, sizeof(buffer));
   for(uint32_t i = 0; i < 64; i++) {
-    write_sdi(file_buffer, VS_MAX_CHUNK_SIZE);
+    write_sdi(buffer, VS_MAX_CHUNK_SIZE);
   }
 
   if (callback != NULL) {

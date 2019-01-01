@@ -10,6 +10,7 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
+#include "util/files.h"
 #include "esp_system.h"
 #include "esp_log.h"
 
@@ -49,6 +50,7 @@ static player_state_t get_state();
 static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
 static void set_now_playing(char *str);
 static void vs1011_callback(uint32_t position, uint32_t total);
+static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
 bool player_start(const char *fname, bool async) {
   if (get_state() == PLAYING) {
@@ -234,7 +236,7 @@ static bool play(const char *fname) {
     ESP_LOGE(TAG, "failed to open file '%s' for reading", fname);
     return false;
   }
-  vs1011_play(f, vs1011_callback);
+  vs1011_play(file_read_func, file_size(f), (void *)f, vs1011_callback);
   ESP_LOGI(TAG, "end playing file '%s'", fname);
   fclose(f);
   return true;
@@ -286,4 +288,8 @@ static bool wait_for_state(player_state_t desired_state, TickType_t ticks) {
 static void vs1011_callback(uint32_t position, uint32_t total) {
   state.pos_total = total;
   state.pos_current = position;
+}
+
+static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
+  return fread(buffer, 1, buffer_size, (FILE *)ctx);
 }
