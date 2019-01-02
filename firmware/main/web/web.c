@@ -195,11 +195,13 @@ static esp_err_t volume_post_handler(httpd_req_t *req) {
   if (!cJSON_IsNumber(volume)) {
     ESP_LOGE(TAG, "error getting volume from json");
     free(buffer);
+    cJSON_Delete(json);
     httpd_resp_send_500(req);
     return ESP_FAIL;
   }
   player_set_volume(volume->valueint);
   free(buffer);
+  cJSON_Delete(json);
 
   render_status(req);
   return ESP_OK;
@@ -340,6 +342,7 @@ static esp_err_t tone_post_handler(httpd_req_t *req) {
     player_set_treble_amplitude(treble_amplitude->valueint);
   }
   free(buffer);
+  cJSON_Delete(json);
 
   render_status(req);
   return ESP_OK;
@@ -387,6 +390,8 @@ static esp_err_t playback_post_handler(httpd_req_t *req) {
   } else if (cJSON_IsFalse(random)) {
     scheduler_set_random(false);
   }
+  free(buffer);
+  cJSON_Delete(json);
 
   render_status(req);
   return ESP_OK;
