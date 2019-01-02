@@ -18,8 +18,13 @@ export default ({ state, actions }) =>
           </tr>
 
           <tr>
-          <td>MAC address</td>
-          <td>{state.system.mac_addr}</td>
+            <td>MAC address</td>
+            <td>{state.system.mac_addr}</td>
+          </tr>
+
+          <tr>
+            <td>IP address (station iface)</td>
+            <td>{state.system.ip_addr}</td>
           </tr>
         </tbody>
       </table>

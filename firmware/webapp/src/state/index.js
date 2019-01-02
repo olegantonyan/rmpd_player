@@ -28,6 +28,7 @@ export default {
 
   system: {
     mac_addr: "",
+    ip_addr: "",
     heap_free: 0,
     heap_free_min: 0
   }
