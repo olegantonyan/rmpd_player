@@ -30,6 +30,7 @@ static esp_err_t volume_post_handler(httpd_req_t *req);
 static esp_err_t status_get_handler(httpd_req_t *req);
 static esp_err_t playback_post_handler(httpd_req_t *req);
 static esp_err_t reboot_post_handler(httpd_req_t *req);
+static esp_err_t system_get_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
 static void render_settings(httpd_req_t *req);
 static void render_status(httpd_req_t *req);
@@ -86,6 +87,12 @@ static httpd_uri_t reboot_post = {
   .uri       = "/api/reboot.json",
   .method    = HTTP_POST,
   .handler   = reboot_post_handler
+};
+
+static httpd_uri_t system_get = {
+  .uri       = "/api/system.json",
+  .method    = HTTP_GET,
+  .handler   = system_get_handler
 };
 
 bool web_init() {
@@ -390,6 +397,33 @@ static esp_err_t reboot_post_handler(httpd_req_t *req) {
   return ESP_OK;
 }
 
+static esp_err_t system_get_handler(httpd_req_t *req) {
+  httpd_resp_set_hdr(req, "Connection", "close");
+  httpd_resp_set_type(req, "application/json");
+
+  cJSON *root = cJSON_CreateObject();
+  cJSON_AddItemToObject(root, "heap_free", cJSON_CreateNumber(esp_get_free_heap_size()));
+  cJSON_AddItemToObject(root, "heap_free_min", cJSON_CreateNumber(esp_get_minimum_free_heap_size()));
+  uint8_t mac[6] = { 0 };
+  esp_efuse_mac_get_default(mac);
+  char mac_str[20] = { 0 };
+  snprintf(mac_str, sizeof(mac_str), "%.2X:%.2X:%.2X:%.2X:%.2X:%.2X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  cJSON_AddItemToObject(root, "mac_addr", cJSON_CreateString(mac_str));
+
+  char* json = malloc(1024);
+  if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
+    httpd_resp_send(req, json, strlen(json));
+  } else {
+    ESP_LOGE(TAG, "failed to build json response");
+    httpd_resp_send_500(req);
+  }
+
+  free(json);
+  cJSON_Delete(root);
+
+  return ESP_OK;
+}
+
 static esp_err_t root_get_handler(httpd_req_t *req) {
   httpd_resp_set_hdr(req, "Connection", "close");
   if(strcmp("/", req->uri) == 0) {
@@ -471,6 +505,7 @@ static httpd_handle_t start_webserver() {
   httpd_register_uri_handler(server, &tone_post);
   httpd_register_uri_handler(server, &playback_post);
   httpd_register_uri_handler(server, &reboot_post);
+  httpd_register_uri_handler(server, &system_get);
   httpd_register_uri_handler(server, &root);
   return server;
 }

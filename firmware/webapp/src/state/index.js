@@ -24,5 +24,11 @@ export default {
     bass_amplitude: 0,
     treble_frequency_limit: 0,
     treble_amplitude: 0
+  },
+
+  system: {
+    mac_addr: "",
+    heap_free: 0,
+    heap_free_min: 0
   }
 };

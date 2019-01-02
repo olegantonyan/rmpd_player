@@ -5,6 +5,26 @@ export default ({ state, actions }) =>
     <br />
 
     <div class="content">
+      <table class="pure-table pure-table-horizontal">
+        <tbody>
+          <tr>
+            <td>Heap free</td>
+            <td>{Math.round(state.system.heap_free / 1024)} Kb</td>
+          </tr>
+
+          <tr>
+            <td>Heap free minimum</td>
+            <td>{Math.round(state.system.heap_free_min / 1024)} Kb</td>
+          </tr>
+
+          <tr>
+          <td>MAC address</td>
+          <td>{state.system.mac_addr}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br />
       <button class="pure-button pure-button-primary" onclick={() => actions.system.reboot()}>Reboot</button>
     </div>
   </div>

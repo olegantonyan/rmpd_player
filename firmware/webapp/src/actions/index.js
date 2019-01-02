@@ -7,6 +7,7 @@ export default {
       case HOME:
         break
       case SYSTEM:
+        actions.system.fetch()
         break
       case SETTINGS:
         actions.settings.fetch()
@@ -85,6 +86,14 @@ export default {
     reboot: value => state => {
       fetch("/api/reboot.json", { method: "POST", headers: { "Connection": "close" } })
       return value
+    },
+
+    set: value => state => { return value },
+
+    fetch: () => (state, actions) => {
+      fetch("/api/system.json", { headers: { "Connection": "close" } })
+        .then(data => data.json())
+        .then((data) => actions.set(data))
     },
   }
 }
