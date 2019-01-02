@@ -5,6 +5,6 @@ export default ({ state, actions }) =>
     <br />
 
     <div class="content">
-      <button class="pure-button pure-button-primary">Reboot</button>
+      <button class="pure-button pure-button-primary" onclick={() => actions.system.reboot()}>Reboot</button>
     </div>
   </div>

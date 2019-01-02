@@ -79,5 +79,12 @@ export default {
         .then(data => data.json())
         .then((data) => actions.set(data))
     },
+  },
+
+  system: {
+    reboot: value => state => {
+      fetch("/api/reboot.json", { method: "POST", headers: { "Connection": "close" } })
+      return value
+    },
   }
 }

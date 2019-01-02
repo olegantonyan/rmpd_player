@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include "esp_log.h"
 #include "esp_err.h"
+#include "esp_system.h"
 #include "esp_http_server.h"
 #include "cJSON.h"
 #include "config/config.h"
@@ -28,6 +29,7 @@ static esp_err_t tone_post_handler(httpd_req_t *req);
 static esp_err_t volume_post_handler(httpd_req_t *req);
 static esp_err_t status_get_handler(httpd_req_t *req);
 static esp_err_t playback_post_handler(httpd_req_t *req);
+static esp_err_t reboot_post_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
 static void render_settings(httpd_req_t *req);
 static void render_status(httpd_req_t *req);
@@ -78,6 +80,12 @@ static httpd_uri_t playback_post = {
   .uri       = "/api/playback.json",
   .method    = HTTP_POST,
   .handler   = playback_post_handler
+};
+
+static httpd_uri_t reboot_post = {
+  .uri       = "/api/reboot.json",
+  .method    = HTTP_POST,
+  .handler   = reboot_post_handler
 };
 
 bool web_init() {
@@ -377,6 +385,11 @@ static esp_err_t playback_post_handler(httpd_req_t *req) {
   return ESP_OK;
 }
 
+static esp_err_t reboot_post_handler(httpd_req_t *req) {
+  esp_restart();
+  return ESP_OK;
+}
+
 static esp_err_t root_get_handler(httpd_req_t *req) {
   httpd_resp_set_hdr(req, "Connection", "close");
   if(strcmp("/", req->uri) == 0) {
@@ -443,6 +456,7 @@ static void send_file(FILE* f, httpd_req_t *req) {
 static httpd_handle_t start_webserver() {
   httpd_handle_t server = NULL;
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+  config.max_uri_handlers = 15;
 
   ESP_LOGI(TAG, "starting server on port: '%d'", config.server_port);
   if (httpd_start(&server, &config) != ESP_OK) {
@@ -456,6 +470,7 @@ static httpd_handle_t start_webserver() {
   httpd_register_uri_handler(server, &tone_get);
   httpd_register_uri_handler(server, &tone_post);
   httpd_register_uri_handler(server, &playback_post);
+  httpd_register_uri_handler(server, &reboot_post);
   httpd_register_uri_handler(server, &root);
   return server;
 }
