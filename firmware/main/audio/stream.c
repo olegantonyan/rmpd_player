@@ -15,13 +15,13 @@
 #include "lwip/dns.h"
 
 bool stream_start(const char *url) {
-
+  return false;
 }
 
 bool stream_stop() {
-
+  return false;
 }
 
 size_t stream_read(uint8_t *buffer, size_t buffer_size) {
-  
+  return 0;
 }
