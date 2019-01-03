@@ -32,6 +32,7 @@ export default {
     reset_reason: "",
     chip_revision: 0,
     heap_free: 0,
-    heap_free_min: 0
+    heap_free_min: 0,
+    uptime: 0
   }
 };

@@ -17,7 +17,8 @@
 #include "util/files.h"
 #include "audio/player.h"
 #include "audio/scheduler.h"
-#include <tcpip_adapter.h>
+#include "tcpip_adapter.h"
+#include "esp_timer.h"
 
 static const char *TAG = "web";
 
@@ -442,6 +443,7 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   esp_chip_info_t ci;
   esp_chip_info(&ci);
   cJSON_AddItemToObject(root, "chip_revision", cJSON_CreateNumber(ci.revision));
+  cJSON_AddItemToObject(root, "uptime", cJSON_CreateNumber(esp_timer_get_time() / 1000000));
 
   char* json = malloc(1024);
   if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
