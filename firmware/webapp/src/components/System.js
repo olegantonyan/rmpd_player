@@ -18,6 +18,11 @@ export default ({ state, actions }) =>
           </tr>
 
           <tr>
+            <td>Reset reason</td>
+            <td>{state.system.reset_reason}</td>
+          </tr>
+
+          <tr>
             <td>MAC address</td>
             <td>{state.system.mac_addr}</td>
           </tr>

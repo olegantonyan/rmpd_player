@@ -29,6 +29,7 @@ export default {
   system: {
     mac_addr: "",
     ip_addr: "",
+    reset_reason: "",
     heap_free: 0,
     heap_free_min: 0
   }
