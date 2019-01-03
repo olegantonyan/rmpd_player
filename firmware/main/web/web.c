@@ -439,6 +439,10 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   }
   cJSON_AddItemToObject(root, "reset_reason", cJSON_CreateString(reset_reason));
 
+  esp_chip_info_t ci;
+  esp_chip_info(&ci);
+  cJSON_AddItemToObject(root, "chip_revision", cJSON_CreateNumber(ci.revision));
+
   char* json = malloc(1024);
   if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
     httpd_resp_send(req, json, strlen(json));

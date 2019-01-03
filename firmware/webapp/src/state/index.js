@@ -30,6 +30,7 @@ export default {
     mac_addr: "",
     ip_addr: "",
     reset_reason: "",
+    chip_revision: 0,
     heap_free: 0,
     heap_free_min: 0
   }
