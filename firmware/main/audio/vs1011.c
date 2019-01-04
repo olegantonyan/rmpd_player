@@ -67,7 +67,7 @@ void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *
 
   size_t bytes_in_buffer = 0;
   uint32_t pos = 0;
-  static uint8_t buffer[4096] = { 0 };
+  static uint8_t buffer[VS1011_BUFFER_SIZE] = { 0 };
   memset(buffer, 0, sizeof(buffer));
 
   write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
