@@ -5,8 +5,12 @@
 #include <stdint.h>
 #include <stddef.h>
 
-bool stream_start(const char *url);
-bool stream_stop();
-size_t stream_read(uint8_t *buffer, size_t buffer_size);
+typedef struct {
+  int socket;
+} stream_t;
+
+bool stream_start(const char *url, stream_t *out);
+bool stream_stop(stream_t *stream);
+size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size);
 
 #endif

@@ -1,6 +1,7 @@
 #include "audio/vs1011.h"
 #include "audio/player.h"
 #include "config/config.h"
+#include "audio/stream.h"
 
 #include <string.h>
 #include <sys/unistd.h>
@@ -51,6 +52,7 @@ static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
 static void set_now_playing(char *str);
 static void vs1011_callback(uint32_t position, uint32_t total);
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
+static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
 bool player_start(const char *fname, bool async) {
   if (get_state() == PLAYING) {
@@ -226,6 +228,11 @@ static void player_thread(void * args) {
 }
 
 static bool play(const char *fname) {
+  stream_t stream;
+  stream_start("http://us4.internet-radio.com:8258/", &stream);
+  vs1011_play(stream_read_func, 0, &stream, vs1011_callback);
+  stream_stop(&stream);
+
   if (fname == NULL) {
     ESP_LOGE(TAG, "null filename");
     return false;
@@ -292,4 +299,8 @@ static void vs1011_callback(uint32_t position, uint32_t total) {
 
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
   return fread(buffer, 1, buffer_size, (FILE *)ctx);
+}
+
+static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
+  return stream_read((stream_t *)ctx, buffer, buffer_size);
 }
