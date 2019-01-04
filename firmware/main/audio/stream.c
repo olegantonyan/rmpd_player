@@ -47,7 +47,7 @@ bool stream_stop(stream_t *stream) {
 }
 
 size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size) {
-  int bytes = read(stream->socket, buffer, buffer_size);
+  int bytes = recv(stream->socket, buffer, buffer_size, MSG_WAITALL);
   if (bytes < 0) {
     return 0;
   }
@@ -100,7 +100,7 @@ static int open_socket(stream_addr_t *stream_addr) {
   size_t request_size = strlen(request_template) + strlen(stream_addr->path) + strlen(stream_addr->host) + 13;
   char *request = malloc(request_size);
   snprintf(request, request_size, request_template, stream_addr->path, stream_addr->host);
-  if (write(sock, request, strlen(request)) < 0) {
+  if (send(sock, request, strlen(request), 0) < 0) {
     ESP_LOGE(TAG, "socket write failed");
     free(request);
     close(sock);
