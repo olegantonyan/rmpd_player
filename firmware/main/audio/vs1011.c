@@ -76,7 +76,7 @@ void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *
     callback(pos, total_size);
   }
 
-//  write_sdi(buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
+  write_sdi(buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
 
   vs1011_transient_mute(false);
 
