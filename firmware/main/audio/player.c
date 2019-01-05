@@ -52,6 +52,7 @@ static player_state_t get_state();
 static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
 static void set_now_playing(char *str);
 static void vs1011_callback(uint32_t position, uint32_t total);
+static bool parse_playlist_file(const char *fname, char *result, size_t result_length);
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
@@ -145,7 +146,7 @@ bool player_init() {
   player_set_treble_freqlimit(config_treble_freqlimit());
   player_set_treble_amplitude(config_treble_amplitude());
 
-  return xTaskCreate(player_thread, "player", 4096, NULL, 15, NULL) == pdPASS;
+  return xTaskCreate(player_thread, "player", 5096, NULL, 15, NULL) == pdPASS;
 }
 
 void player_set_volume(uint8_t percents) {
@@ -230,25 +231,41 @@ static void player_thread(void * args) {
 }
 
 static bool play(const char *fname) {
-  stream_t stream;
-  //stream_start("http://us4.internet-radio.com:8258/", VS1011_BUFFER_SIZE, &stream);
-  stream_start("http://streaming.radionomy.com/-PHILOSOMATIKA-", VS1011_BUFFER_SIZE, &stream);
-  vs1011_play(stream_read_func, 0, &stream, vs1011_callback);
-  stream_stop(&stream);
-
-  /*if (fname == NULL) {
+  if (fname == NULL) {
     ESP_LOGE(TAG, "null filename");
     return false;
   }
+
   ESP_LOGI(TAG, "start playing file '%s'", fname);
-  FILE *f = fopen(fname, "rb");
-  if (f == NULL) {
-    ESP_LOGE(TAG, "failed to open file '%s' for reading", fname);
-    return false;
+  if (string_ends_with(fname, ".m3u") || string_ends_with(fname, ".pls")) {
+    stream_t stream;
+    //stream_start("http://us4.internet-radio.com:8258/", VS1011_BUFFER_SIZE, &stream);
+    //
+    //stream_start("http://streaming.radionomy.com/-PHILOSOMATIKA-", VS1011_BUFFER_SIZE, &stream);
+    //stream_start("http://relay3.slayradio.org:8000/", VS1011_BUFFER_SIZE, &stream);
+
+    char url[384] = { 0 };
+    if (!parse_playlist_file(fname, url, sizeof(url))) {
+      ESP_LOGE(TAG, "error parsing playlist file '%s'", fname);
+      return false;
+    }
+    if (!stream_start(url, VS1011_BUFFER_SIZE, &stream)) {
+      ESP_LOGE(TAG, "failed to start a stream '%s'", url);
+      return false;
+    }
+    vs1011_play(stream_read_func, 0, &stream, vs1011_callback);
+    stream_stop(&stream);
+  } else {
+    FILE *f = fopen(fname, "rb");
+    if (f == NULL) {
+      ESP_LOGE(TAG, "failed to open file '%s' for reading", fname);
+      return false;
+    }
+    vs1011_play(file_read_func, file_size(f), (void *)f, vs1011_callback);
+    fclose(f);
   }
-  vs1011_play(file_read_func, file_size(f), (void *)f, vs1011_callback);
   ESP_LOGI(TAG, "end playing file '%s'", fname);
-  fclose(f);*/
+
   return true;
 }
 
@@ -298,6 +315,37 @@ static bool wait_for_state(player_state_t desired_state, TickType_t ticks) {
 static void vs1011_callback(uint32_t position, uint32_t total) {
   state.pos_total = total;
   state.pos_current = position;
+}
+
+static bool parse_playlist_file(const char *fname, char *result, size_t result_length) {
+  bool ok = false;
+  FILE *f = fopen(fname, "r");
+  size_t line_max_length = result_length + 12;
+  char *line = malloc(line_max_length);
+  if (string_ends_with(fname, ".m3u")) {
+    while(fgets(line, line_max_length, f) != NULL) {
+      if (line[0] == '#') {
+        continue;
+      }
+      if (strncmp(line, "htt", 3) == 0) {
+        for (int i = strlen(line) - 1; i > 0; i--) {
+          if (line[i] == '\r' || line[i] == '\n') {
+            line[i] = '\0';
+          }
+        }
+        strncpy(result, line, result_length);
+        ok = true;
+        break;
+      }
+    }
+  } else if (string_ends_with(fname, ".pls")) {
+
+    //strncpy(result, line, result_length);
+    //ok = true;
+  }
+  free(line);
+  fclose(f);
+  return ok;
 }
 
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {

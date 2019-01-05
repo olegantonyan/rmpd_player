@@ -110,6 +110,7 @@ size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size) {
 }
 
 static bool parse_uri(const char *uri, stream_addr_t *addr) {
+  memset(addr, 0, sizeof(stream_addr_t));
   if (sscanf(uri, "%9[^:]://%255[^:]:%5[^/]%255[^\n]", addr->protocol, addr->host, addr->port, addr->path) == 4) {
   } else if (sscanf(uri, "%9[^:]://%255[^/]%255[^\n]", addr->protocol, addr->host, addr->path) == 3) {
   } else if (sscanf(uri, "%9[^:]://%255[^:]:%5[^\n]", addr->protocol, addr->host, addr->port) == 3) {

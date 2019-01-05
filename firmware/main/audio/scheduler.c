@@ -150,7 +150,7 @@ static uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, vo
       snprintf(newpath, newpath_len, "%s/%s", path, ep->d_name);
       files_in_dir += recurse_dir(newpath, depth + 1, index, callback);
       free(newpath);
-    } else if (string_ends_with(ep->d_name, ".mp3")) {
+    } else if (string_ends_with(ep->d_name, ".mp3") || string_ends_with(ep->d_name, ".m3u") || string_ends_with(ep->d_name, ".pls")) {
       size_t name_len = strlen(path) + strlen(ep->d_name) + 10;
       char *fullname = malloc(name_len);
       snprintf(fullname, name_len, "%s/%s", path, ep->d_name);
@@ -163,7 +163,7 @@ static uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, vo
       }
       free(fullname);
     } else {
-      ESP_LOGD(TAG, "'%s' is not mp3", ep->d_name);
+      ESP_LOGD(TAG, "'%s' is not supported media file", ep->d_name);
     }
     taskYIELD();
   }
