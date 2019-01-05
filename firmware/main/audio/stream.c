@@ -14,6 +14,7 @@
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
+#include "util/url.h"
 #include <errno.h>
 
 static const char *TAG = "stream";
@@ -21,22 +22,14 @@ static const char *TAG = "stream";
 static const EventBits_t EOS_BIT = BIT0;
 static const EventBits_t STOP_BIT = BIT1;
 
-typedef struct {
-  char host[256];
-  char protocol[10];
-  char path[256];
-  char port[6];
-} stream_addr_t;
-
-static bool parse_uri(const char *uri, stream_addr_t *result);
-static int open_socket(stream_addr_t *addr);
+static int open_socket(url_t *addr);
 static void thread(void *params);
 
 bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   ESP_LOGI(TAG, "starting %s", url);
 
-  stream_addr_t stream_addr;
-  if (!parse_uri(url, &stream_addr)) {
+  url_t stream_addr;
+  if (!url_parse(url, &stream_addr)) {
     ESP_LOGE(TAG, "error parsing url '%s'", url);
     return false;
   }
@@ -44,6 +37,7 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
     ESP_LOGE(TAG, "protocol %s is not supported", stream_addr.protocol);
     return false;
   }
+  ESP_LOGI(TAG, "protocol:%s host:%s port:%s path:%s", stream_addr.protocol, stream_addr.host, stream_addr.port, stream_addr.path);
 
   int sock = -1;
   do {
@@ -109,33 +103,9 @@ size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size) {
   return bytes;
 }
 
-static bool parse_uri(const char *uri, stream_addr_t *addr) {
-  memset(addr, 0, sizeof(stream_addr_t));
-  if (sscanf(uri, "%9[^:]://%255[^:]:%5[^/]%255[^\n]", addr->protocol, addr->host, addr->port, addr->path) == 4) {
-  } else if (sscanf(uri, "%9[^:]://%255[^/]%255[^\n]", addr->protocol, addr->host, addr->path) == 3) {
-  } else if (sscanf(uri, "%9[^:]://%255[^:]:%5[^\n]", addr->protocol, addr->host, addr->port) == 3) {
-  } else if (sscanf(uri, "%9[^:]://%255[^\n]", addr->protocol, addr->host) == 2) {
-  } else {
-    return false;
-  }
 
-  if (strcmp(addr->port, "") == 0) {
-    if (strcmp(addr->protocol, "https") == 0) {
-      strcpy(addr->port, "443");
-    } else if (strcmp(addr->protocol, "http") == 0) {
-      strcpy(addr->port, "80");
-    }
-  }
-  if (strcmp(addr->path, "") == 0) {
-    strcpy(addr->path, "/");
-  }
 
-  ESP_LOGI(TAG, "protocol:%s host:%s port:%s path:%s", addr->protocol, addr->host, addr->port, addr->path);
-
-  return true;
-}
-
-static int open_socket(stream_addr_t *stream_addr) {
+static int open_socket(url_t *stream_addr) {
   const struct addrinfo hints = {
     .ai_family = AF_INET,
     .ai_socktype = SOCK_STREAM,
