@@ -11,6 +11,7 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
+#include "util/strings.h"
 #include "util/files.h"
 #include "esp_system.h"
 #include "esp_log.h"
@@ -322,27 +323,33 @@ static bool parse_playlist_file(const char *fname, char *result, size_t result_l
   FILE *f = fopen(fname, "r");
   size_t line_max_length = result_length + 12;
   char *line = malloc(line_max_length);
-  if (string_ends_with(fname, ".m3u")) {
-    while(fgets(line, line_max_length, f) != NULL) {
-      if (line[0] == '#') {
-        continue;
-      }
-      if (strncmp(line, "htt", 3) == 0) {
-        for (int i = strlen(line) - 1; i > 0; i--) {
-          if (line[i] == '\r' || line[i] == '\n') {
-            line[i] = '\0';
-          }
-        }
-        strncpy(result, line, result_length);
-        ok = true;
-        break;
-      }
+
+  while(fgets(line, line_max_length, f) != NULL) {
+    if (line[0] == '#') {
+      continue;
     }
+    string_chomp(line);
+    if (strncmp(line, "htt", 3) == 0) {
+      strncpy(result, line, result_length);
+      ok = true;
+      break;
+    }
+    if (strncmp(line, "File1=", 6) == 0) { // pls format
+      strncpy(result, &line[6], result_length);
+      ok = true;
+      break;
+    }
+  }
+
+  if (ok && (strstr(result, ".pls") != NULL)) { // bullshit format - link to a pls file instead of stream itself
+    // TODO http request and parse response as pls
+  }
+
+/*  if (string_ends_with(fname, ".m3u")) {
+
   } else if (string_ends_with(fname, ".pls")) {
 
-    //strncpy(result, line, result_length);
-    //ok = true;
-  }
+  }*/
   free(line);
   fclose(f);
   return ok;

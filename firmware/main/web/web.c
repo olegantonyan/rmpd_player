@@ -14,6 +14,7 @@
 #include "config/config.h"
 #include "wifi/wifi.h"
 #include "audio/player.h"
+#include "util/strings.h"
 #include "util/files.h"
 #include "audio/player.h"
 #include "audio/scheduler.h"

@@ -16,7 +16,7 @@
 #include "esp_log.h"
 #include "storage/sd.h"
 #include <dirent.h>
-#include "util/files.h"
+#include "util/strings.h"
 #include "config/config.h"
 
 static const char *TAG = "scheduler";
