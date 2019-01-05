@@ -231,7 +231,8 @@ static void player_thread(void * args) {
 
 static bool play(const char *fname) {
   stream_t stream;
-  stream_start("http://us4.internet-radio.com:8258/", VS1011_BUFFER_SIZE, &stream);
+  //stream_start("http://us4.internet-radio.com:8258/", VS1011_BUFFER_SIZE, &stream);
+  stream_start("http://streaming.radionomy.com/-PHILOSOMATIKA-", VS1011_BUFFER_SIZE, &stream);
   vs1011_play(stream_read_func, 0, &stream, vs1011_callback);
   stream_stop(&stream);
 
