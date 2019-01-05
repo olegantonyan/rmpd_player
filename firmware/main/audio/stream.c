@@ -32,7 +32,7 @@ static stream_addr_t parse_uri(const char *uri);
 static int open_socket(stream_addr_t *addr);
 static void thread(void *params);
 
-bool stream_start(const char *url, size_t buffer_size, stream_t *out) {
+bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   ESP_LOGI(TAG, "starting stream %s", url);
   stream_addr_t stream_addr = parse_uri(url);
   int sock = -1;
@@ -44,7 +44,8 @@ bool stream_start(const char *url, size_t buffer_size, stream_t *out) {
     vTaskDelay(pdMS_TO_TICKS(3000));
   } while(sock < 0);
   out->socket = sock;
-  out->buffer = xRingbufferCreate(buffer_size, RINGBUF_TYPE_BYTEBUF);
+  out->read_chunk_size = read_chunk_size;
+  out->buffer = xRingbufferCreate(read_chunk_size * 4, RINGBUF_TYPE_BYTEBUF);
   if (out->buffer == NULL) {
     ESP_LOGE(TAG, "cannot create ring buffer");
     return false;
@@ -55,11 +56,11 @@ bool stream_start(const char *url, size_t buffer_size, stream_t *out) {
     return false;
   }
 
-  return xTaskCreate(thread, "stream", 4096, out, 5, NULL) == pdPASS;
+  return xTaskCreate(thread, "stream", 2048, out, 5, NULL) == pdPASS;
 }
 
 bool stream_stop(stream_t *stream) {
-  ESP_LOGI(TAG, "stopping stream");
+  ESP_LOGI(TAG, "stopping");
 
   xEventGroupSetBits(stream->event_group, STOP_BIT);
 
@@ -169,12 +170,11 @@ static void thread(void *params) {
 
   ESP_LOGI(TAG, "started");
 
-  uint8_t chunk_buf[512] = { 0 };
+  uint8_t *chunk_buf = malloc(stream->read_chunk_size);
   int bytes = -1;
   do {
-    memset(chunk_buf, 0, sizeof(chunk_buf));
-    bytes = recv(stream->socket, chunk_buf, sizeof(chunk_buf), MSG_WAITALL);
-    if (bytes <= 0 || xEventGroupGetBits(stream->event_group) & STOP_BIT) {
+    bytes = recv(stream->socket, chunk_buf, stream->read_chunk_size, MSG_WAITALL);
+    if (bytes <= 0 || (xEventGroupGetBits(stream->event_group) & STOP_BIT)) {
       break;
     }
     if (xRingbufferSend(stream->buffer, chunk_buf, bytes, pdMS_TO_TICKS(5000)) == pdFALSE) {
@@ -184,6 +184,7 @@ static void thread(void *params) {
       break;
     }
   } while(bytes > 0);
+  free(chunk_buf);
 
   ESP_LOGI(TAG, "end of stream");
 
