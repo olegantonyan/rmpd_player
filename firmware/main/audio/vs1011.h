@@ -11,7 +11,6 @@
 
 bool vs1011_init();
 void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *ctx), size_t total_size, void *ctx, void (*callback)(uint32_t poistion, uint32_t total));
-void vs1011_stop();
 void vs1011_transient_mute(bool mute);
 uint16_t vs1011_set_volume(uint8_t percents);
 uint16_t vs1011_set_bass_freqlimit(uint8_t value); // 2-15          //  20Hz - 150Hz

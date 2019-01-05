@@ -41,7 +41,8 @@ static struct {
 
 static QueueHandle_t queue = NULL;
 
-const EventBits_t STATE_CHANGED_BIT = BIT0;
+static const EventBits_t STATE_CHANGED_BIT = BIT0;
+static const EventBits_t PLAYER_STOP_BIT = BIT1;
 static EventGroupHandle_t event_group;
 
 static void player_thread(void * args);
@@ -91,7 +92,8 @@ bool player_stop() {
   if (get_state() == STOPPED) {
     return true;
   }
-  vs1011_stop();
+  //vs1011_stop();
+  xEventGroupSetBits(event_group, PLAYER_STOP_BIT);
   return wait_for_state(STOPPED, portMAX_DELAY);
 }
 
@@ -229,11 +231,11 @@ static void player_thread(void * args) {
 
 static bool play(const char *fname) {
   stream_t stream;
-  stream_start("http://us4.internet-radio.com:8258/", &stream);
+  stream_start("http://us4.internet-radio.com:8258/", VS1011_BUFFER_SIZE * 4, &stream);
   vs1011_play(stream_read_func, 0, &stream, vs1011_callback);
   stream_stop(&stream);
 
-  if (fname == NULL) {
+/*  if (fname == NULL) {
     ESP_LOGE(TAG, "null filename");
     return false;
   }
@@ -245,7 +247,7 @@ static bool play(const char *fname) {
   }
   vs1011_play(file_read_func, file_size(f), (void *)f, vs1011_callback);
   ESP_LOGI(TAG, "end playing file '%s'", fname);
-  fclose(f);
+  fclose(f);*/
   return true;
 }
 
@@ -298,9 +300,17 @@ static void vs1011_callback(uint32_t position, uint32_t total) {
 }
 
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
+  if (xEventGroupGetBits(event_group) & PLAYER_STOP_BIT) {
+    xEventGroupClearBits(event_group, PLAYER_STOP_BIT);
+    return 0;
+  }
   return fread(buffer, 1, buffer_size, (FILE *)ctx);
 }
 
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
+  if (xEventGroupGetBits(event_group) & PLAYER_STOP_BIT) {
+    xEventGroupClearBits(event_group, PLAYER_STOP_BIT);
+    return 0;
+  }
   return stream_read((stream_t *)ctx, buffer, buffer_size);
 }

@@ -6,6 +6,7 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
+#include "freertos/ringbuf.h"
 #include "esp_system.h"
 #include "esp_log.h"
 #include "lwip/err.h"
@@ -17,6 +18,9 @@
 
 static const char *TAG = "stream";
 
+static const EventBits_t EOS_BIT = BIT0;
+static const EventBits_t STOP_BIT = BIT1;
+
 typedef struct {
   const char *host;
   const char *protocol;
@@ -26,31 +30,71 @@ typedef struct {
 
 static stream_addr_t parse_uri(const char *uri);
 static int open_socket(stream_addr_t *addr);
+static void thread(void *params);
 
-bool stream_start(const char *url, stream_t *out) {
+bool stream_start(const char *url, size_t buffer_size, stream_t *out) {
   ESP_LOGI(TAG, "starting stream %s", url);
   stream_addr_t stream_addr = parse_uri(url);
   int sock = -1;
   do {
     sock = open_socket(&stream_addr);
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    if (sock >= 0) {
+      break;
+    }
+    vTaskDelay(pdMS_TO_TICKS(3000));
   } while(sock < 0);
   out->socket = sock;
+  out->buffer = xRingbufferCreate(buffer_size, RINGBUF_TYPE_BYTEBUF);
+  if (out->buffer == NULL) {
+    ESP_LOGE(TAG, "cannot create ring buffer");
+    return false;
+  }
+  out->event_group = xEventGroupCreate();
+  if (out->event_group == NULL) {
+    ESP_LOGE(TAG, "cannot create event group");
+    return false;
+  }
 
-  return true;
+  return xTaskCreate(thread, "stream", 4096, out, 5, NULL) == pdPASS;
 }
 
 bool stream_stop(stream_t *stream) {
   ESP_LOGI(TAG, "stopping stream");
+
+  xEventGroupSetBits(stream->event_group, STOP_BIT);
+
+  uint8_t dummy = 0;
+  xRingbufferReceiveUpTo(stream->buffer, (size_t *)&dummy, 0, sizeof(dummy)); // force read if reader thread already stopped
+  xRingbufferSend(stream->buffer, &dummy, sizeof(dummy), 0); // force read from the stream if there's someone waiting for it
+
+  xEventGroupWaitBits(stream->event_group, EOS_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+
   close(stream->socket);
+  vRingbufferDelete(stream->buffer);
+  vEventGroupDelete(stream->event_group);
+  stream->buffer = NULL;
+  stream->event_group = NULL;
+  stream->socket = -1;
+
+  ESP_LOGI(TAG, "stopped");
+
   return true;
 }
 
 size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size) {
-  int bytes = recv(stream->socket, buffer, buffer_size, MSG_WAITALL);
-  if (bytes < 0) {
+  if (xEventGroupGetBits(stream->event_group) & EOS_BIT) {
     return 0;
   }
+
+  size_t bytes = 0;
+  uint8_t *data = (uint8_t *)xRingbufferReceiveUpTo(stream->buffer, &bytes, pdMS_TO_TICKS(5000), buffer_size);
+  if (data != NULL) {
+    memcpy(buffer, data, bytes);
+    vRingbufferReturnItem(stream->buffer, (void *)data);
+  } else {
+    ESP_LOGW(TAG, "buffer undeflow");
+  }
+
   return bytes;
 }
 
@@ -118,4 +162,31 @@ static int open_socket(stream_addr_t *stream_addr) {
     return -1;
   }
   return sock;
+}
+
+static void thread(void *params) {
+  stream_t *stream = (stream_t *)params;
+
+  ESP_LOGI(TAG, "started");
+
+  uint8_t chunk_buf[512] = { 0 };
+  int bytes = -1;
+  do {
+    memset(chunk_buf, 0, sizeof(chunk_buf));
+    bytes = recv(stream->socket, chunk_buf, sizeof(chunk_buf), MSG_WAITALL);
+    if (bytes <= 0 || xEventGroupGetBits(stream->event_group) & STOP_BIT) {
+      break;
+    }
+    if (xRingbufferSend(stream->buffer, chunk_buf, bytes, pdMS_TO_TICKS(5000)) == pdFALSE) {
+      break;
+    }
+    if (xEventGroupGetBits(stream->event_group) & STOP_BIT) {
+      break;
+    }
+  } while(bytes > 0);
+
+  ESP_LOGI(TAG, "end of stream");
+
+  xEventGroupSetBits(stream->event_group, EOS_BIT);
+  vTaskDelete(NULL);
 }

@@ -5,7 +5,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "driver/spi_master.h"
 #include "soc/gpio_struct.h"
@@ -39,8 +38,6 @@ typedef enum {
 
 static spi_device_handle_t data_spi;
 static spi_device_handle_t command_spi;
-static EventGroupHandle_t event_group;
-const EventBits_t VS1011STOP_BIT = BIT0;
 static SemaphoreHandle_t mutex = NULL;
 static SemaphoreHandle_t dreq_sema = NULL;
 
@@ -62,8 +59,6 @@ void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *
   if (read_func == NULL) {
     return;
   }
-
-  xEventGroupClearBits(event_group, VS1011STOP_BIT);
 
   size_t bytes_in_buffer = 0;
   uint32_t pos = 0;
@@ -98,23 +93,20 @@ void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *
     //uint16_t h1 = read_sci(SCI_HDAT1); // format
     //uint16_t h0 = read_sci(SCI_HDAT0); // format
     //printf("%uKiB %1ds %d    H0: 0x%X H1: 0x%X\n", pos / 1024, read_sci(SCI_DECODE_TIME), sample_rate, h0, h1);
-
-    if (xEventGroupGetBits(event_group) & VS1011STOP_BIT) {
-      audio_format_t af = audio_format();
-      if (af != af_mp3 && af != af_unknown) {
-        write_sci(SCI_MODE, read_sci(SCI_MODE) | SM_OUTOFWAV);
-        memset(buffer, 0, sizeof(buffer));
-        for(uint32_t i = 0; i < 512; i++) {
-          write_sdi(buffer, VS_MAX_CHUNK_SIZE);
-          if (!(read_sci(SCI_MODE) & SM_OUTOFWAV)) {
-            break;
-          }
-        }
-      }
-      break;
-    }
   }
   vs1011_transient_mute(true);
+
+  audio_format_t af = audio_format();
+  if (af != af_mp3 && af != af_unknown) {
+    write_sci(SCI_MODE, read_sci(SCI_MODE) | SM_OUTOFWAV);
+    memset(buffer, 0, sizeof(buffer));
+    for(uint32_t i = 0; i < 512; i++) {
+      write_sdi(buffer, VS_MAX_CHUNK_SIZE);
+      if (!(read_sci(SCI_MODE) & SM_OUTOFWAV)) {
+        break;
+      }
+    }
+  }
 
   memset(buffer, 0, sizeof(buffer));
   for(uint32_t i = 0; i < 64; i++) {
@@ -132,20 +124,11 @@ void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *
   }
 }
 
-void vs1011_stop() {
-  xEventGroupSetBits(event_group, VS1011STOP_BIT);
-}
-
 void vs1011_transient_mute(bool mute) {
   gpio_set_level(VS_MUTE_GPIO, mute ? 0 : 1);
 }
 
 bool vs1011_init() {
-  event_group = xEventGroupCreate();
-  if (event_group == NULL) {
-    ESP_LOGE(TAG, "cannot create event group");
-    return false;
-  }
   mutex = xSemaphoreCreateMutex();
   if (mutex == NULL) {
     ESP_LOGE(TAG, "cannot create mutex");
