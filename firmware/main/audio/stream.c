@@ -108,8 +108,6 @@ size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size) {
   return bytes;
 }
 
-
-
 static int open_socket(url_t *stream_addr) {
   const struct addrinfo hints = {
     .ai_family = AF_INET,

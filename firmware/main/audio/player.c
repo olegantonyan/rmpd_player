@@ -242,12 +242,7 @@ static bool play(const char *fname) {
   ESP_LOGI(TAG, "start playing file '%s'", fname);
   if (string_ends_with(fname, ".m3u") || string_ends_with(fname, ".pls")) {
     stream_t stream;
-    //stream_start("http://us4.internet-radio.com:8258/", VS1011_BUFFER_SIZE, &stream);
-    //
-    //stream_start("http://streaming.radionomy.com/-PHILOSOMATIKA-", VS1011_BUFFER_SIZE, &stream);
-    //stream_start("http://relay3.slayradio.org:8000/", VS1011_BUFFER_SIZE, &stream);
-
-    char url[384] = { 0 };
+    char url[512] = { 0 };
     if (!parse_playlist_file(fname, url, sizeof(url))) {
       ESP_LOGE(TAG, "error parsing playlist file '%s'", fname);
       return false;
