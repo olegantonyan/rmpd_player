@@ -20,6 +20,7 @@
 #include "audio/scheduler.h"
 #include "tcpip_adapter.h"
 #include "esp_timer.h"
+#include "web/auth.h"
 
 static const char *TAG = "web";
 
