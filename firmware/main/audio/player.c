@@ -15,6 +15,7 @@
 #include "util/files.h"
 #include "esp_system.h"
 #include "esp_log.h"
+#include "util/http.h"
 
 static const char *TAG = "player";
 
@@ -54,6 +55,7 @@ static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
 static void set_now_playing(char *str);
 static void vs1011_callback(uint32_t position, uint32_t total);
 static bool parse_playlist_file(const char *fname, char *result, size_t result_length);
+static bool fetch_playlist_by_url(const char *url, uint8_t *buffer, size_t buffer_size);
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
@@ -342,16 +344,51 @@ static bool parse_playlist_file(const char *fname, char *result, size_t result_l
   }
 
   if (ok && (strstr(result, ".pls") != NULL)) { // bullshit format - link to a pls file instead of stream itself
-    // TODO http request and parse response as pls
+    ESP_LOGI(TAG, "fetching actual playlist from %s", result);
+    const size_t buffer_size = 1024;
+    uint8_t *buffer = malloc(buffer_size);
+    if (fetch_playlist_by_url(result, buffer, buffer_size)) {
+      buffer[buffer_size - 1] = '\0'; // just in case
+      char *saveptr = NULL;
+      char *delims = "\n";
+      char *tok = strtok_r((char *)buffer, delims, &saveptr);
+      bool done = false;
+      while (tok != NULL) {
+        if (strncmp(tok, "File1=", 6) == 0) { // pls format
+          string_chomp(tok);
+          strncpy(result, &tok[6], result_length);
+          done = true;
+          break;
+        }
+        tok = strtok_r(NULL, delims, &saveptr);
+      }
+      ok = done;
+    }
+    free(buffer);
   }
 
-/*  if (string_ends_with(fname, ".m3u")) {
-
-  } else if (string_ends_with(fname, ".pls")) {
-
-  }*/
   free(line);
   fclose(f);
+  return ok;
+}
+
+static bool fetch_playlist_by_url(const char *url, uint8_t *buffer, size_t buffer_size) {
+  bool ok = false;
+  size_t content_length = 0;
+  int response_status = 0;
+  uint8_t retries = 50;
+  do {
+    response_status = http_get(url, buffer, buffer_size, &content_length);
+    if (response_status == 200 || response_status == 201) {
+      ok = true;
+      break;
+    }
+    if (content_length > buffer_size) {
+      ESP_LOGE(TAG, "expected max %d bytes, got %d", buffer_size, content_length);
+      ok = false;
+      break;
+    }
+  } while(retries-- > 0);
   return ok;
 }
 

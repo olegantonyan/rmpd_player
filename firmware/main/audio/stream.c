@@ -40,13 +40,18 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   ESP_LOGI(TAG, "protocol:%s host:%s port:%s path:%s", stream_addr.protocol, stream_addr.host, stream_addr.port, stream_addr.path);
 
   int sock = -1;
+  uint8_t retries = 50;
   do {
     sock = open_socket(&stream_addr);
     if (sock >= 0) {
       break;
     }
     vTaskDelay(pdMS_TO_TICKS(3000));
-  } while(sock < 0);
+  } while(retries-- > 0);
+  if (retries == 0) {
+    ESP_LOGE(TAG, "cannot open connection");
+    return false;
+  }
   out->socket = sock;
   out->read_chunk_size = read_chunk_size;
   out->buffer = xRingbufferCreate(read_chunk_size * 4, RINGBUF_TYPE_BYTEBUF);
@@ -97,7 +102,7 @@ size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size) {
     memcpy(buffer, data, bytes);
     vRingbufferReturnItem(stream->buffer, (void *)data);
   } else {
-    ESP_LOGW(TAG, "buffer undeflow");
+    ESP_LOGW(TAG, "buffer underflow");
   }
 
   return bytes;
