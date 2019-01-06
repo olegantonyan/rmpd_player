@@ -19,6 +19,7 @@ int http_get(const char *uri, uint8_t *data, size_t data_max_length, size_t *con
   esp_http_client_config_t config = {
    .url = uri,
    .event_handler = http_event_handle,
+   .timeout_ms = 10000,
   };
   esp_http_client_handle_t client = esp_http_client_init(&config);
   esp_err_t err = esp_http_client_perform(client);
