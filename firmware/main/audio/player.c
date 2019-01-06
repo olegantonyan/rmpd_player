@@ -15,7 +15,7 @@
 #include "util/files.h"
 #include "esp_system.h"
 #include "esp_log.h"
-#include "util/http.h"
+#include "audio/stream_playlist.h"
 
 static const char *TAG = "player";
 
@@ -54,8 +54,6 @@ static player_state_t get_state();
 static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
 static void set_now_playing(char *str);
 static void vs1011_callback(uint32_t position, uint32_t total);
-static bool parse_playlist_file(const char *fname, char *result, size_t result_length);
-static bool fetch_playlist_by_url(const char *url, uint8_t *buffer, size_t buffer_size);
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
@@ -243,7 +241,7 @@ static bool play(const char *fname) {
   if (string_ends_with(fname, ".m3u") || string_ends_with(fname, ".pls")) {
     stream_t stream;
     char url[512] = { 0 };
-    if (!parse_playlist_file(fname, url, sizeof(url))) {
+    if (!stream_playlist_parse_file(fname, url, sizeof(url))) {
       ESP_LOGE(TAG, "error parsing playlist file '%s'", fname);
       return false;
     }
@@ -313,78 +311,6 @@ static bool wait_for_state(player_state_t desired_state, TickType_t ticks) {
 static void vs1011_callback(uint32_t position, uint32_t total) {
   state.pos_total = total;
   state.pos_current = position;
-}
-
-static bool parse_playlist_file(const char *fname, char *result, size_t result_length) {
-  bool ok = false;
-  FILE *f = fopen(fname, "r");
-  size_t line_max_length = result_length + 12;
-  char *line = malloc(line_max_length);
-
-  while(fgets(line, line_max_length, f) != NULL) {
-    if (line[0] == '#') {
-      continue;
-    }
-    string_chomp(line);
-    if (strncmp(line, "htt", 3) == 0) {
-      strncpy(result, line, result_length);
-      ok = true;
-      break;
-    }
-    if (strncmp(line, "File1=", 6) == 0) { // pls format
-      strncpy(result, &line[6], result_length);
-      ok = true;
-      break;
-    }
-  }
-
-  if (ok && (strstr(result, ".pls") != NULL)) { // bullshit format - link to a pls file instead of stream itself
-    ESP_LOGI(TAG, "fetching actual playlist from %s", result);
-    const size_t buffer_size = 1024;
-    uint8_t *buffer = malloc(buffer_size);
-    if (fetch_playlist_by_url(result, buffer, buffer_size)) {
-      buffer[buffer_size - 1] = '\0'; // just in case
-      char *saveptr = NULL;
-      char *delims = "\n";
-      char *tok = strtok_r((char *)buffer, delims, &saveptr);
-      bool done = false;
-      while (tok != NULL) {
-        if (strncmp(tok, "File1=", 6) == 0) { // pls format
-          string_chomp(tok);
-          strncpy(result, &tok[6], result_length);
-          done = true;
-          break;
-        }
-        tok = strtok_r(NULL, delims, &saveptr);
-      }
-      ok = done;
-    }
-    free(buffer);
-  }
-
-  free(line);
-  fclose(f);
-  return ok;
-}
-
-static bool fetch_playlist_by_url(const char *url, uint8_t *buffer, size_t buffer_size) {
-  bool ok = false;
-  size_t content_length = 0;
-  int response_status = 0;
-  uint8_t retries = 50;
-  do {
-    response_status = http_get(url, buffer, buffer_size, &content_length);
-    if (response_status == 200 || response_status == 201) {
-      ok = true;
-      break;
-    }
-    if (content_length > buffer_size) {
-      ESP_LOGE(TAG, "expected max %d bytes, got %d", buffer_size, content_length);
-      ok = false;
-      break;
-    }
-  } while(retries-- > 0);
-  return ok;
 }
 
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
