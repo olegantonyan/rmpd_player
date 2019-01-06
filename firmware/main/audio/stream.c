@@ -54,7 +54,7 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   }
   out->socket = sock;
   out->read_chunk_size = read_chunk_size;
-  out->buffer = xRingbufferCreate(read_chunk_size * 4, RINGBUF_TYPE_BYTEBUF);
+  out->buffer = xRingbufferCreate(read_chunk_size * 8, RINGBUF_TYPE_BYTEBUF);
   if (out->buffer == NULL) {
     ESP_LOGE(TAG, "cannot create ring buffer");
     return false;
