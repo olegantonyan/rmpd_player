@@ -19,7 +19,7 @@ bool auth_check(httpd_req_t *req) {
     reject(req);
     return false;
   }
-  base64_decode(buf, base64, strlen(buf));
+  base64_decode(buf, base64, strlen(base64));
 
   char login[16] = { 0 };
   char password[16] = { 0 };
@@ -32,7 +32,6 @@ bool auth_check(httpd_req_t *req) {
     reject(req);
     return false;
   }
-
 
   return true;
 }

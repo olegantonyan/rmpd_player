@@ -33,9 +33,10 @@ size_t base64_decode(char *dest, const char *src, size_t srclen) {
       break;
     }
     src += 4;
-    while(*src && (*src == 13 || *src == 10)) src++;
-  }
-  while(srclen -= 4);
+    while(*src && (*src == 13 || *src == 10)) {
+      src++;
+    }
+  } while(srclen -= 4);
   *p = 0;
   return p - dest;
 }
