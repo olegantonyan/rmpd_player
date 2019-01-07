@@ -104,3 +104,13 @@ bool config_random() {
 bool config_save_random(bool arg) {
   return nvs_save_uint8("random", arg ? 1 : 0);
 }
+
+char *config_web_login() {
+  char *t = "admin";
+  return t;
+}
+
+char *config_web_password() {
+  char *t = "1234";
+  return t;
+}

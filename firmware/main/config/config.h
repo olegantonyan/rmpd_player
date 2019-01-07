@@ -25,4 +25,7 @@ bool config_save_treble_amplitude(int8_t arg);
 bool config_random();
 bool config_save_random(bool arg);
 
+char *config_web_login();
+char *config_web_password();
+
 #endif
