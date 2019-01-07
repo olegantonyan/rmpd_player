@@ -28,4 +28,7 @@ bool config_save_random(bool arg);
 char *config_web_login();
 char *config_web_password();
 
+char *config_deviceid();
+char *config_ap_password();
+
 #endif

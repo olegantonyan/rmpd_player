@@ -111,6 +111,15 @@ char *config_web_login() {
 }
 
 char *config_web_password() {
-  char *t = "1234";
+  return config_ap_password();
+}
+
+char *config_deviceid() {
+  char *t = "vanilla";
+  return t;
+}
+
+char *config_ap_password() {
+  char *t = "12345678";
   return t;
 }

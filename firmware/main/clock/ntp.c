@@ -39,6 +39,8 @@ bool ntp_init() {
 }
 
 static void thread(void * args) {
+  vTaskDelay(pdMS_TO_TICKS(5000)); // hack
+  
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, "pool.ntp.org");
   sntp_setservername(1, "time.google.com");

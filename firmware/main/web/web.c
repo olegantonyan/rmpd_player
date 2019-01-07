@@ -558,6 +558,7 @@ static httpd_handle_t start_webserver() {
   httpd_handle_t server = NULL;
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.max_uri_handlers = 15;
+  config.max_open_sockets = 20;
 
   ESP_LOGI(TAG, "starting server on port: '%d'", config.server_port);
   if (httpd_start(&server, &config) != ESP_OK) {
