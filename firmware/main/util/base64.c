@@ -1,9 +1,9 @@
 #include "util/base64.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 static const char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-static const size_t BASE64_INPUT_SIZE = 57;
 
 static bool is_base64(char c);
 static inline char value(char c);
@@ -39,6 +39,35 @@ size_t base64_decode(char *dest, const char *src, size_t srclen) {
   } while(srclen -= 4);
   *p = 0;
   return p - dest;
+}
+
+size_t base64_encode(char *encoded, const char *string, size_t len) {
+    int i = 0;
+    char *p = encoded;
+    for (i = 0; i < len - 2; i += 3) {
+      *p++ = table[(string[i] >> 2) & 0x3F];
+      *p++ = table[((string[i] & 0x3) << 4) |
+                      ((int) (string[i + 1] & 0xF0) >> 4)];
+      *p++ = table[((string[i + 1] & 0xF) << 2) |
+                      ((int) (string[i + 2] & 0xC0) >> 6)];
+      *p++ = table[string[i + 2] & 0x3F];
+    }
+    if (i < len) {
+    *p++ = table[(string[i] >> 2) & 0x3F];
+    if (i == (len - 1)) {
+        *p++ = table[((string[i] & 0x3) << 4)];
+        *p++ = '=';
+    }
+    else {
+        *p++ = table[((string[i] & 0x3) << 4) |
+                        ((int) (string[i + 1] & 0xF0) >> 4)];
+        *p++ = table[((string[i + 1] & 0xF) << 2)];
+    }
+    *p++ = '=';
+    }
+
+    *p++ = '\0';
+    return p - encoded;
 }
 
 static bool is_base64(char c) {

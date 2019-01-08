@@ -15,6 +15,7 @@
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
 #include "util/url.h"
+#include "util/base64.h"
 #include <errno.h>
 
 static const char *TAG = "stream";
@@ -24,6 +25,7 @@ static const EventBits_t STOP_BIT = BIT1;
 
 static int open_socket(url_t *addr);
 static void thread(void *params);
+static char *http_request(url_t *stream_addr);
 
 bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   ESP_LOGI(TAG, "starting %s", url);
@@ -37,7 +39,7 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
     ESP_LOGE(TAG, "protocol %s is not supported", stream_addr.protocol);
     return false;
   }
-  ESP_LOGI(TAG, "protocol:%s host:%s port:%s path:%s", stream_addr.protocol, stream_addr.host, stream_addr.port, stream_addr.path);
+  ESP_LOGI(TAG, "protocol:%s host:%s port:%s path:%s username:%s password:%s", stream_addr.protocol, stream_addr.host, stream_addr.port, stream_addr.path, stream_addr.username, stream_addr.password);
 
   int sock = -1;
   uint8_t retries = 50;
@@ -54,7 +56,7 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   }
   out->socket = sock;
   out->read_chunk_size = read_chunk_size;
-  out->buffer = xRingbufferCreate(read_chunk_size * 8, RINGBUF_TYPE_BYTEBUF);
+  out->buffer = xRingbufferCreate(read_chunk_size * 10, RINGBUF_TYPE_BYTEBUF);
   if (out->buffer == NULL) {
     ESP_LOGE(TAG, "cannot create ring buffer");
     return false;
@@ -135,10 +137,10 @@ static int open_socket(url_t *stream_addr) {
   }
   freeaddrinfo(res);
 
-  const char *request_template = "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n";
-  size_t request_size = strlen(request_template) + strlen(stream_addr->path) + strlen(stream_addr->host) + 13;
-  char *request = malloc(request_size);
-  snprintf(request, request_size, request_template, stream_addr->path, stream_addr->host);
+  char *request = http_request(stream_addr);
+  if (request == NULL) {
+    return -1;
+  }
   if (send(sock, request, strlen(request), 0) < 0) {
     ESP_LOGE(TAG, "socket write failed");
     free(request);
@@ -157,6 +159,34 @@ static int open_socket(url_t *stream_addr) {
     return -1;
   }
   return sock;
+}
+
+static char *http_request(url_t *stream_addr) {
+  char *request_template = NULL;
+  size_t request_size = 0;
+  char *request = NULL;
+  if (strlen(stream_addr->username) > 0 && strlen(stream_addr->password) > 0) {
+    request_template = "GET %s HTTP/1.0\r\nHost: %s\r\nAuthorization: Basic %s\r\n\r\n";
+    request_size = strlen(request_template) + strlen(stream_addr->path) + strlen(stream_addr->host) + 13;
+    request = malloc(request_size);
+    if (request == NULL) {
+      return NULL;
+    }
+    char auth[64] = { 0 };
+    snprintf(auth, sizeof(auth), "%s:%s", stream_addr->username, stream_addr->password);
+    char auth64[sizeof(auth) * 4] = { 0 };
+    base64_encode(auth64, auth, strlen(auth));
+    snprintf(request, request_size, request_template, stream_addr->path, stream_addr->host, auth64);
+  } else {
+    request_template = "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n";
+    request_size = strlen(request_template) + strlen(stream_addr->path) + strlen(stream_addr->host) + 13;
+    request = malloc(request_size);
+    if (request == NULL) {
+      return NULL;
+    }
+    snprintf(request, request_size, request_template, stream_addr->path, stream_addr->host);
+  }
+  return request;
 }
 
 static void thread(void *params) {
