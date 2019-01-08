@@ -95,7 +95,6 @@ bool player_stop() {
   if (get_state() == STOPPED) {
     return true;
   }
-  //vs1011_stop();
   xEventGroupSetBits(event_group, PLAYER_STOP_BIT);
   return wait_for_state(STOPPED, portMAX_DELAY);
 }
