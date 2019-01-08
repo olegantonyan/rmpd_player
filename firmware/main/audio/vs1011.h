@@ -9,8 +9,14 @@
 
 #define VS1011_BUFFER_SIZE 4096
 
+typedef struct {
+  uint32_t position;
+  uint32_t total;
+  uint16_t decode_time;
+} audio_info_t;
+
 bool vs1011_init();
-void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *ctx), size_t total_size, void *ctx, void (*callback)(uint32_t poistion, uint32_t total)); // to stop return 0 from read_func
+void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *ctx), size_t total_size, void *ctx, void (*callback)(audio_info_t ai)); // to stop return 0 from read_func
 void vs1011_transient_mute(bool mute);
 uint16_t vs1011_set_volume(uint8_t percents);
 uint16_t vs1011_set_bass_freqlimit(uint8_t value); // 2-15          //  20Hz - 150Hz

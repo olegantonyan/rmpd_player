@@ -139,6 +139,7 @@ static void render_status(httpd_req_t *req) {
     cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString(""));
   }
   cJSON_AddItemToObject(root, "percent_pos", cJSON_CreateNumber(player_get_position_percents()));
+  cJSON_AddItemToObject(root, "seconds_pos", cJSON_CreateNumber(player_get_position_seconds()));
   cJSON_AddItemToObject(root, "volume", cJSON_CreateNumber(config_volume()));
   cJSON_AddItemToObject(root, "random", cJSON_CreateBool(scheduler_random()));
   time_t now = time(NULL);

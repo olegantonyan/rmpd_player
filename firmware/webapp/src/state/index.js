@@ -14,6 +14,7 @@ export default {
   status: {
     now_playing: "",
     percent_pos: 0,
+    seconds_pos: 0,
     time: "",
     volume: 0,
     random: false

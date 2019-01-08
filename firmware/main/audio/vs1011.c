@@ -54,7 +54,7 @@ static audio_format_t audio_format();
 void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *ctx),
                  size_t total_size,
                  void *ctx,
-                 void (*callback)(uint32_t poistion, uint32_t total)
+                 void (*callback)(audio_info_t ai)
                ) {
   if (read_func == NULL) {
     return;
@@ -65,10 +65,16 @@ void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *
   static uint8_t buffer[VS1011_BUFFER_SIZE] = { 0 };
   memset(buffer, 0, sizeof(buffer));
 
-  write_sci(SCI_DECODE_TIME, 0);         // Reset DECODE_TIME
+  write_sci(SCI_DECODE_TIME, 0); // Reset DECODE_TIME
+  write_sci(SCI_DECODE_TIME, 0); // twice according to datasheet
 
   if (callback != NULL) {
-    callback(pos, total_size);
+    audio_info_t ai = {
+      .total = total_size,
+      .position = pos,
+      .decode_time = read_sci(SCI_DECODE_TIME),
+    };
+    callback(ai);
   }
 
   write_sdi(buffer, 2); // according to faq: Send at least one (preferably two) byte containing zero to SDI.
@@ -86,7 +92,12 @@ void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *
     }
 
     if (callback != NULL) {
-      callback(pos, total_size);
+      audio_info_t ai = {
+        .total = total_size,
+        .position = pos,
+        .decode_time = read_sci(SCI_DECODE_TIME),
+      };
+      callback(ai);
     }
 
     //uint16_t sample_rate = read_sci(SCI_AUDATA);
@@ -114,7 +125,12 @@ void vs1011_play(size_t (*read_func)(uint8_t *buffer, size_t buffer_size, void *
   }
 
   if (callback != NULL) {
-    callback(0, 0);
+    audio_info_t ai = {
+      .total = 0,
+      .position = 0,
+      .decode_time = 0,
+    };
+    callback(ai);
   }
 
   /* If SM_OUTOFWAV is on at this point, there is some weirdness going

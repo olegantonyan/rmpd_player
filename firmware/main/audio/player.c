@@ -39,7 +39,8 @@ static struct {
   char *now_playing; // XXX: points to dynamically allocated string from player_message_t
   uint32_t pos_total;
   uint32_t pos_current;
-} state = { STOPPED, NULL, NULL, 0, 0 };
+  uint16_t pos_seconds;
+} state = { STOPPED, NULL, NULL, 0, 0, 0 };
 
 static QueueHandle_t queue = NULL;
 
@@ -53,7 +54,7 @@ static void set_state(player_state_t new_state);
 static player_state_t get_state();
 static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
 static void set_now_playing(char *str);
-static void vs1011_callback(uint32_t position, uint32_t total);
+static void vs1011_callback(audio_info_t ai);
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
@@ -116,6 +117,10 @@ uint8_t player_get_position_percents() {
     return 0;
   }
   return (uint8_t)((state.pos_current / (float)state.pos_total) * 100.0);
+}
+
+uint16_t player_get_position_seconds() {
+  return state.pos_seconds;
 }
 
 bool player_init() {
@@ -308,9 +313,10 @@ static bool wait_for_state(player_state_t desired_state, TickType_t ticks) {
   return get_state() == desired_state;
 }
 
-static void vs1011_callback(uint32_t position, uint32_t total) {
-  state.pos_total = total;
-  state.pos_current = position;
+static void vs1011_callback(audio_info_t ai) {
+  state.pos_total = ai.total;
+  state.pos_current = ai.position;
+  state.pos_seconds = ai.decode_time;
 }
 
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
