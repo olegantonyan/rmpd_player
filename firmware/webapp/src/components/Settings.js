@@ -3,7 +3,7 @@ import { h } from 'hyperapp'
 export default ({ state, actions }) =>
   <div id="settings">
     <br />
-    
+
     <div class="content">
 
       <h3>Audio</h3>
@@ -51,7 +51,7 @@ export default ({ state, actions }) =>
           </div>
 
           <div class="pure-control-group">
-            <label for="wifi_pass">password</label>
+            <label for="wifi_pass">Password</label>
             <input id="wifi_pass"
                    type="password"
                    placeholder=""
