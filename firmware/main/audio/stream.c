@@ -167,15 +167,15 @@ static char *http_request(url_t *stream_addr) {
   char *request = NULL;
   if (strlen(stream_addr->username) > 0 && strlen(stream_addr->password) > 0) {
     request_template = "GET %s HTTP/1.0\r\nHost: %s\r\nAuthorization: Basic %s\r\n\r\n";
-    request_size = strlen(request_template) + strlen(stream_addr->path) + strlen(stream_addr->host) + 13;
-    request = malloc(request_size);
-    if (request == NULL) {
-      return NULL;
-    }
     char auth[64] = { 0 };
     snprintf(auth, sizeof(auth), "%s:%s", stream_addr->username, stream_addr->password);
     char auth64[sizeof(auth) * 4] = { 0 };
     base64_encode(auth64, auth, strlen(auth));
+    request_size = strlen(request_template) + strlen(stream_addr->path) + strlen(stream_addr->host) + strnlen(auth64, sizeof(auth64)) + 13;
+    request = malloc(request_size);
+    if (request == NULL) {
+      return NULL;
+    }
     snprintf(request, request_size, request_template, stream_addr->path, stream_addr->host, auth64);
   } else {
     request_template = "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n";
