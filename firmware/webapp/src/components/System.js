@@ -46,11 +46,18 @@ export default ({ state, actions }) =>
             <td>Uptime</td>
             <td>{seconds_to_string(state.system.uptime)}</td>
           </tr>
+
+          <tr>
+            <td></td>
+            <td>
+              <span class="pure-button button-xsmall" onclick={() => actions.system.fetch()}>Refresh</span>
+            </td>
+          </tr>
         </tbody>
       </table>
 
       <br />
-      <button class="pure-button pure-button-primary" onclick={() => actions.system.reboot()}>Reboot</button>
+      <button class="pure-button pure-button-primary" onclick={() => confirm("Will reboot now") ? actions.system.reboot() : void(0)}>Reboot</button>
     </div>
   </div>
 
