@@ -123,3 +123,13 @@ char *config_ap_password() {
   char *t = "12345678";
   return t;
 }
+
+config_ip_addr_t config_ap_static_ip() {
+  config_ip_addr_t t = {
+    .oct1 = 10,
+    .oct2 = 10,
+    .oct3 = 0,
+    .oct4 = 1
+  };
+  return t;
+}

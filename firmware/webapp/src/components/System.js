@@ -38,6 +38,11 @@ export default ({ state, actions }) =>
           </tr>
 
           <tr>
+            <td>IP address (static AP iface)</td>
+            <td>{state.system.ap_static_addr}</td>
+          </tr>
+
+          <tr>
             <td>Uptime</td>
             <td>{seconds_to_string(state.system.uptime)}</td>
           </tr>

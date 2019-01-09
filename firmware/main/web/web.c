@@ -454,6 +454,10 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   ip4addr_ntoa_r(&ip_info.ip, ip, sizeof(ip));
   cJSON_AddItemToObject(root, "ip_addr", cJSON_CreateString(ip));
 
+  config_ip_addr_t ap_ad = config_ap_static_ip();
+  snprintf(mac_str, sizeof(mac_str), "%d.%d.%d.%d", ap_ad.oct1, ap_ad.oct2, ap_ad.oct3, ap_ad.oct4);
+  cJSON_AddItemToObject(root, "ap_static_addr", cJSON_CreateString(mac_str));
+
   const char *reset_reason = "";
   switch(esp_reset_reason()) {
     case ESP_RST_UNKNOWN:   reset_reason = "unknown"; break;    //!< Reset reason can not be determined

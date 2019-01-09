@@ -104,8 +104,9 @@ static void dhcp_server_init() {
   ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP));
   tcpip_adapter_ip_info_t ipinfo;
   memset(&ipinfo, 0, sizeof(ipinfo));
-  IP4_ADDR(&ipinfo.ip, 10,10,0,1);
-  IP4_ADDR(&ipinfo.gw, 10,10,0,1);
+  config_ip_addr_t c = config_ap_static_ip();
+  IP4_ADDR(&ipinfo.ip, c.oct1, c.oct2, c.oct3, c.oct4);
+  IP4_ADDR(&ipinfo.gw, c.oct1, c.oct2, c.oct3, c.oct4);
   IP4_ADDR(&ipinfo.netmask, 255,255,255,0);
   ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &ipinfo));
   ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP));
