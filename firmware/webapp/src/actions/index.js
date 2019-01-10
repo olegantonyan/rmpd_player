@@ -12,6 +12,7 @@ export default {
       case SETTINGS:
         actions.settings.fetch()
         actions.audio.fetch()
+        actions.settings.fetch_timezones()
         break
     }
     return { nav_current_route: value, nav_menu_open: false }
@@ -25,14 +26,20 @@ export default {
     },
     save: () => (state, actions) => {
       actions.saving(true)
-      fetch("/api/settings.json", { method: "POST", body: JSON.stringify({wifi_ssid: state.wifi_ssid, wifi_pass: state.wifi_pass}), headers: { "Content-Type": "application/json", "Connection": "close" } })
+      fetch("/api/settings.json", { method: "POST", body: JSON.stringify({wifi_ssid: state.wifi_ssid, wifi_pass: state.wifi_pass, timezone: state.timezone}), headers: { "Content-Type": "application/json", "Connection": "close" } })
         .then(data => data.json())
         .catch(error => actions.saving(false))
         .then((data) => { actions.update(data); actions.saving(false) })
         .catch(error => actions.saving(false))
     },
     update: value => state => { return value },
-    saving: value => state => ({ saving: value })
+    saving: value => state => ({ saving: value }),
+
+    fetch_timezones: () => (state, actions) => {
+      fetch("/zones.json", { headers: { "Connection": "close" } })
+        .then(data => data.json())
+        .then((data) => actions.update({ all_timezones: data }))
+    },
   },
 
   status: {

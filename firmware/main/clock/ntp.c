@@ -12,6 +12,7 @@
 #include "lwip/err.h"
 #include "lwip/apps/sntp.h"
 #include "clock/ds3231.h"
+#include "clock/clock.h"
 
 static const char *TAG = "ntp";
 
@@ -40,7 +41,7 @@ bool ntp_init() {
 
 static void thread(void * args) {
   vTaskDelay(pdMS_TO_TICKS(5000)); // hack
-  
+
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, "pool.ntp.org");
   sntp_setservername(1, "time.google.com");
@@ -58,6 +59,7 @@ static void thread(void * args) {
   if(xQueueReceive(queue, &result, portMAX_DELAY)) {
     struct timeval tv = { .tv_sec = result, .tv_usec = 0 };
     settimeofday(&tv, NULL);
+    clock_set_timezone_from_config();
 
     time_t now = time(NULL);
     struct tm timeinfo = { 0 };

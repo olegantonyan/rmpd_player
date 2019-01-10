@@ -8,7 +8,9 @@ export default {
   settings: {
     wifi_ssid: null,
     wifi_pass: null,
-    saving: false
+    timezone: "",
+    saving: false,
+    all_timezones: {},
   },
 
   status: {

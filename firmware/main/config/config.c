@@ -3,6 +3,7 @@
 
 #define MAX_WIFI_SSID_LENGTH 32
 #define MAX_WIFI_PASS_LENGTH 64
+#define MAX_TIMEZONE_LENGTH 32
 
 char *config_wifi_ssid() {
   static char buffer[MAX_WIFI_SSID_LENGTH] = {0};
@@ -132,4 +133,17 @@ config_ip_addr_t config_ap_static_ip() {
     .oct4 = 1
   };
   return t;
+}
+
+char *config_timezone() {
+  static char buffer[MAX_TIMEZONE_LENGTH] = {0};
+  bool ok = nvs_read_string("timezone", buffer, sizeof(buffer));
+  if (ok) {
+    return buffer;
+  }
+  return "Europe/Kaliningrad";
+}
+
+bool config_save_timezone(const char *arg) {
+  return nvs_save_string("timezone", (char *)arg);
 }

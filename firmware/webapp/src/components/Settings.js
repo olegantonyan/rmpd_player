@@ -68,5 +68,25 @@ export default ({ state, actions }) =>
         </fieldset>
       </form>
 
+      <h3>Time & Date</h3>
+      <form class="pure-form pure-form-aligned">
+        <fieldset>
+          <div class="pure-control-group">
+            <label for="timezone-select">Timezone</label>
+            <select id="timezone-select" onchange={e => actions.settings.update({ timezone: e.target.value })}>
+              {
+                Object.keys(state.settings.all_timezones).map(key => (<option value={key} selected={key == state.settings.timezone}>{key}</option>))
+              }
+            </select>
+          </div>
+
+          <div class="pure-controls">
+            <a class="pure-button pure-button-primary" onclick={() => actions.settings.save()} disabled={state.settings.saving}>
+              {state.settings.saving ? 'Saving...' : 'Save'}
+            </a>
+          </div>
+        </fieldset>
+      </form>
+
     </div>
   </div>

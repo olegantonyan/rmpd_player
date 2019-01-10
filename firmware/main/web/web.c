@@ -21,6 +21,7 @@
 #include "tcpip_adapter.h"
 #include "esp_timer.h"
 #include "web/auth.h"
+#include "clock/clock.h"
 
 static const char *TAG = "web";
 
@@ -113,6 +114,9 @@ static void render_settings(httpd_req_t *req) {
 
   cJSON_AddItemToObject(root, "wifi_ssid", cJSON_CreateString(ssid));
   cJSON_AddItemToObject(root, "wifi_pass", cJSON_CreateString(pass));
+
+  char *timezone = config_timezone();
+  cJSON_AddItemToObject(root, "timezone", cJSON_CreateString(timezone));
 
   char* json = malloc(1024);
 
@@ -249,6 +253,17 @@ static esp_err_t settings_post_handler(httpd_req_t *req) {
       goto exit;
     }
   } else {
+    const cJSON *timezone = cJSON_GetObjectItemCaseSensitive(json, "timezone");
+    if (cJSON_IsString(timezone) && (timezone->valuestring != NULL)) {
+      if (strcmp(timezone->valuestring, config_timezone()) != 0) {
+        if(!config_save_timezone(timezone->valuestring)) {
+          ok = false;
+          goto exit;
+        }
+        clock_set_timezone_from_config();
+      }
+    }
+
     const cJSON *ssid = cJSON_GetObjectItemCaseSensitive(json, "wifi_ssid");
     if (!cJSON_IsString(ssid) || (ssid->valuestring == NULL)) {
       ok = false;
@@ -263,7 +278,10 @@ static esp_err_t settings_post_handler(httpd_req_t *req) {
       ok = false;
       goto exit;
     }
-    ok = config_save_wifi_ssid(ssid->valuestring) && config_save_wifi_pass(pass->valuestring);
+    if (strcmp(ssid->valuestring, config_wifi_ssid()) != 0 || strcmp(pass->valuestring, config_wifi_pass()) != 0) {
+      ok = config_save_wifi_ssid(ssid->valuestring) && config_save_wifi_pass(pass->valuestring);
+      wifi_reconfig();
+    }
   }
 
 exit:
@@ -271,7 +289,6 @@ exit:
   cJSON_Delete(json);
   if (ok) {
     render_settings(req);
-    wifi_reconfig();
     return ESP_OK;
   } else {
     httpd_resp_send_500(req);
@@ -534,6 +551,8 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "image/x-icon");
   } else if(string_ends_with(fname, ".svg")) {
     httpd_resp_set_type(req, "image/svg+xml");
+  } else if(string_ends_with(fname, ".json")) {
+    httpd_resp_set_type(req, "application/json");
   } else {
     httpd_resp_set_type(req, "application/octet-stream");
   }

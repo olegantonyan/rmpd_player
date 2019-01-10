@@ -40,4 +40,7 @@ char *config_ap_password();
 
 config_ip_addr_t config_ap_static_ip();
 
+char *config_timezone();
+bool config_save_timezone(const char *arg);
+
 #endif
