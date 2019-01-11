@@ -1,13 +1,13 @@
 {
   "name": "webapp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "webapp",
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server",
     "build": "rm -rf build && webpack -p --config webpack.config.prod.js",
     "test": "jest --coverage --no-cache",
-    "deploy": "rm -rf ../fs/*.{ico,html,css,js,svg,jpg,gif,png}; cp -R build/* ../fs/"
+    "deploy": "rm -rf ../fs/*.{ico,html,css,js,svg,jpg,gif,png,json}; cp -R build/* ../fs/; cp -R static/* ../fs/"
   },
   "author": "Oleg Antonyan",
   "license": "MIT",
