@@ -22,6 +22,8 @@
 #include "esp_timer.h"
 #include "web/auth.h"
 #include "clock/clock.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 static const char *TAG = "web";
 
@@ -496,16 +498,56 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   cJSON_AddItemToObject(root, "chip_revision", cJSON_CreateNumber(ci.revision));
   cJSON_AddItemToObject(root, "uptime", cJSON_CreateNumber(esp_timer_get_time() / 1000000));
 
-  char* json = malloc(1024);
-  if(cJSON_PrintPreallocated(root, json, 1024, 0)) {
-    httpd_resp_send(req, json, strlen(json));
+
+  bool task_list_ok = true;
+  const char *task_list_header = "Task Name\tStatus\tPrio\tStack\tTask#\tAffinity\n";
+  size_t bytes_for_tasks_list = uxTaskGetNumberOfTasks() * 40 + strlen(task_list_header);
+  char *task_list = malloc(bytes_for_tasks_list);
+  if (task_list == NULL) {
+    task_list = "malloc failed";
+    task_list_ok = false;
   } else {
-    ESP_LOGE(TAG, "failed to build json response");
+    task_list[0] = '\0';
+    strcat(task_list, task_list_header);
+    vTaskList(task_list + strlen(task_list_header));
+  }
+  cJSON_AddItemToObject(root, "task_list", cJSON_CreateString(task_list));
+
+  bool runtime_stats_ok = true;
+  const char *runtime_stats_header = "Task Name\tAbs Time\t% Time\n";
+  char *runtime_stats = malloc(bytes_for_tasks_list);
+  if (runtime_stats == NULL) {
+    runtime_stats = "malloc failed";
+    runtime_stats_ok = false;
+  } else {
+    runtime_stats[0] = '\0';
+    strcat(runtime_stats, runtime_stats_header);
+    vTaskGetRunTimeStats(runtime_stats + strlen(runtime_stats_header));
+  }
+  cJSON_AddItemToObject(root, "runtime_stats", cJSON_CreateString(runtime_stats));
+
+  size_t json_size = 1024 + bytes_for_tasks_list * 2;
+  char* json = malloc(json_size);
+  if (json == NULL) {
+    ESP_LOGE(TAG, "json allocation failed");
     httpd_resp_send_500(req);
+  } else {
+    if(cJSON_PrintPreallocated(root, json, json_size, 0)) {
+      httpd_resp_send(req, json, strlen(json));
+      cJSON_Delete(root);
+    } else {
+      ESP_LOGE(TAG, "failed to build json response");
+      httpd_resp_send_500(req);
+    }
+    free(json);
   }
 
-  free(json);
-  cJSON_Delete(root);
+  if (task_list_ok) {
+    free(task_list);
+  }
+  if (runtime_stats_ok) {
+    free(runtime_stats);
+  }
 
   return ESP_OK;
 }

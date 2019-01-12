@@ -64,7 +64,7 @@ export default ({ state, actions }) =>
             <a class="pure-button pure-button-primary" onclick={() => actions.settings.save()} disabled={state.settings.saving}>
               {state.settings.saving ? 'Saving...' : 'Save'}
             </a>
-            <i> DHCP will be used to get an IP address</i>
+            <i> DHCP will be used to obtain IP address/gateway</i>
           </div>
         </fieldset>
       </form>

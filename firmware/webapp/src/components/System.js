@@ -56,6 +56,16 @@ export default ({ state, actions }) =>
         </tbody>
       </table>
 
+      <h3>Task list</h3>
+      <pre>
+        {state.system.task_list}
+      </pre>
+
+      <h3>Runtime stats</h3>
+      <pre>
+        {state.system.runtime_stats}
+      </pre>
+
       <br />
       <button class="pure-button pure-button-primary" onclick={() => confirm("Will reboot now") ? actions.system.reboot() : void(0)}>Reboot</button>
     </div>
