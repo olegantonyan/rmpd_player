@@ -53,8 +53,8 @@ ifeq ($(ARCHIVE), tar)
 endif
 
 
-VERSION ?= $(shell git describe --always)
-SPIFFS_VERSION := $(shell git -C spiffs describe --tags || echo "unknown")
+#VERSION ?= $(shell git describe --always)
+#SPIFFS_VERSION := $(shell git -C spiffs describe --tags || echo "unknown")
 BUILD_CONFIG_NAME ?= -generic
 
 OBJ		:= main.o \

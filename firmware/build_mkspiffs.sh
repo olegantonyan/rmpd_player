@@ -10,3 +10,5 @@
 #    Change CONFIG_SPIFFS_META_LENGTH to 0 in menuconfig. Note that you will need to disable timestamp support (CONFIG_SPIFFS_USE_MTIME) as well.
 
 make -C ../mkspiffs CPPFLAGS="-DSPIFFS_OBJ_META_LEN=4"
+
+# make sure that "#VERSION ?= $(shell git describe --always)" and "#SPIFFS_VERSION := $(shell git -C spiffs describe --tags || echo "unknown")" are commented in mkspiffs' Makefile

@@ -13,3 +13,8 @@ include $(IDF_PATH)/make/project.mk
 include fs.mk
 
 flash_all: fs flash
+
+webapp:
+	$(shell cd webapp && npm run-script build > /dev/null && npm run-script deploy > /dev/null)
+
+.PHONY: webapp
