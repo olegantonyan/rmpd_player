@@ -49,9 +49,10 @@ static bool configure() {
 
 static void station() {
   wifi_config_t wifi_config;
+  memset(&wifi_config, 0, sizeof(wifi_config));
+  wifi_config.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;
+  wifi_config.sta.sort_method = WIFI_CONNECT_AP_BY_SIGNAL;
 
-  wifi_config.sta.ssid[0] = '\0';
-  wifi_config.sta.password[0] = '\0';
   if (config_wifi_ssid() != NULL) {
     strcpy((char *)wifi_config.sta.ssid, config_wifi_ssid());
   }
