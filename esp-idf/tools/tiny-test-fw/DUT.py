@@ -205,12 +205,14 @@ class _RecvThread(threading.Thread):
 
     PERFORMANCE_PATTERN = re.compile(r"\[Performance]\[(\w+)]: ([^\r\n]+)\r?\n")
 
-    def __init__(self, read, data_cache):
+    def __init__(self, read, data_cache, recorded_data, record_data_lock):
         super(_RecvThread, self).__init__()
         self.exit_event = threading.Event()
         self.setDaemon(True)
         self.read = read
         self.data_cache = data_cache
+        self.recorded_data = recorded_data
+        self.record_data_lock = record_data_lock
         # cache the last line of recv data for collecting performance
         self._line_cache = str()
 
@@ -243,7 +245,10 @@ class _RecvThread(threading.Thread):
         while not self.exit_event.isSet():
             data = self.read(1000)
             if data:
-                self.data_cache.put(data)
+                with self.record_data_lock:
+                    self.data_cache.put(data)
+                    for capture_id in self.recorded_data:
+                        self.recorded_data[capture_id].put(data)
                 self.collect_performance(data)
 
     def exit(self):
@@ -274,10 +279,15 @@ class BaseDUT(object):
         self.log_file = log_file
         self.app = app
         self.data_cache = _DataCache()
+        # the main process of recorded data are done in receive thread
+        # but receive thread could be closed in DUT lifetime (tool methods)
+        # so we keep it in BaseDUT, as their life cycle are same
+        self.recorded_data = dict()
+        self.record_data_lock = threading.RLock()
         self.receive_thread = None
         self.expect_failures = []
-        # open and start during init
-        self.open()
+        self._port_open()
+        self.start_receive()
 
     def __str__(self):
         return "DUT({}: {})".format(self.name, str(self.port))
@@ -382,26 +392,32 @@ class BaseDUT(object):
         pass
 
     # methods that features raw port methods
-    def open(self):
+    def start_receive(self):
         """
-        open port and create thread to receive data.
+        Start thread to receive data.
 
         :return: None
         """
-        self._port_open()
-        self.receive_thread = _RecvThread(self._port_read, self.data_cache)
+        self.receive_thread = _RecvThread(self._port_read, self.data_cache,
+                                          self.recorded_data, self.record_data_lock)
         self.receive_thread.start()
 
-    def close(self):
+    def stop_receive(self):
         """
-        close receive thread and then close port.
-
+        stop the receiving thread for the port
         :return: None
         """
         if self.receive_thread:
             self.receive_thread.exit()
-        self._port_close()
         self.LOG_THREAD.flush_data()
+        self.receive_thread = None
+
+    def close(self):
+        """
+        permanently close the port
+        """
+        self.stop_receive()
+        self._port_close()
 
     @staticmethod
     def u_to_bytearray(data):
@@ -410,10 +426,10 @@ class BaseDUT(object):
 
         :param data: data which needs to be checked and maybe transformed
         """
-        if type(data) is type(u''):
+        if isinstance(data, type(u'')):
             try:
                 data = data.encode('utf-8')
-            except:
+            except Exception:
                 print(u'Cannot encode {} of type {}'.format(data, type(data)))
                 raise
         return data
@@ -448,6 +464,42 @@ class BaseDUT(object):
         self.data_cache.flush(size)
         return data
 
+    def start_capture_raw_data(self, capture_id="default"):
+        """
+        Sometime application want to get DUT raw data and use ``expect`` method at the same time.
+        Capture methods provides a way to get raw data without affecting ``expect`` or ``read`` method.
+
+        If you call ``start_capture_raw_data`` with same capture id again, it will restart capture on this ID.
+
+        :param capture_id: ID of capture. You can use different IDs to do different captures at the same time.
+        """
+        with self.record_data_lock:
+            try:
+                # if start capture on existed ID, we do flush data and restart capture
+                self.recorded_data[capture_id].flush()
+            except KeyError:
+                # otherwise, create new data cache
+                self.recorded_data[capture_id] = _DataCache()
+
+    def stop_capture_raw_data(self, capture_id="default"):
+        """
+        Stop capture and get raw data.
+        This method should be used after ``start_capture_raw_data`` on the same capture ID.
+
+        :param capture_id: ID of capture.
+        :return: captured raw data between start capture and stop capture.
+        """
+        with self.record_data_lock:
+            try:
+                ret = self.recorded_data[capture_id].get_data()
+                self.recorded_data.pop(capture_id)
+            except KeyError as e:
+                e.message = "capture_id does not exist. " \
+                            "You should call start_capture_raw_data with same ID " \
+                            "before calling stop_capture_raw_data"
+                raise e
+        return ret
+
     # expect related methods
 
     @staticmethod
@@ -477,13 +529,13 @@ class BaseDUT(object):
         :return: match groups if match succeed otherwise None
         """
         ret = None
-        if type(pattern.pattern) is type(u''):
+        if isinstance(pattern.pattern, type(u'')):
             pattern = re.compile(BaseDUT.u_to_bytearray(pattern.pattern))
-        if type(data) is type(u''):
+        if isinstance(data, type(u'')):
             data = BaseDUT.u_to_bytearray(data)
         match = pattern.search(data)
         if match:
-            ret = tuple(x.decode() for x in match.groups())
+            ret = tuple(None if x is None else x.decode() for x in match.groups())
             index = match.end()
         else:
             index = -1
@@ -491,7 +543,7 @@ class BaseDUT(object):
 
     EXPECT_METHOD = [
         [type(re.compile("")), "_expect_re"],
-        [type(b''), "_expect_str"], # Python 2 & 3 hook to work without 'from builtins import str' from future
+        [type(b''), "_expect_str"],  # Python 2 & 3 hook to work without 'from builtins import str' from future
         [type(u''), "_expect_str"],
     ]
 

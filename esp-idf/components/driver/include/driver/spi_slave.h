@@ -44,8 +44,26 @@ typedef struct {
     uint32_t flags;                 ///< Bitwise OR of SPI_SLAVE_* flags
     int queue_size;                 ///< Transaction queue size. This sets how many transactions can be 'in the air' (queued using spi_slave_queue_trans but not yet finished using spi_slave_get_trans_result) at the same time
     uint8_t mode;                   ///< SPI mode (0-3)
-    slave_transaction_cb_t post_setup_cb; ///< Callback called after the SPI registers are loaded with new data
-    slave_transaction_cb_t post_trans_cb; ///< Callback called after a transaction is done
+    slave_transaction_cb_t post_setup_cb;  /**< Callback called after the SPI registers are loaded with new data.
+                                             *
+                                             *  This callback is called within interrupt
+                                             *  context should be in IRAM for best
+                                             *  performance, see "Transferring Speed"
+                                             *  section in the SPI Master documentation for
+                                             *  full details. If not, the callback may crash
+                                             *  during flash operation when the driver is
+                                             *  initialized with ESP_INTR_FLAG_IRAM.
+                                             */
+    slave_transaction_cb_t post_trans_cb;  /**< Callback called after a transaction is done.
+                                             *
+                                             *  This callback is called within interrupt
+                                             *  context should be in IRAM for best
+                                             *  performance, see "Transferring Speed"
+                                             *  section in the SPI Master documentation for
+                                             *  full details. If not, the callback may crash
+                                             *  during flash operation when the driver is
+                                             *  initialized with ESP_INTR_FLAG_IRAM.
+                                             */
 } spi_slave_interface_config_t;
 
 /**
@@ -55,7 +73,10 @@ struct spi_slave_transaction_t {
     size_t length;                  ///< Total data length, in bits
     size_t trans_len;               ///< Transaction data length, in bits
     const void *tx_buffer;          ///< Pointer to transmit buffer, or NULL for no MOSI phase
-    void *rx_buffer;                ///< Pointer to receive buffer, or NULL for no MISO phase
+    void *rx_buffer;                /**< Pointer to receive buffer, or NULL for no MISO phase.
+                                     * When the DMA is anabled, must start at WORD boundary (``rx_buffer%4==0``),
+                                     * and has length of a multiple of 4 bytes.
+                                     */
     void *user;                     ///< User-defined variable. Can be used to store eg transaction ID.
 };
 

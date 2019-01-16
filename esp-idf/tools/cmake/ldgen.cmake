@@ -22,7 +22,12 @@ function(ldgen_add_fragment_files target fragment_files)
     endforeach()
 
     set_property(TARGET ldgen APPEND PROPERTY FRAGMENT_FILES ${fragment_files_full_path})
+endfunction()
 
+# ldgen_generate_sections_info
+#
+# Generate sections info for specified target to be used in linker script generation
+function(ldgen_generate_sections_info target)
     get_filename_component(target_sections_info ${CMAKE_CURRENT_BINARY_DIR}/${target}.sections_info ABSOLUTE)
 
     add_custom_command(
@@ -42,6 +47,9 @@ endfunction()
 # Passes a linker script template to the linker script generation tool for
 # processing
 function(ldgen_process_template template output)
+    file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/ldgen.section_infos
+        CONTENT "$<JOIN:$<TARGET_PROPERTY:ldgen_section_infos,SECTIONS_INFO_FILES>,\n>")
+
     # Create command to invoke the linker script generator tool.
     add_custom_command(
         OUTPUT ${output}
@@ -50,7 +58,7 @@ function(ldgen_process_template template output)
         --fragments "$<JOIN:$<TARGET_PROPERTY:ldgen,FRAGMENT_FILES>,\t>"
         --input     ${template}
         --output    ${output}
-        --sections  "$<JOIN:$<TARGET_PROPERTY:ldgen_section_infos,SECTIONS_INFO_FILES>,\t>"
+        --sections  ${CMAKE_BINARY_DIR}/ldgen.section_infos
         --kconfig   ${IDF_PATH}/Kconfig
         --env       "COMPONENT_KCONFIGS=${COMPONENT_KCONFIGS}"
         --env       "COMPONENT_KCONFIGS_PROJBUILD=${COMPONENT_KCONFIGS_PROJBUILD}"
@@ -67,6 +75,8 @@ endfunction()
 # ldgen_create_commands
 #
 # Create the command to generate the output scripts from templates presented.
-function(ldgen_add_dependencies executable_name)
-    add_dependencies(${executable_name} ldgen)
+function(ldgen_add_dependencies)
+    if(IDF_PROJECT_EXECUTABLE)
+        add_dependencies(${IDF_PROJECT_EXECUTABLE} ldgen)
+    endif()
 endfunction()

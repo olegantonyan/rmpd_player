@@ -34,7 +34,8 @@ help:
 	@echo "make size-components, size-files - Finer-grained memory footprints"
 	@echo "make size-symbols - Per symbol memory footprint. Requires COMPONENT=<component>"
 	@echo "make erase_flash - Erase entire flash contents"
-	@echo "make erase_ota - Erase ota_data partition. After that will boot first bootable partition (factory or OTAx)."
+	@echo "make erase_otadata - Erase ota_data partition; First bootable partition (factory or OTAx) will be used on next boot."
+	@echo "                     This assumes this project's partition table is the one flashed on the device."
 	@echo "make monitor - Run idf_monitor tool to monitor serial output from app"
 	@echo "make simple_monitor - Monitor serial output on terminal console"
 	@echo "make list-components - List all components in the project"
@@ -277,6 +278,10 @@ LDFLAGS ?= -nostdlib \
 CPPFLAGS ?=
 EXTRA_CPPFLAGS ?=
 CPPFLAGS := -DESP_PLATFORM -D IDF_VER=\"$(IDF_VER)\" -MMD -MP $(CPPFLAGS) $(EXTRA_CPPFLAGS)
+PROJECT_VER ?=
+export IDF_VER
+export PROJECT_NAME
+export PROJECT_VER
 
 # Warnings-related flags relevant both for C and C++
 COMMON_WARNING_FLAGS = -Wall -Werror=all \
@@ -565,8 +570,8 @@ define GenerateSubmoduleCheckTarget
 check-submodules: $(IDF_PATH)/$(1)/.git
 $(IDF_PATH)/$(1)/.git:
 	@echo "WARNING: Missing submodule $(1)..."
-	[ -e ${IDF_PATH}/.git ] || ( echo "ERROR: esp-idf must be cloned from git to work."; exit 1)
-	[ -x "$(shell which git)" ] || ( echo "ERROR: Need to run 'git submodule init $(1)' in esp-idf root directory."; exit 1)
+	[ -e ${IDF_PATH}/.git ] || { echo "ERROR: esp-idf must be cloned from git to work."; exit 1; }
+	[ -x "$(shell which git)" ] || { echo "ERROR: Need to run 'git submodule init $(1)' in esp-idf root directory."; exit 1; }
 	@echo "Attempting 'git submodule update --init $(1)' in esp-idf root directory..."
 	cd ${IDF_PATH} && git submodule update --init $(1)
 

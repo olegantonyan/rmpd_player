@@ -124,6 +124,7 @@ config BT_HCI_UART_BAUDRATE
     default 921600
     help
         UART Baudrate for HCI. Please use standard baudrate.
+
 endmenu
 
 menu "MODEM SLEEP Options"
@@ -135,7 +136,6 @@ config BTDM_CONTROLLER_MODEM_SLEEP
     default y
     help
         Enable/disable bluetooth controller low power mode.
-        Note that currently there is problem in the combination use of bluetooth modem sleep and Dynamic Frequency Scaling(DFS). So do not enable DFS if bluetooth modem sleep is in use.
 
 choice BTDM_MODEM_SLEEP_MODE
     prompt "Bluetooth Modem sleep mode"
@@ -146,11 +146,13 @@ choice BTDM_MODEM_SLEEP_MODE
 config BTDM_MODEM_SLEEP_MODE_ORIG
     bool "ORIG Mode(sleep with low power clock)"
     help
-        ORIG mode is a deep sleep mode that can be used for dual mode controller. In this mode, bluetooth controller sleeps between BR/EDR frames and BLE events. A low power clock is used to maintain bluetooth reference clock.
+        ORIG mode is a bluetooth sleep mode that can be used for dual mode controller. In this mode, bluetooth controller
+        sleeps between BR/EDR frames and BLE events. A low power clock is used to maintain bluetooth reference clock.
 config BTDM_MODEM_SLEEP_MODE_EVED
-    bool "EVED Mode "
+    bool "EVED Mode(For internal test only)"
     help
-        This mode is for BLE only.
+        EVED mode is for BLE only and is only for internal test. Do not use it for production. this mode is not compatible
+        with DFS nor light sleep
 endchoice
 
 choice BTDM_LOW_POWER_CLOCK
@@ -161,6 +163,10 @@ choice BTDM_LOW_POWER_CLOCK
 
 config BTDM_LPCLK_SEL_MAIN_XTAL
     bool "Main crystal"
+    help
+        Main crystal can be used as low power clock for bluetooth modem sleep. If this option is selected, bluetooth
+        modem sleep can work under Dynamic Frequency Scaling(DFS) enabled, but cannot work when light sleep is enabled.
+        Main crystal has a relatively better performance than other bluetooth low power clock sources.
 config BTDM_LPCLK_SEL_EXT_32K_XTAL
     bool "External 32kHz crystal"
     depends on ESP32_RTC_CLOCK_SOURCE_EXTERNAL_CRYSTAL
@@ -180,16 +186,16 @@ choice SCAN_DUPLICATE_TYPE
     default SCAN_DUPLICATE_BY_DEVICE_ADDR
     depends on BLE_SCAN_DUPLICATE
     help
-        Scan duplicate have three ways. one is "Scan Duplicate By Device Address", This way is to use advertiser address 
-        filtering. The adv packet of the same address is only allowed to be reported once. Another way is "Scan Duplicate 
-        By Device Address And Advertising Data". This way is to use advertising data and device address filtering. All 
-        different adv packets with the same address are allowed to be reported. The last way is "Scan Duplicate By Advertising 
+        Scan duplicate have three ways. one is "Scan Duplicate By Device Address", This way is to use advertiser address
+        filtering. The adv packet of the same address is only allowed to be reported once. Another way is "Scan Duplicate
+        By Device Address And Advertising Data". This way is to use advertising data and device address filtering. All
+        different adv packets with the same address are allowed to be reported. The last way is "Scan Duplicate By Advertising
         Data". This way is to use advertising data filtering. All same advertising data only allow to be reported once even though
         they are from different devices.
 
 config SCAN_DUPLICATE_BY_DEVICE_ADDR
     bool "Scan Duplicate By Device Address"
-    help 
+    help
         This way is to use advertiser address filtering. The adv packet of the same address is only allowed to be reported once
 
 config SCAN_DUPLICATE_BY_ADV_DATA
@@ -201,7 +207,7 @@ config SCAN_DUPLICATE_BY_ADV_DATA
 config SCAN_DUPLICATE_BY_ADV_DATA_AND_DEVICE_ADDR
     bool "Scan Duplicate By Device Address And Advertising Data"
     help
-    This way is to use advertising data and device address filtering. All different adv packets with the same address are 
+    This way is to use advertising data and device address filtering. All different adv packets with the same address are
     allowed to be reported.
 endchoice
 
@@ -238,7 +244,13 @@ config MESH_DUPLICATE_SCAN_CACHE_SIZE
         Maximum number of adv packets which can be recorded in duplicate scan cache for BLE Mesh.
         When the maximum amount of device in the filter is reached, the cache will be refreshed.
 
-
+config BTDM_CONTROLLER_FULL_SCAN_SUPPORTED
+    bool "BLE full scan feature supported"
+    depends on BTDM_CONTROLLER_MODE_BLE_ONLY
+    default n
+    help
+        The full scan function is mainly used to provide BLE scan performance.
+        This is required for scenes with high scan performance requirements, such as BLE Mesh scenes.
 
 endmenu
 
@@ -276,6 +288,13 @@ config BTC_TASK_STACK_SIZE
     default 3072
     help
         This select btc task stack size
+
+config BTU_TASK_STACK_SIZE
+    int "Bluetooth Bluedroid Host Stack task stack size"
+    depends on BLUEDROID_ENABLED
+    default 4096
+    help
+        This select btu task stack size
 
 config BLUEDROID_MEM_DEBUG
     bool "Bluedroid memory debug"
@@ -341,6 +360,13 @@ config HFP_AUDIO_DATA_PATH_HCI
     help
         This enables the Serial Port Profile
 endchoice
+
+config BT_SSP_ENABLED
+    bool "Secure Simple Pairing"
+    depends on CLASSIC_BT_ENABLED
+    default y
+    help
+        This enables the Secure Simple Pairing. If disable this option, Bluedroid will only support Legacy Pairing
 
 config GATTS_ENABLE
     bool "Include GATT server module(GATTS)"

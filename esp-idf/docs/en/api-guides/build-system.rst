@@ -187,6 +187,12 @@ The following variables are set at the project level, but exported for use in th
 - ``CC``, ``LD``, ``AR``, ``OBJCOPY``: Full paths to each tool from the gcc xtensa cross-toolchain.
 - ``HOSTCC``, ``HOSTLD``, ``HOSTAR``: Full names of each tool from the host native toolchain.
 - ``IDF_VER``: ESP-IDF version, retrieved from either ``$(IDF_PATH)/version.txt`` file (if present) else using git command ``git describe``. Recommended format here is single liner that specifies major IDF release version, e.g. ``v2.0`` for a tagged release or ``v2.0-275-g0efaa4f`` for an arbitrary commit. Application can make use of this by calling :cpp:func:`esp_get_idf_version`.
+- ``PROJECT_VER``: Project version. 
+
+* If ``PROJECT_VER`` variable set in project Makefile file, its value will be used.
+* Else, if the ``$PROJECT_PATH/version.txt`` exists, its contents will be used as ``PROJECT_VER``.
+* Else, if the project is located inside a Git repository, the output of git describe will be used.
+* Otherwise, ``PROJECT_VER`` will be "1".
 
 If you modify any of these variables inside ``component.mk`` then this will not prevent other components from building but it may make your component hard to build and/or debug.
 
@@ -302,6 +308,8 @@ ESP-IDF build systems adds the following C preprocessor definitions on the comma
 
 - ``ESP_PLATFORM`` — Can be used to detect that build happens within ESP-IDF.
 - ``IDF_VER`` — ESP-IDF version, see `Preset Component Variables`_ for more details.
+- ``PROJECT_VER``: The project version, see `Preset Component Variables`_ for more details.
+- ``PROJECT_NAME``: Name of the project, as set in project Makefile.
 
 Build Process Internals
 -----------------------
@@ -343,6 +351,16 @@ Setting ``BATCH_BUILD`` implies the following:
 - Verbose output (same as ``V=1``, see below). If you don't want verbose output, also set ``V=0``.
 - If the project configuration is missing new configuration items (from new components or esp-idf updates) then the project use the default values, instead of prompting the user for each item.
 - If the build system needs to invoke ``menuconfig``, an error is printed and the build fails.
+
+.. _make-size:
+
+Advanced Make Targets
+---------------------
+
+- ``make app``, ``make bootloader``, ``make partition table`` can be used to build only the app, bootloader, or partition table from the project as applicable.
+- ``make erase_flash`` and ``make erase_ota`` will use esptool.py to erase the entire flash chip and the OTA selection setting from the flash chip, respectively.
+- ``make size`` prints some size information about the app. ``make size-components`` and ``make size-files`` are similar targets which print more detailed per-component or per-source-file information, respectively.
+
 
 Debugging The Make Process
 --------------------------

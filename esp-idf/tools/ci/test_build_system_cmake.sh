@@ -58,6 +58,7 @@ function run_tests()
     BOOTLOADER_BINS="bootloader/bootloader.elf bootloader/bootloader.bin"
     APP_BINS="app-template.elf app-template.bin"
     PARTITION_BIN="partition_table/partition-table.bin"
+    IDF_COMPONENT_PREFIX="idf_component"
 
     print_status "Initial clean build"
     # if build fails here, everything fails
@@ -71,14 +72,14 @@ function run_tests()
     take_build_snapshot
     touch ${IDF_PATH}/components/esp32/cpu_start.c
     idf.py build || failure "Failed to partial build"
-    assert_rebuilt ${APP_BINS} esp32/libesp32.a esp32/CMakeFiles/esp32.dir/cpu_start.c.obj
-    assert_not_rebuilt lwip/liblwip.a freertos/libfreertos.a ${BOOTLOADER_BINS} ${PARTITION_BIN}
+    assert_rebuilt ${APP_BINS} esp-idf/esp32/libesp32.a esp-idf/esp32/CMakeFiles/${IDF_COMPONENT_PREFIX}_esp32.dir/cpu_start.c.obj
+    assert_not_rebuilt esp-idf/lwip/liblwip.a esp-idf/freertos/libfreertos.a ${BOOTLOADER_BINS} ${PARTITION_BIN}
 
     print_status "Bootloader source file rebuilds bootloader"
     take_build_snapshot
     touch ${IDF_PATH}/components/bootloader/subproject/main/bootloader_start.c
     idf.py build || failure "Failed to partial build bootloader"
-    assert_rebuilt ${BOOTLOADER_BINS} bootloader/main/CMakeFiles/main.dir/bootloader_start.c.obj
+    assert_rebuilt ${BOOTLOADER_BINS} bootloader/esp-idf/main/CMakeFiles/${IDF_COMPONENT_PREFIX}_main.dir/bootloader_start.c.obj
     assert_not_rebuilt ${APP_BINS} ${PARTITION_BIN}
 
     print_status "Partition CSV file rebuilds partitions"
@@ -95,6 +96,19 @@ function run_tests()
     idf.py build || failure "Partial build failed"
     assert_not_rebuilt ${ALL_BUILD_FILES}
 
+    print_status "Rebuild when app version was changed"
+    clean_build_dir
+    # App version
+    echo "project-version-1.0" > ${TESTDIR}/template/version.txt
+    idf.py build || failure "Failed to build with app version"
+    print_status "Change app version"
+    take_build_snapshot
+	echo "project-version-2.0(012345678901234567890123456789)" > ${TESTDIR}/template/version.txt
+	idf.py build || failure "Failed to rebuild with changed app version"
+    assert_rebuilt ${APP_BINS}
+    assert_not_rebuilt ${BOOTLOADER_BINS} esp-idf/esp32/libesp32.a
+    rm -f ${TESTDIR}/template/version.txt
+    
     print_status "Moving BUILD_DIR_BASE out of tree"
     clean_build_dir
     OUTOFTREE_BUILD=${TESTDIR}/alt_build
@@ -166,15 +180,16 @@ function run_tests()
     idf.py build
     take_build_snapshot
     # need to actually change config, or cmake is too smart to rebuild
-    sed -i s/^\#\ CONFIG_FREERTOS_UNICORE\ is\ not\ set/CONFIG_FREERTOS_UNICORE=y/ sdkconfig
+    sed -i.bak s/^\#\ CONFIG_FREERTOS_UNICORE\ is\ not\ set/CONFIG_FREERTOS_UNICORE=y/ sdkconfig
     idf.py build
     # check the sdkconfig.h file was rebuilt
     assert_rebuilt config/sdkconfig.h
     # pick one each of .c, .cpp, .S that #includes sdkconfig.h
     # and therefore should rebuild
-    assert_rebuilt newlib/CMakeFiles/newlib.dir/syscall_table.c.obj
-    assert_rebuilt nvs_flash/CMakeFiles/nvs_flash.dir/src/nvs_api.cpp.obj
-    assert_rebuilt freertos/CMakeFiles/freertos.dir/xtensa_vectors.S.obj
+    assert_rebuilt esp-idf/newlib/CMakeFiles/${IDF_COMPONENT_PREFIX}_newlib.dir/syscall_table.c.obj
+    assert_rebuilt esp-idf/nvs_flash/CMakeFiles/${IDF_COMPONENT_PREFIX}_nvs_flash.dir/src/nvs_api.cpp.obj
+    assert_rebuilt esp-idf/freertos/CMakeFiles/${IDF_COMPONENT_PREFIX}_freertos.dir/xtensa_vectors.S.obj
+    mv sdkconfig.bak sdkconfig
 
     print_status "Updating project CMakeLists.txt triggers full recompile"
     clean_build_dir
@@ -182,13 +197,14 @@ function run_tests()
     take_build_snapshot
     # Need to actually change the build config, or CMake won't do anything
     cp CMakeLists.txt CMakeLists.bak
-    sed -i 's/^project(/add_compile_options("-DUSELESS_MACRO_DOES_NOTHING=1")\nproject\(/' CMakeLists.txt
+    sed -i.bak 's/^project(/add_compile_options("-DUSELESS_MACRO_DOES_NOTHING=1")\nproject\(/' CMakeLists.txt
     idf.py build || failure "Build failed"
     mv CMakeLists.bak CMakeLists.txt
     # similar to previous test
-    assert_rebuilt newlib/CMakeFiles/newlib.dir/syscall_table.c.obj
-    assert_rebuilt nvs_flash/CMakeFiles/nvs_flash.dir/src/nvs_api.cpp.obj
-    assert_rebuilt freertos/CMakeFiles/freertos.dir/xtensa_vectors.S.obj
+    assert_rebuilt esp-idf/newlib/CMakeFiles/${IDF_COMPONENT_PREFIX}_newlib.dir/syscall_table.c.obj
+    assert_rebuilt esp-idf/nvs_flash/CMakeFiles/${IDF_COMPONENT_PREFIX}_nvs_flash.dir/src/nvs_api.cpp.obj
+    assert_rebuilt esp-idf/freertos/CMakeFiles/${IDF_COMPONENT_PREFIX}_freertos.dir/xtensa_vectors.S.obj
+    mv sdkconfig.bak sdkconfig
 
     print_status "Can build with Ninja (no idf.py)"
     clean_build_dir
@@ -203,23 +219,21 @@ function run_tests()
 
     print_status "Can build with IDF_PATH set via cmake cache not environment"
     clean_build_dir
-    cp CMakeLists.txt CMakeLists.bak
-    sed -i 's/ENV{IDF_PATH}/{IDF_PATH}/' CMakeLists.txt
+    sed -i.bak 's/ENV{IDF_PATH}/{IDF_PATH}/' CMakeLists.txt
     export IDF_PATH_BACKUP="$IDF_PATH"
     (unset IDF_PATH &&
          cd build &&
          cmake -G Ninja .. -DIDF_PATH=${IDF_PATH_BACKUP} &&
          ninja) || failure "Ninja build failed"
-    mv CMakeLists.bak CMakeLists.txt
+    mv CMakeLists.txt.bak CMakeLists.txt
     assert_built ${APP_BINS} ${BOOTLOADER_BINS} ${PARTITION_BIN}
 
     print_status "Can build with IDF_PATH unset and inferred by build system"
     clean_build_dir
-    cp CMakeLists.txt CMakeLists.bak
-    sed -i "s%\$ENV{IDF_PATH}%${IDF_PATH}%" CMakeLists.txt  # expand to a hardcoded path
-    (unset IDF_PATH && cd build &&
-         cmake -G Ninja .. && ninja) || failure "Ninja build failed"
-    mv CMakeLists.bak CMakeLists.txt
+    sed -i.bak "s%\$ENV{IDF_PATH}%\${ci_idf_path}%" CMakeLists.txt  # expand to a hardcoded path
+    (ci_idf_path=${IDF_PATH} && unset IDF_PATH && cd build &&
+         cmake -G Ninja -D ci_idf_path=${ci_idf_path} .. && ninja) || failure "Ninja build failed"
+    mv CMakeLists.txt.bak CMakeLists.txt
     assert_built ${APP_BINS} ${BOOTLOADER_BINS} ${PARTITION_BIN}
 
     # Next two tests will use this fake 'esp31b' target
@@ -227,7 +241,7 @@ function run_tests()
     mkdir -p components/$fake_target
     touch components/$fake_target/CMakeLists.txt
     cp ${IDF_PATH}/tools/cmake/toolchain-esp32.cmake components/$fake_target/toolchain-$fake_target.cmake
-    sed -i.old '/cmake_minimum_required/ a\
+    sed -i.bak '/cmake_minimum_required/ a\
         set(COMPONENTS esptool_py)' CMakeLists.txt
 
     print_status "Can override IDF_TARGET from environment"
@@ -247,7 +261,7 @@ function run_tests()
     grep "IDF_TARGET:STRING=${fake_target}" build/CMakeCache.txt || failure "IDF_TARGET not set in CMakeCache.txt using idf.py -D"
 
     # Clean up modifications for the fake target
-    mv CMakeLists.txt.old CMakeLists.txt
+    mv CMakeLists.txt.bak CMakeLists.txt
     rm -rf components
 
     print_status "Can find toolchain file in component directory"
@@ -255,6 +269,26 @@ function run_tests()
     mv ${IDF_PATH}/tools/cmake/toolchain-esp32.cmake ${IDF_PATH}/components/esp32/
     idf.py build || failure "Failed to build with toolchain file in component directory"
     mv ${IDF_PATH}/components/esp32/toolchain-esp32.cmake ${IDF_PATH}/tools/cmake/
+    assert_built ${APP_BINS} ${BOOTLOADER_BINS} ${PARTITION_BIN}
+
+    print_status "Can build with auto generated CMakeLists.txt"
+    clean_build_dir
+    mv CMakeLists.txt CMakeLists.bak
+    ${IDF_PATH}/tools/cmake/convert_to_cmake.py .
+    idf.py build || failure "Auto generated CMakeLists.txt build failed"
+    mv CMakeLists.bak CMakeLists.txt
+    assert_built ${APP_BINS} ${BOOTLOADER_BINS} ${PARTITION_BIN}
+
+    print_status "Setting EXTRA_COMPONENT_DIRS works"
+    clean_build_dir
+    mkdir -p main/main/main # move main component contents to another directory
+    mv main/* main/main/main
+    cp CMakeLists.txt CMakeLists.bak # set EXTRA_COMPONENT_DIRS to point to the other directory
+    sed -i "s%cmake_minimum_required(VERSION \([0-9]\+\).\([0-9]\+\))%cmake_minimum_required(VERSION \1.\2)\nset(EXTRA_COMPONENT_DIRS main/main/main)%" CMakeLists.txt
+    idf.py build || failure "Build with EXTRA_COMPONENT_DIRS set failed"
+    mv CMakeLists.bak CMakeLists.txt # revert previous modifications
+    mv main/main/main/* main
+    rm -rf main/main
     assert_built ${APP_BINS} ${BOOTLOADER_BINS} ${PARTITION_BIN}
 
     print_status "All tests completed"

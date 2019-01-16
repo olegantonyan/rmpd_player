@@ -1,4 +1,4 @@
-# expand_requires.cmake is a utility cmake script to expand component requirements early in the build,
+# expand_requirements.cmake is a utility cmake script to expand component requirements early in the build,
 # before the components are ready to be included.
 #
 # Parameters:
@@ -33,6 +33,8 @@ cmake_minimum_required(VERSION 3.5)
 include("${IDF_PATH}/tools/cmake/utilities.cmake")
 include("${IDF_PATH}/tools/cmake/component_utils.cmake")
 
+set(ESP_PLATFORM 1)
+
 if(NOT DEPENDENCIES_FILE)
     message(FATAL_ERROR "DEPENDENCIES_FILE must be set.")
 endif()
@@ -43,12 +45,6 @@ endif()
 spaces2list(COMPONENT_DIRS)
 
 spaces2list(COMPONENT_REQUIRES_COMMON)
-
-function(debug message)
-    if(DEBUG)
-        message(STATUS "${message}")
-    endif()
-endfunction()
 
 # Dummy register_component used to save requirements variables as global properties, for later expansion
 #
@@ -83,10 +79,6 @@ function(require_idf_targets)
     if(NOT ${IDF_TARGET} IN_LIST ARGN)
         message(FATAL_ERROR "Component ${COMPONENT_NAME} only supports targets: ${ARGN}")
     endif()
-endfunction()
-
-# Dummy call for ldgen_add_fragment_file
-function(ldgen_add_fragment_file files)
 endfunction()
 
 # expand_component_requirements: Recursively expand a component's requirements,
@@ -160,15 +152,15 @@ macro(filter_components_list)
             endif()
         else()
             set(add_component 1)
-
         endif()
 
         if(NOT ${component} IN_LIST EXCLUDE_COMPONENTS AND add_component EQUAL 1)
             list(APPEND components ${component})
             list(APPEND component_paths ${component_path})
 
-            if(TESTS_ALL EQUAL 1 OR TEST_COMPONENTS)
-                if(NOT TESTS_ALL EQUAL 1 AND TEST_COMPONENTS)
+            if(BUILD_TESTS EQUAL 1)
+
+                if(TEST_COMPONENTS)
                     if(${component} IN_LIST TEST_COMPONENTS)
                         set(add_test_component 1)
                     else()
