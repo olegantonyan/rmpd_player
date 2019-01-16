@@ -626,6 +626,11 @@ static httpd_handle_t start_webserver() {
   config.max_uri_handlers = 15;
   config.max_open_sockets = 20;
 
+  /* Use the URI wildcard matching function in order to
+     * allow the same handler to respond to multiple different
+     * target URIs which match the wildcard scheme */
+  config.uri_match_fn = httpd_uri_match_wildcard;
+
   ESP_LOGI(TAG, "starting server on port: '%d'", config.server_port);
   if (httpd_start(&server, &config) != ESP_OK) {
     ESP_LOGI(TAG, "error starting server!");
