@@ -67,7 +67,15 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
     return false;
   }
 
-  return xTaskCreate(thread, "stream", 2048, out, 5, NULL) == pdPASS;
+  if (xTaskCreate(thread, "stream", 2048, out, 5, NULL) != pdPASS) {
+    ESP_LOGE(TAG, "cannot start thread");
+    return false;
+  }
+  uint8_t wait_fill = 200;
+  do { // wait buffer half-full
+    vTaskDelay(pdMS_TO_TICKS(5));
+  } while ((xRingbufferGetCurFreeSize(out->buffer) < (read_chunk_size * STREAM_BUFFER_MAX_CHUNKS / 2)) && wait_fill-- > 0);
+  return wait_fill > 0;
 }
 
 bool stream_stop(stream_t *stream) {
