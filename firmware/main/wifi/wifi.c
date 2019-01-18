@@ -10,6 +10,10 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "config/config.h"
+#include "mdns.h"
+#include "driver/gpio.h"
+#include <sys/socket.h>
+#include <netdb.h>
 
 static const char *TAG = "wireless";
 
@@ -18,10 +22,12 @@ static void dhcp_server_init();
 static void softap();
 static void station();
 static bool configure();
-static char *hostname();
+static const char *hostname();
 static void reconnect_thread_hack(void *params);
+static void mdns_setup();
 
 bool wifi_init() {
+  mdns_setup();
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
   esp_wifi_set_ps(WIFI_PS_NONE); // disable powersave
 
@@ -165,7 +171,7 @@ static void softap() {
   ESP_LOGI(TAG, "softap ssid:%s password:%s", wifi_config.ap.ssid, wifi_config.ap.password);
 }
 
-static char *hostname() {
+static const char *hostname() {
   static char h[32] = { 0 };
   if (strlen(h) > 0) {
     return h;
@@ -180,4 +186,11 @@ static void reconnect_thread_hack(void *params) {
   station();
   esp_wifi_connect();
   vTaskDelete(NULL);
+}
+
+static void mdns_setup() {
+  mdns_init();
+  mdns_hostname_set(hostname());
+  mdns_instance_name_set(hostname());
+  mdns_service_add("built-in web ui", "_http", "_tcp", 80, NULL, 0);
 }
