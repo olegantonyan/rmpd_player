@@ -20,16 +20,11 @@
 static const char *TAG = "player";
 
 typedef enum {
-  PLAYER_START = 100,
-} player_message_type_t;
-
-typedef enum {
   PLAYING = 100,
   STOPPED
 } player_state_t;
 
 typedef struct {
-  player_message_type_t type;
   char *filename; // XXX: dynamically allocated
 } player_message_t;
 
@@ -68,7 +63,6 @@ bool player_start(const char *fname, bool async) {
     return false;
   }
   player_message_t m;
-  m.type = PLAYER_START;
   m.filename = malloc(strlen(fname) + 1);
   if (m.filename == NULL) {
     ESP_LOGE(TAG, "malloc failed");
@@ -216,20 +210,13 @@ static void player_thread(void * args) {
   while(true) {
     player_message_t message;
     if(xQueueReceive(queue, &message, portMAX_DELAY)) {
-      switch(message.type) {
-        case PLAYER_START:
-          set_now_playing(message.filename);
-          set_state(PLAYING);
-          play(message.filename);
-          set_state(STOPPED);
-          set_now_playing(NULL);
-          break;
-        default:
-          break;
-      }
+      set_now_playing(message.filename);
+      set_state(PLAYING);
+      play(message.filename);
+      set_state(STOPPED);
+      set_now_playing(NULL);
       if (message.filename != NULL) {
         free(message.filename);
-        set_now_playing(NULL); // just in case
       }
     }
   }
