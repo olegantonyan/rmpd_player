@@ -1,4 +1,4 @@
-#include "audio/scheduler.h"
+#include "playlist/scheduler.h"
 #include "audio/player.h"
 #include "audio/random.h"
 

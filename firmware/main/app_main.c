@@ -2,7 +2,7 @@
 #include "web/web.h"
 #include "storage/spi.h"
 #include "storage/sd.h"
-#include "audio/scheduler.h"
+#include "playlist/scheduler.h"
 #include "clock/clock.h"
 
 void app_main() {

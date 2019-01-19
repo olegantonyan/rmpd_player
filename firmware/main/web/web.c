@@ -17,7 +17,7 @@
 #include "util/strings.h"
 #include "util/files.h"
 #include "audio/player.h"
-#include "audio/scheduler.h"
+#include "playlist/scheduler.h"
 #include "tcpip_adapter.h"
 #include "esp_timer.h"
 #include "web/auth.h"

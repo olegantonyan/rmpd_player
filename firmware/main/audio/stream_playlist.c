@@ -21,7 +21,7 @@ bool stream_playlist_parse_file(const char *fname, char *result, size_t result_l
       continue;
     }
     string_chomp(line);
-    if (strncmp(line, "htt", 3) == 0) {
+    if (strncmp(line, "http", 4) == 0) {
       strncpy(result, line, result_length);
       ok = true;
       break;
@@ -80,4 +80,32 @@ static bool fetch_playlist_by_url(const char *url, uint8_t *buffer, size_t buffe
     }
   } while(retries-- > 0);
   return ok;
+}
+
+bool stream_is_stream_playlist(const char *fname) {
+  if (!string_ends_with(fname, ".m3u") && !string_ends_with(fname, ".pls")) {
+    return false;
+  }
+
+  FILE *f = fopen(fname, "r");
+  const size_t line_max_length = 512;
+  char *line = malloc(line_max_length);
+
+  bool result = false;
+  while(fgets(line, line_max_length, f) != NULL) {
+    if (line[0] == '#') {
+      continue;
+    }
+    string_chomp(line);
+    if (strncmp(line, "http", 4) == 0) {
+      result = true;
+      break;
+    }
+    if (strncmp(line, "File1=", 6) == 0) { // pls format
+      result = true;
+      break;
+    }
+  }
+  free(line);
+  return result;
 }
