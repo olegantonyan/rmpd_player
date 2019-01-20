@@ -500,7 +500,7 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
 
 
   bool task_list_ok = true;
-  const char *task_list_header = "Task Name\tStatus\tPrio\tStack\tTask#\tAffinity\n";
+  const char *task_list_header = "Task Name\tStatus\tPrio\tStack Free\tTask#\tAffinity\n";
   size_t bytes_for_tasks_list = uxTaskGetNumberOfTasks() * 40 + strlen(task_list_header);
   char *task_list = malloc(bytes_for_tasks_list);
   if (task_list == NULL) {
