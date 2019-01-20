@@ -51,8 +51,6 @@ uint32_t recurse_dir(const char *path, uint8_t depth, uint16_t *index, void (*ca
        (*index)++;
      }
      free(fullname);
-   } else {
-     ESP_LOGD(TAG, "'%s' is not supported media file", ep->d_name);
    }
    taskYIELD();
   }
