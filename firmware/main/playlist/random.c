@@ -1,4 +1,4 @@
-#include "audio/random.h"
+#include "playlist/random.h"
 
 #include <string.h>
 #include "esp_system.h"

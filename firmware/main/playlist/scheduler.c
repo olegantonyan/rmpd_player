@@ -1,6 +1,6 @@
 #include "playlist/scheduler.h"
 #include "audio/player.h"
-#include "audio/random.h"
+#include "playlist/random.h"
 #include "playlist/recurse.h"
 #include <string.h>
 #include <stdio.h>
