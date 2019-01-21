@@ -2,6 +2,7 @@
 #include "audio/player.h"
 #include "playlist/random.h"
 #include "playlist/recurse.h"
+#include "audio/stream_playlist.h"
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
@@ -102,29 +103,37 @@ static void scheduler_thread(void * args) {
 
   uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, NULL, NULL, mediafile_match_func);
   ESP_LOGI(TAG, "total media files: %u", total_mediafiles);
-  if (total_mediafiles > 65535) {
+  if (total_mediafiles > SCHEDULER_MAX_MEDIAFILES) {
     ESP_LOGE(TAG, "too many media files");
-    vTaskDelete(NULL);
-    return;
   }
-  xSemaphoreTake(state.mutex, portMAX_DELAY);
-  state.total = (uint16_t)total_mediafiles;
-  random_init(state.total - 1);
-  if (scheduler_random()) {
-    state.next = random_next();
-  }
-  xSemaphoreGive(state.mutex);
 
-  while(true) {
-    uint16_t index = 0;
-    recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback, mediafile_match_func);
-    taskYIELD();
-    random_reset();
+  uint32_t total_streams = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, NULL, NULL, stream_is_stream_playlist);
+  ESP_LOGI(TAG, "total stream playlists: %u", total_streams);
+  if (total_streams > SCHEDULER_MAX_STREAMS) {
+    ESP_LOGE(TAG, "too many streams");
   }
+
+  if (total_mediafiles > 0 && total_mediafiles < SCHEDULER_MAX_MEDIAFILES) {
+    xSemaphoreTake(state.mutex, portMAX_DELAY);
+    state.total = (uint16_t)total_mediafiles;
+    random_init(state.total - 1);
+    if (scheduler_random()) {
+      state.next = random_next();
+    }
+    xSemaphoreGive(state.mutex);
+
+    while(true) {
+      uint16_t index = 0;
+      recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback, mediafile_match_func);
+      taskYIELD();
+      random_reset();
+    }
+  }
+  vTaskDelete(NULL);
 }
 
 static bool mediafile_match_func(const char *fname) {
-  return string_ends_with(fname, ".mp3") || string_ends_with(fname, ".m3u") || string_ends_with(fname, ".pls");
+  return string_ends_with(fname, ".mp3");
 }
 
 static void on_medifile_callback(const char *path, uint16_t index) {

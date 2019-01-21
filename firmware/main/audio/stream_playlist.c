@@ -5,6 +5,7 @@
 #include "esp_log.h"
 #include "util/strings.h"
 #include "util/http.h"
+#include <errno.h>
 
 static const char *TAG = "stream_playlist";
 
@@ -13,6 +14,10 @@ static bool fetch_playlist_by_url(const char *url, uint8_t *buffer, size_t buffe
 bool stream_playlist_parse_file(const char *fname, char *result, size_t result_length) {
   bool ok = false;
   FILE *f = fopen(fname, "r");
+  if (f == NULL) {
+    ESP_LOGE(TAG, "error opening file %s: %s", fname, strerror(errno));
+    return false;
+  }
   size_t line_max_length = result_length + 12;
   char *line = malloc(line_max_length);
 
@@ -86,13 +91,16 @@ bool stream_is_stream_playlist(const char *fname) {
   if (!string_ends_with(fname, ".m3u") && !string_ends_with(fname, ".pls")) {
     return false;
   }
-
   FILE *f = fopen(fname, "r");
-  const size_t line_max_length = 512;
-  char *line = malloc(line_max_length);
+  if (f == NULL) {
+    ESP_LOGE(TAG, "error opening file %s: %s", fname, strerror(errno));
+    return false;
+  }
+
+  char line[512] = { 0 };
 
   bool result = false;
-  while(fgets(line, line_max_length, f) != NULL) {
+  while(fgets(line, sizeof(line), f) != NULL) {
     if (line[0] == '#') {
       continue;
     }
@@ -106,6 +114,6 @@ bool stream_is_stream_playlist(const char *fname) {
       break;
     }
   }
-  free(line);
+  fclose(f);
   return result;
 }

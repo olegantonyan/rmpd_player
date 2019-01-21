@@ -280,7 +280,7 @@ static esp_err_t settings_post_handler(httpd_req_t *req) {
       ok = false;
       goto exit;
     }
-    if (strcmp(ssid->valuestring, config_wifi_ssid()) != 0 || strcmp(pass->valuestring, config_wifi_pass()) != 0) {
+    if (config_wifi_ssid() == NULL || config_wifi_pass() == NULL || (config_wifi_ssid() != NULL && strcmp(ssid->valuestring, config_wifi_ssid()) != 0) || ( config_wifi_pass() != NULL && strcmp(pass->valuestring, config_wifi_pass()) != 0)) {
       ok = config_save_wifi_ssid(ssid->valuestring) && config_save_wifi_pass(pass->valuestring);
       wifi_reconfig();
     }
