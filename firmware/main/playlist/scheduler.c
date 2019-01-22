@@ -34,6 +34,7 @@ static void play(const char *path);
 static void stop();
 static void on_medifile_callback(const char *path, uint16_t index);
 static bool mediafile_match_func(const char *fname);
+static bool mediafile_enum_func(const char *fname);
 
 bool scheduler_init() {
   if (!player_init()) {
@@ -101,16 +102,10 @@ static void scheduler_thread(void * args) {
   }
   closedir(dp);
 
-  uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, NULL, NULL, mediafile_match_func);
+  uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, NULL, NULL, mediafile_enum_func);
   ESP_LOGI(TAG, "total media files: %u", total_mediafiles);
   if (total_mediafiles > SCHEDULER_MAX_MEDIAFILES) {
     ESP_LOGE(TAG, "too many media files");
-  }
-
-  uint32_t total_streams = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, NULL, NULL, stream_is_stream_playlist);
-  ESP_LOGI(TAG, "total stream playlists: %u", total_streams);
-  if (total_streams > SCHEDULER_MAX_STREAMS) {
-    ESP_LOGE(TAG, "too many streams");
   }
 
   if (total_mediafiles > 0 && total_mediafiles < SCHEDULER_MAX_MEDIAFILES) {
@@ -132,8 +127,18 @@ static void scheduler_thread(void * args) {
   vTaskDelete(NULL);
 }
 
+static bool mediafile_enum_func(const char *fname) {
+  if (string_ends_with(fname, ".mp3")) {
+    return true;
+  } else if (stream_is_stream_playlist(fname)) {
+    // TODO add to a list
+    return true;
+  }
+  return false;
+}
+
 static bool mediafile_match_func(const char *fname) {
-  return string_ends_with(fname, ".mp3");
+  return string_ends_with(fname, ".mp3") || stream_is_stream_playlist(fname);
 }
 
 static void on_medifile_callback(const char *path, uint16_t index) {

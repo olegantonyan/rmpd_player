@@ -23,9 +23,9 @@ static const char *TAG = "stream";
 static const EventBits_t EOS_BIT = BIT0;
 static const EventBits_t STOP_BIT = BIT1;
 
-static int open_socket(url_t *addr);
+static int open_socket(const url_t *addr);
 static void thread(void *params);
-static char *http_request(url_t *stream_addr);
+static char *http_request(const url_t *stream_addr);
 
 bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   ESP_LOGI(TAG, "starting %s", url);
@@ -42,13 +42,13 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   ESP_LOGI(TAG, "protocol:%s host:%s port:%s path:%s username:%s password:%s", stream_addr.protocol, stream_addr.host, stream_addr.port, stream_addr.path, stream_addr.username, stream_addr.password);
 
   int sock = -1;
-  uint8_t retries = 50;
+  uint8_t retries = 1;
   do {
     sock = open_socket(&stream_addr);
     if (sock >= 0) {
       break;
     }
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    vTaskDelay(pdMS_TO_TICKS(200));
   } while(retries-- > 0);
   if (retries == 0) {
     ESP_LOGE(TAG, "cannot open connection");
@@ -101,7 +101,7 @@ bool stream_stop(stream_t *stream) {
   return true;
 }
 
-size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size) {
+size_t stream_read(const stream_t *stream, uint8_t *buffer, size_t buffer_size) {
   if (xEventGroupGetBits(stream->event_group) & EOS_BIT) {
     return 0;
   }
@@ -118,7 +118,7 @@ size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size) {
   return bytes;
 }
 
-static int open_socket(url_t *stream_addr) {
+static int open_socket(const url_t *stream_addr) {
   const struct addrinfo hints = {
     .ai_family = AF_INET,
     .ai_socktype = SOCK_STREAM,
@@ -169,7 +169,7 @@ static int open_socket(url_t *stream_addr) {
   return sock;
 }
 
-static char *http_request(url_t *stream_addr) {
+static char *http_request(const url_t *stream_addr) {
   char *request_template = NULL;
   size_t request_size = 0;
   char *request = NULL;
@@ -206,13 +206,13 @@ static void thread(void *params) {
   int bytes = -1;
   do {
     bytes = recv(stream->socket, chunk_buf, stream->read_chunk_size, MSG_WAITALL);
-    if (bytes <= 0 || (xEventGroupGetBits(stream->event_group) & STOP_BIT)) {
+    if (xEventGroupGetBits(stream->event_group) & STOP_BIT) {
+      break;
+    }
+    if (bytes <= 0) {
       break;
     }
     if (xRingbufferSend(stream->buffer, chunk_buf, bytes, pdMS_TO_TICKS(5000)) == pdFALSE) {
-      break;
-    }
-    if (xEventGroupGetBits(stream->event_group) & STOP_BIT) {
       break;
     }
   } while(bytes > 0);

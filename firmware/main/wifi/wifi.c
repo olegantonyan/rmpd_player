@@ -3,6 +3,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
@@ -17,6 +18,9 @@
 
 static const char *TAG = "wireless";
 
+static const EventBits_t WIFI_CONNECTED_BIT = BIT0;
+static EventGroupHandle_t event_group = NULL;
+
 static esp_err_t event_handler(void *ctx, system_event_t *event);
 static void dhcp_server_init();
 static void softap();
@@ -27,6 +31,12 @@ static void reconnect_thread_hack(void *params);
 static void mdns_setup();
 
 bool wifi_init() {
+  event_group = xEventGroupCreate();
+  if (event_group == NULL) {
+    ESP_LOGE(TAG, "cannot create event group");
+    return false;
+  }
+
   mdns_setup();
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
   esp_wifi_set_ps(WIFI_PS_NONE); // disable powersave
@@ -39,6 +49,10 @@ bool wifi_init() {
 bool wifi_reconfig() {
   station();
   return true;
+}
+
+bool wifi_is_connected() {
+  return xEventGroupGetBits(event_group) & WIFI_CONNECTED_BIT;
 }
 
 static bool configure() {
@@ -84,6 +98,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
     break;
   case SYSTEM_EVENT_STA_GOT_IP:
     ESP_LOGI(TAG, "got ip:%s", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+    xEventGroupSetBits(event_group, WIFI_CONNECTED_BIT);
     break;
   case SYSTEM_EVENT_AP_STACONNECTED:
     ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d", MAC2STR(event->event_info.sta_connected.mac), event->event_info.sta_connected.aid);
@@ -93,6 +108,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
     break;
   case SYSTEM_EVENT_STA_DISCONNECTED:
     ESP_LOGI(TAG, "disconnected, reason %d", event->event_info.disconnected.reason);
+    xEventGroupClearBits(event_group, WIFI_CONNECTED_BIT);
     /*
     WIFI_REASON_UNSPECIFIED              = 1,
     WIFI_REASON_AUTH_EXPIRE              = 2,

@@ -6,5 +6,6 @@
 
 bool wifi_init();
 bool wifi_reconfig();
+bool wifi_is_connected();
 
 #endif

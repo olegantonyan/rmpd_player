@@ -2,6 +2,8 @@
 #include "audio/player.h"
 #include "config/config.h"
 #include "audio/stream.h"
+#include "audio/stream_playlist.h"
+#include "wifi/wifi.h"
 
 #include <string.h>
 #include <sys/unistd.h>
@@ -41,10 +43,13 @@ static QueueHandle_t queue = NULL;
 
 static const EventBits_t STATE_CHANGED_BIT = BIT0;
 static const EventBits_t PLAYER_STOP_BIT = BIT1;
+static const EventBits_t PLAYER_STOPED_BIT = BIT2;
 static EventGroupHandle_t event_group;
 
 static void player_thread(void * args);
 static bool play(const char *fname);
+static bool play_stream(const char *fname);
+static bool play_file(const char *fname);
 static void set_state(player_state_t new_state);
 static player_state_t get_state();
 static bool wait_for_state(player_state_t desired_state, TickType_t ticks);
@@ -70,6 +75,8 @@ bool player_start(const char *fname, bool async) {
   }
   m.filename[0] = '\0';
   strcpy(m.filename, fname);
+
+  xEventGroupClearBits(event_group, PLAYER_STOPED_BIT);
 
   BaseType_t result = xQueueSend(queue, &m, portMAX_DELAY);
   if (async) {
@@ -229,30 +236,65 @@ static bool play(const char *fname) {
   }
 
   ESP_LOGI(TAG, "start playing file '%s'", fname);
-  if (string_ends_with(fname, ".m3u") || string_ends_with(fname, ".pls")) {
-    stream_t stream;
-    char url[512] = { 0 };
+  if (stream_is_stream_playlist(fname)) {
+    play_stream(fname);
+  } else {
+    play_file(fname);
+  }
+  ESP_LOGI(TAG, "end playing file '%s'", fname);
+
+  return true;
+}
+
+static bool play_stream(const char *fname) {
+  stream_t stream;
+  char url[512] = { 0 };
+
+  uint8_t retries = config_stream_retries();
+  bool infinite = retries == 0;
+  do {
+    if (!wifi_is_connected()) {
+      ESP_LOGW(TAG, "no network - ignoring stream start");
+      return false;
+    }
+    memset(url, 0, sizeof(url));
     if (!stream_playlist_parse_file(fname, url, sizeof(url))) {
       ESP_LOGE(TAG, "error parsing playlist file '%s'", fname);
       return false;
     }
+
     if (!stream_start(url, VS1011_BUFFER_SIZE, &stream)) {
       ESP_LOGE(TAG, "failed to start a stream '%s'", url);
-      return false;
+      continue;
     }
     vs1011_play(stream_read_func, 0, &stream, vs1011_callback);
-    stream_stop(&stream);
-  } else {
-    FILE *f = fopen(fname, "rb");
-    if (f == NULL) {
-      ESP_LOGE(TAG, "failed to open file '%s' for reading", fname);
-      return false;
-    }
-    vs1011_play(file_read_func, file_size(f), (void *)f, vs1011_callback);
-    fclose(f);
-  }
-  ESP_LOGI(TAG, "end playing file '%s'", fname);
 
+    if (xEventGroupGetBits(event_group) & PLAYER_STOPED_BIT) {
+      xEventGroupClearBits(event_group, PLAYER_STOPED_BIT);
+      ESP_LOGD(TAG, "stopped by player stop");
+      stream_stop(&stream);
+      return true;
+    }
+
+    if (infinite) {
+      ESP_LOGI(TAG, "stopped by eos, retry (infinite)");
+    } else {
+      ESP_LOGI(TAG, "stopped by eos, retries remaining %d", retries);
+    }
+    stream_stop(&stream);
+  } while (infinite || retries-- > 0);
+
+  return infinite || retries > 0;
+}
+
+static bool play_file(const char *fname) {
+  FILE *f = fopen(fname, "rb");
+  if (f == NULL) {
+    ESP_LOGE(TAG, "failed to open file '%s' for reading", fname);
+    return false;
+  }
+  vs1011_play(file_read_func, file_size(f), (void *)f, vs1011_callback);
+  fclose(f);
   return true;
 }
 
@@ -308,6 +350,7 @@ static void vs1011_callback(audio_info_t ai) {
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
   if (xEventGroupGetBits(event_group) & PLAYER_STOP_BIT) {
     xEventGroupClearBits(event_group, PLAYER_STOP_BIT);
+    xEventGroupSetBits(event_group, PLAYER_STOPED_BIT);
     return 0;
   }
   return fread(buffer, 1, buffer_size, (FILE *)ctx);
@@ -316,6 +359,7 @@ static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
   if (xEventGroupGetBits(event_group) & PLAYER_STOP_BIT) {
     xEventGroupClearBits(event_group, PLAYER_STOP_BIT);
+    xEventGroupSetBits(event_group, PLAYER_STOPED_BIT);
     return 0;
   }
   return stream_read((stream_t *)ctx, buffer, buffer_size);

@@ -19,6 +19,6 @@ typedef struct {
 
 bool stream_start(const char *url, size_t read_chunk_size, stream_t *out);
 bool stream_stop(stream_t *stream);
-size_t stream_read(stream_t *stream, uint8_t *buffer, size_t buffer_size);
+size_t stream_read(const stream_t *stream, uint8_t *buffer, size_t buffer_size);
 
 #endif

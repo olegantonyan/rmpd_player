@@ -43,4 +43,6 @@ config_ip_addr_t config_ap_static_ip();
 char *config_timezone();
 bool config_save_timezone(const char *arg);
 
+uint8_t config_stream_retries();
+
 #endif

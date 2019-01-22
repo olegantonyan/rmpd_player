@@ -147,3 +147,7 @@ char *config_timezone() {
 bool config_save_timezone(const char *arg) {
   return nvs_save_string("timezone", (char *)arg);
 }
+
+uint8_t config_stream_retries() {
+  return 3;
+}
