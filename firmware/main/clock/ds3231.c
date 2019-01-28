@@ -143,7 +143,7 @@ static bool i2c_read(uint8_t reg, uint8_t *buffer, size_t size) {
   i2c_master_read(cmd, buffer, size, I2C_MASTER_LAST_NACK);
   i2c_master_stop(cmd);
 
-  esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, pdMS_TO_TICKS(1000));
 
   i2c_cmd_link_delete(cmd);
   xSemaphoreGive(mutex);
@@ -168,7 +168,7 @@ static bool i2c_write(uint8_t reg, uint8_t *data, size_t size) {
   i2c_master_write(cmd, data, size, I2C_MASTER_ACK);
   i2c_master_stop(cmd);
 
-  esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, pdMS_TO_TICKS(1000));
 
   i2c_cmd_link_delete(cmd);
   xSemaphoreGive(mutex);
@@ -190,5 +190,5 @@ static void start_condition() {
   gpio_set_direction(SDA_GPIO, GPIO_MODE_OUTPUT);
   gpio_set_level(SDA_GPIO, 0);
   gpio_set_level(SCL_GPIO, 1);
-  vTaskDelay(5 / portTICK_RATE_MS);
+  vTaskDelay(pdMS_TO_TICKS(5));
 }

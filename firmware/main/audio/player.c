@@ -212,7 +212,7 @@ void player_set_treble_amplitude(int8_t value) { // -8-7, 0=off  // -12dB - 10.5
 }
 
 static void player_thread(void * args) {
-  vTaskDelay(100 / portTICK_PERIOD_MS); // wait 100ms in MUTE state (@see vs1011 app note)
+  vTaskDelay(pdMS_TO_TICKS(100)); // wait 100ms in MUTE state (@see vs1011 app note)
   vs1011_transient_mute(false);
   while(true) {
     player_message_t message;

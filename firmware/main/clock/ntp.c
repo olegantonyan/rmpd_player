@@ -13,6 +13,7 @@
 #include "lwip/apps/sntp.h"
 #include "clock/ds3231.h"
 #include "clock/clock.h"
+#include "wifi/wifi.h"
 
 static const char *TAG = "ntp";
 
@@ -40,7 +41,7 @@ bool ntp_init() {
 }
 
 static void thread(void * args) {
-  vTaskDelay(pdMS_TO_TICKS(5000)); // hack
+  wifi_wait_connected(portMAX_DELAY);
 
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, "pool.ntp.org");

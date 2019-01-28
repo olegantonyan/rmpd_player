@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include "util/strings.h"
 #include "config/config.h"
+#include "playlist/stream_scheduler.h"
 
 static const char *TAG = "scheduler";
 
@@ -102,6 +103,8 @@ static void scheduler_thread(void * args) {
   }
   closedir(dp);
 
+  stream_scheduler_init();
+
   uint16_t index = 0;
   uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, mediafile_enum_func, mediafile_match_func);
   ESP_LOGI(TAG, "total media files: %u", total_mediafiles);
@@ -125,12 +128,16 @@ static void scheduler_thread(void * args) {
       random_reset();
     }
   }
+
+  stream_scheduler_deinit();
+
   vTaskDelete(NULL);
 }
 
 static void mediafile_enum_func(const char *fname, uint16_t index) {
   if (stream_is_stream_playlist(fname)) {
-    // TODO add to a list
+    ESP_LOGI(TAG, "adding %s as a stream with index %d", fname, index);
+    stream_scheduler_add_stream(index);
   }
 }
 

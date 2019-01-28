@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 #define SCHEDULER_MAX_MEDIAFILES 65536
-#define SCHEDULER_MAX_STREAMS 128
 
 bool scheduler_init();
 bool scheduler_next();

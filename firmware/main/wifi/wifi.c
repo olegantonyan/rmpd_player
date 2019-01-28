@@ -55,6 +55,14 @@ bool wifi_is_connected() {
   return xEventGroupGetBits(event_group) & WIFI_CONNECTED_BIT;
 }
 
+bool wifi_wait_connected(uint32_t ms) {
+  uint32_t ticks = pdMS_TO_TICKS(ms);
+  if (ms == portMAX_DELAY) {
+    ticks = portMAX_DELAY;
+  }
+  return xEventGroupWaitBits(event_group, WIFI_CONNECTED_BIT, pdFALSE,	pdFALSE, ticks) & WIFI_CONNECTED_BIT;
+}
+
 static bool configure() {
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
