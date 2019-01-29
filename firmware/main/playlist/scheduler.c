@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -16,10 +17,10 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "storage/sd.h"
-#include <dirent.h>
 #include "util/strings.h"
 #include "config/config.h"
 #include "playlist/stream_scheduler.h"
+#include "wifi/wifi.h"
 
 static const char *TAG = "scheduler";
 
@@ -120,6 +121,10 @@ static void scheduler_thread(void * args) {
       state.next = random_next();
     }
     xSemaphoreGive(state.mutex);
+
+    if (stream_scheduler_max() > 0) {
+      wifi_wait_connected(5000);
+    }
 
     while(true) {
       index = 0;

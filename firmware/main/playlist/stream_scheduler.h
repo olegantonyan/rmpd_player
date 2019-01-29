@@ -9,5 +9,6 @@
 void stream_scheduler_init();
 void stream_scheduler_deinit();
 bool stream_scheduler_add_stream(uint16_t index);
+uint8_t stream_scheduler_max();
 
 #endif

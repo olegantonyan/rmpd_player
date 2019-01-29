@@ -5,7 +5,7 @@
 static struct {
   bool initialized;
   uint16_t list[STREAM_SCHEDULER_MAX_STREAMS];
-  uint8_t pointer;
+  uint8_t max;
 } p = { false, { 0 }, 0 };
 
 void stream_scheduler_init() {
@@ -17,13 +17,17 @@ void stream_scheduler_deinit() {
   p.initialized = false;
 }
 
+uint8_t stream_scheduler_max() {
+  return p.max;
+}
+
 bool stream_scheduler_add_stream(uint16_t index) {
   if (!p.initialized) {
     return false;
   }
-  if (p.pointer >= STREAM_SCHEDULER_MAX_STREAMS) {
+  if (p.max >= STREAM_SCHEDULER_MAX_STREAMS) {
     return false;
   }
-  p.list[p.pointer++] = index;
+  p.list[p.max++] = index;
   return true;
 }
