@@ -31,3 +31,8 @@ bool stream_scheduler_add_stream(uint16_t index) {
   p.list[p.max++] = index;
   return true;
 }
+
+bool stream_scheduler_is_possible() {
+  // TODO
+  return true;
+}

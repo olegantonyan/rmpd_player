@@ -2592,7 +2592,7 @@ U 1 1 5CE349F9
 P 5350 7400
 F 0 "U8" H 5350 7867 50  0000 C CNN
 F 1 "TPS54331D" H 5350 7776 50  0000 C CNN
-F 2 "Housings_SOIC:SOIC-8-1EP_3.9x4.9mm_Pitch1.27mm" H 5350 7400 50  0001 C CNN
+F 2 "Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm" H 5350 7400 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/tps54233.pdf" H 5350 7350 50  0001 C CNN
 	1    5350 7400
 	1    0    0    -1  
@@ -2866,7 +2866,7 @@ U 1 1 5E53881E
 P 5350 9550
 F 0 "U9" H 5350 10017 50  0000 C CNN
 F 1 "TPS54331D" H 5350 9926 50  0000 C CNN
-F 2 "Housings_SOIC:SOIC-8-1EP_3.9x4.9mm_Pitch1.27mm" H 5350 9550 50  0001 C CNN
+F 2 "Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm" H 5350 9550 50  0001 C CNN
 F 3 "http://www.ti.com/lit/ds/symlink/tps54233.pdf" H 5350 9500 50  0001 C CNN
 	1    5350 9550
 	1    0    0    -1  
