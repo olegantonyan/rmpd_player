@@ -32,6 +32,19 @@ bool stream_scheduler_add_stream(uint16_t index) {
   return true;
 }
 
+bool stream_scheduler_is_known_stream(uint16_t index) {
+  if (!p.initialized) {
+    return false;
+  }
+
+  for (size_t i = 0; i < p.max; i++) {
+    if (p.list[i] == index) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool stream_scheduler_is_possible() {
   // TODO
   return true;

@@ -152,26 +152,32 @@ static bool mediafile_match_func(const char *fname) {
 
 static void on_medifile_callback(const char *path, uint16_t index) {
   ESP_LOGD(TAG, "index %u next_index %u : %s", index, state.next, path);
-  if (index == state.next) {
-    xSemaphoreTake(state.mutex, portMAX_DELAY);
-    state.current = index;
-    if (scheduler_random()) {
-      state.next = random_next();
+  if (index != state.next) {
+    return;
+  }
+  xSemaphoreTake(state.mutex, portMAX_DELAY);
+  state.current = index;
+  if (scheduler_random()) {
+    state.next = random_next();
+  } else {
+    if (state.next >= (state.total - 1)) {
+      state.next = 0;
     } else {
-      if (state.next >= (state.total - 1)) {
-        state.next = 0;
-      } else {
-        state.next = state.current + 1;
+      state.next = state.current + 1;
+    }
+  }
+  xSemaphoreGive(state.mutex);
+
+  if (stream_scheduler_is_known_stream(index)) {
+    if (stream_scheduler_is_possible()) { // play stream here
+      if (play(path)) {
+        ESP_LOGD(TAG, "stream finished successfuly");
+      } else { // mark this stream as possibly dead
+        ESP_LOGD(TAG, "stream finished with error");
       }
     }
-    xSemaphoreGive(state.mutex);
-    
-    bool player_result = play(path);
-    if (player_result) {
-      ESP_LOGD(TAG, "finished successfuly");
-    } else {
-      ESP_LOGD(TAG, "finished with error");
-    }
+  } else { // play a file or unknown stream (shouldn't be here)
+    play(path);
   }
 }
 
