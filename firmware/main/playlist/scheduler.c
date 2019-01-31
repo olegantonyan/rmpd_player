@@ -32,7 +32,7 @@ static struct s_state {
 } state = { NULL, 0, 0, 0 };
 
 static void scheduler_thread(void * args);
-static void play(const char *path);
+static bool play(const char *path);
 static void stop();
 static void on_medifile_callback(const char *path, uint16_t index);
 static bool mediafile_match_func(const char *fname);
@@ -165,13 +165,19 @@ static void on_medifile_callback(const char *path, uint16_t index) {
       }
     }
     xSemaphoreGive(state.mutex);
-    play(path);
+    
+    bool player_result = play(path);
+    if (player_result) {
+      ESP_LOGD(TAG, "finished successfuly");
+    } else {
+      ESP_LOGD(TAG, "finished with error");
+    }
   }
 }
 
-static void play(const char *path) {
+static bool play(const char *path) {
   ESP_LOGD(TAG, "starting '%s'", path);
-  player_start(path, false);
+  return player_start(path);
 }
 
 static void stop() {

@@ -30,6 +30,10 @@ typedef struct {
   char *filename; // XXX: dynamically allocated
 } player_message_t;
 
+typedef struct {
+  bool success;
+} player_result_t;
+
 static struct {
   player_state_t state;
   SemaphoreHandle_t mutex;
@@ -40,6 +44,7 @@ static struct {
 } state = { STOPPED, NULL, NULL, 0, 0, 0 };
 
 static QueueHandle_t queue = NULL;
+static QueueHandle_t back_queue = NULL;
 
 static const EventBits_t STATE_CHANGED_BIT = BIT0;
 static const EventBits_t PLAYER_STOP_BIT = BIT1;
@@ -58,7 +63,7 @@ static void vs1011_callback(audio_info_t ai);
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
-bool player_start(const char *fname, bool async) {
+bool player_start(const char *fname) {
   if (get_state() == PLAYING) {
     player_stop();
   }
@@ -79,16 +84,16 @@ bool player_start(const char *fname, bool async) {
   xEventGroupClearBits(event_group, PLAYER_STOPED_BIT);
 
   BaseType_t result = xQueueSend(queue, &m, portMAX_DELAY);
-  if (async) {
-    return result == pdTRUE;
-  }
   if (result != pdTRUE) {
     return false;
   }
-  if (!wait_for_state(PLAYING, portMAX_DELAY)) {
+
+  player_result_t pr;
+  result = xQueueReceive(back_queue, &pr, portMAX_DELAY);
+  if (result != pdTRUE) {
     return false;
   }
-  return wait_for_state(STOPPED, portMAX_DELAY);
+  return pr.success;
 }
 
 bool player_stop() {
@@ -130,9 +135,14 @@ bool player_init() {
     return false;
   }
 
-  queue = xQueueCreate(5, sizeof(player_message_t));
+  queue = xQueueCreate(1, sizeof(player_message_t));
   if (queue == NULL) {
     ESP_LOGE(TAG, "cannot create queue");
+    return false;
+  }
+  back_queue = xQueueCreate(1, sizeof(player_result_t));
+  if (back_queue == NULL) {
+    ESP_LOGE(TAG, "cannot create back queue");
     return false;
   }
   state.mutex = xSemaphoreCreateMutex();
@@ -219,9 +229,11 @@ static void player_thread(void * args) {
     if(xQueueReceive(queue, &message, portMAX_DELAY)) {
       set_now_playing(message.filename);
       set_state(PLAYING);
-      play(message.filename);
+      player_result_t result;
+      result.success = play(message.filename);
       set_state(STOPPED);
       set_now_playing(NULL);
+      xQueueSend(back_queue, &result, 0);
       if (message.filename != NULL) {
         free(message.filename);
       }
@@ -235,15 +247,16 @@ static bool play(const char *fname) {
     return false;
   }
 
+  bool result = false;
   ESP_LOGI(TAG, "start playing file '%s'", fname);
   if (stream_is_stream_playlist(fname)) {
-    play_stream(fname);
+    result = play_stream(fname);
   } else {
-    play_file(fname);
+    result = play_file(fname);
   }
   ESP_LOGI(TAG, "end playing file '%s'", fname);
 
-  return true;
+  return result;
 }
 
 static bool play_stream(const char *fname) {
@@ -282,7 +295,7 @@ static bool play_stream(const char *fname) {
       ESP_LOGI(TAG, "stopped by eos, retries remaining %d", retries);
     }
     stream_stop(&stream);
-  } while (infinite || retries-- > 0);
+  } while (infinite || --retries > 0);
 
   return infinite || retries > 0;
 }
