@@ -127,7 +127,7 @@ static void thread(void * args) {
     recurse_dir(p.storage_path, 0, &index, on_medifile_callback, scheduler_mediafile_match_func);
 
     if (stream_scheduler_any_alive_streams()) {
-      xSemaphoreTake(p.sema, pdMS_TO_TICKS(2 * 3600 * 1000));
+      xSemaphoreTake(p.sema, pdMS_TO_TICKS(1 * 3600 * 1000));
     } else {
       xSemaphoreTake(p.sema, pdMS_TO_TICKS(10 * 1000));
     }
