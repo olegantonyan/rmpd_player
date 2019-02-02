@@ -29,9 +29,9 @@ int http_get(const char *uri, uint8_t *data, size_t data_max_length, size_t *con
     int bytes = esp_http_client_read(client, (char *)data, data_max_length);
     *content_length = esp_http_client_get_content_length(client);
     status = esp_http_client_get_status_code(client);
-    ESP_LOGI(TAG, "status:%d content_length:%d bytes_read:%d", status, *content_length, bytes);
+    ESP_LOGD(TAG, "status:%d content_length:%d bytes_read:%d", status, *content_length, bytes);
   } else {
-    ESP_LOGE(TAG, "http get request failed: %s", esp_err_to_name(err));
+    ESP_LOGW(TAG, "http get request failed: %s", esp_err_to_name(err));
   }
   esp_http_client_cleanup(client);
 
