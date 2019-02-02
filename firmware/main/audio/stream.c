@@ -41,16 +41,8 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
   }
   ESP_LOGI(TAG, "protocol:%s host:%s port:%s path:%s username:%s password:%s", stream_addr.protocol, stream_addr.host, stream_addr.port, stream_addr.path, stream_addr.username, stream_addr.password);
 
-  int sock = -1;
-  uint8_t retries = 1;
-  do {
-    sock = open_socket(&stream_addr);
-    if (sock >= 0) {
-      break;
-    }
-    vTaskDelay(pdMS_TO_TICKS(200));
-  } while(retries-- > 0);
-  if (retries == 0) {
+  int sock = open_socket(&stream_addr);
+  if (sock < 0) {
     ESP_LOGE(TAG, "cannot open connection");
     return false;
   }

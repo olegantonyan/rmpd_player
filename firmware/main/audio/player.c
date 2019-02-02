@@ -28,6 +28,7 @@ typedef enum {
 
 typedef struct {
   char *filename; // XXX: dynamically allocated
+  void (*error_callback)();
 } player_message_t;
 
 typedef struct {
@@ -52,8 +53,8 @@ static const EventBits_t PLAYER_STOPED_BIT = BIT2;
 static EventGroupHandle_t event_group;
 
 static void player_thread(void * args);
-static bool play(const char *fname);
-static bool play_stream(const char *fname);
+static bool play(const char *fname, void (*error_callback)());
+static bool play_stream(const char *fname, void (*error_callback)());
 static bool play_file(const char *fname);
 static void set_state(player_state_t new_state);
 static player_state_t get_state();
@@ -63,7 +64,7 @@ static void vs1011_callback(audio_info_t ai);
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
-bool player_start(const char *fname) {
+bool player_start(const char *fname, void (*error_callback)()) {
   if (get_state() == PLAYING) {
     player_stop();
   }
@@ -80,6 +81,7 @@ bool player_start(const char *fname) {
   }
   m.filename[0] = '\0';
   strcpy(m.filename, fname);
+  m.error_callback = error_callback;
 
   xEventGroupClearBits(event_group, PLAYER_STOPED_BIT);
 
@@ -230,7 +232,7 @@ static void player_thread(void * args) {
       set_now_playing(message.filename);
       set_state(PLAYING);
       player_result_t result;
-      result.success = play(message.filename);
+      result.success = play(message.filename, message.error_callback);
       set_state(STOPPED);
       set_now_playing(NULL);
       xQueueSend(back_queue, &result, 0);
@@ -241,7 +243,7 @@ static void player_thread(void * args) {
   }
 }
 
-static bool play(const char *fname) {
+static bool play(const char *fname, void (*error_callback)()) {
   if (fname == NULL) {
     ESP_LOGE(TAG, "null filename");
     return false;
@@ -250,7 +252,7 @@ static bool play(const char *fname) {
   bool result = false;
   ESP_LOGI(TAG, "start playing file '%s'", fname);
   if (stream_playlist_is_stream(fname)) {
-    result = play_stream(fname);
+    result = play_stream(fname, error_callback);
   } else {
     result = play_file(fname);
   }
@@ -259,7 +261,7 @@ static bool play(const char *fname) {
   return result;
 }
 
-static bool play_stream(const char *fname) {
+static bool play_stream(const char *fname, void (*error_callback)()) {
   stream_t stream;
   char url[512] = { 0 };
 
@@ -268,16 +270,25 @@ static bool play_stream(const char *fname) {
   do {
     if (!wifi_is_connected()) {
       ESP_LOGW(TAG, "no network - ignoring stream start");
+      if (error_callback != NULL) {
+        error_callback();
+      }
       return false;
     }
     memset(url, 0, sizeof(url));
     if (!stream_playlist_parse_file(fname, url, sizeof(url))) {
       ESP_LOGE(TAG, "error parsing playlist file '%s'", fname);
+      if (error_callback != NULL) {
+        error_callback();
+      }
       return false;
     }
 
     if (!stream_start(url, VS1011_BUFFER_SIZE, &stream)) {
       ESP_LOGE(TAG, "failed to start a stream '%s'", url);
+      if (error_callback != NULL) {
+        error_callback();
+      }
       continue;
     }
     vs1011_play(stream_read_func, 0, &stream, vs1011_callback);
@@ -295,6 +306,9 @@ static bool play_stream(const char *fname) {
       ESP_LOGI(TAG, "stopped by eos, retries remaining %d", retries);
     }
     stream_stop(&stream);
+    if (error_callback != NULL) {
+      error_callback();
+    }
   } while (infinite || --retries > 0);
 
   return infinite || retries > 0;

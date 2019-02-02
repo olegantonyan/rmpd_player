@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 bool player_init();
-bool player_start(const char *fname);
+bool player_start(const char *fname, void (*error_callback)());
 bool player_stop();
 bool player_get_now_playing(char *buffer, size_t length);
 uint8_t player_get_position_percents();

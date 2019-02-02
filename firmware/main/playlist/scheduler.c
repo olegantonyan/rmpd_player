@@ -181,7 +181,6 @@ static void on_medifile_callback(const char *path, uint16_t index) {
       } else {
         ESP_LOGD(TAG, "stream finished with error");
         stream_scheduler_mark_dead(index);
-        stream_scheduler_force_probe(); // TODO do this from player callback if there is an error in stream
       }
     }
   } else if (!stream_scheduler_any_alive_streams()) { // play a file if there are no alive streams
@@ -191,7 +190,7 @@ static void on_medifile_callback(const char *path, uint16_t index) {
 
 static bool play(const char *path) {
   ESP_LOGD(TAG, "starting '%s'", path);
-  return player_start(path);
+  return player_start(path, stream_scheduler_force_probe); // force stream probe after any error regardless of retries #
 }
 
 static void stop() {
