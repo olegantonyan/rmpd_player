@@ -19,7 +19,7 @@ int http_get(const char *uri, uint8_t *data, size_t data_max_length, size_t *con
   esp_http_client_config_t config = {
    .url = uri,
    .event_handler = http_event_handle,
-   .timeout_ms = 10000,
+   .timeout_ms = 5000,
   };
   esp_http_client_handle_t client = esp_http_client_init(&config);
   esp_err_t err = esp_http_client_perform(client);
@@ -30,7 +30,6 @@ int http_get(const char *uri, uint8_t *data, size_t data_max_length, size_t *con
     *content_length = esp_http_client_get_content_length(client);
     status = esp_http_client_get_status_code(client);
     ESP_LOGI(TAG, "status:%d content_length:%d bytes_read:%d", status, *content_length, bytes);
-    //printf("%.*s", bytes, data);
   } else {
     ESP_LOGE(TAG, "http get request failed: %s", esp_err_to_name(err));
   }

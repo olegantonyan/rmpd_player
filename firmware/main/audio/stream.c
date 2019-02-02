@@ -118,6 +118,27 @@ size_t stream_read(const stream_t *stream, uint8_t *buffer, size_t buffer_size) 
   return bytes;
 }
 
+bool stream_probe(const char *url) {
+  url_t stream_addr;
+  if (!url_parse(url, &stream_addr)) {
+    ESP_LOGD(TAG, "probe: error parsing url '%s'", url);
+    return false;
+  }
+  if (strcmp(stream_addr.protocol, "http") != 0) {
+    ESP_LOGD(TAG, "probe: protocol %s is not supported", stream_addr.protocol);
+    return false;
+  }
+  int sock = open_socket(&stream_addr);
+  if (sock < 0) {
+    return false;
+  }
+
+  uint8_t buf[32] = { 0 };
+  int bytes = recv(sock, buf, sizeof(buf), 0);
+  close(sock);
+  return bytes > 0;
+}
+
 static int open_socket(const url_t *stream_addr) {
   const struct addrinfo hints = {
     .ai_family = AF_INET,
@@ -126,7 +147,7 @@ static int open_socket(const url_t *stream_addr) {
   struct addrinfo *res;
   int err = getaddrinfo(stream_addr->host, stream_addr->port, &hints, &res);
   if(err != 0) {
-    ESP_LOGE(TAG, "dns lookup failed err: %d", err);
+    ESP_LOGW(TAG, "dns lookup failed err: %d", err);
     return -1;
   }
 
@@ -138,7 +159,7 @@ static int open_socket(const url_t *stream_addr) {
   }
 
   if(connect(sock, res->ai_addr, res->ai_addrlen) != 0) {
-    ESP_LOGE(TAG, "socket connect failed: %s", strerror(errno));
+    ESP_LOGW(TAG, "socket connect failed: %s", strerror(errno));
     close(sock);
     freeaddrinfo(res);
     return -1;
@@ -150,7 +171,7 @@ static int open_socket(const url_t *stream_addr) {
     return -1;
   }
   if (send(sock, request, strlen(request), 0) < 0) {
-    ESP_LOGE(TAG, "socket write failed");
+    ESP_LOGW(TAG, "socket write failed");
     free(request);
     close(sock);
     return -1;

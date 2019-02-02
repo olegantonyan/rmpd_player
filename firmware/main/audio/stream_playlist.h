@@ -6,6 +6,6 @@
 #include <stddef.h>
 
 bool stream_playlist_parse_file(const char *fname, char *url, size_t url_max_length);
-bool stream_is_stream_playlist(const char *fname);
+bool stream_playlist_is_stream(const char *fname);
 
 #endif

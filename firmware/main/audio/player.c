@@ -249,7 +249,7 @@ static bool play(const char *fname) {
 
   bool result = false;
   ESP_LOGI(TAG, "start playing file '%s'", fname);
-  if (stream_is_stream_playlist(fname)) {
+  if (stream_playlist_is_stream(fname)) {
     result = play_stream(fname);
   } else {
     result = play_file(fname);

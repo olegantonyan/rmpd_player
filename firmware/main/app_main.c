@@ -7,8 +7,8 @@
 
 void app_main() {
   spiffs_init();
-  clock_init();
   wifi_init();
+  clock_init();
   sd_init();
   web_init();
   scheduler_init();

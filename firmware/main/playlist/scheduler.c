@@ -35,7 +35,6 @@ static void scheduler_thread(void * args);
 static bool play(const char *path);
 static void stop();
 static void on_medifile_callback(const char *path, uint16_t index);
-static bool mediafile_match_func(const char *fname);
 static void mediafile_enum_func(const char *fname, uint16_t index);
 
 bool scheduler_init() {
@@ -95,6 +94,10 @@ bool scheduler_prev() {
   return true;
 }
 
+bool scheduler_mediafile_match_func(const char *fname) {
+  return string_ends_with(fname, ".mp3") || stream_playlist_is_stream(fname);
+}
+
 static void scheduler_thread(void * args) {
   DIR *dp = opendir(STORAGE_SD_MOUNTPOINT);
   if (dp == NULL) {
@@ -104,13 +107,19 @@ static void scheduler_thread(void * args) {
   }
   closedir(dp);
 
-  stream_scheduler_init();
+  if (!stream_scheduler_init(STORAGE_SD_MOUNTPOINT)) {
+    ESP_LOGE(TAG, "cannot initialize stream scheduler");
+  }
 
   uint16_t index = 0;
-  uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, mediafile_enum_func, mediafile_match_func);
+  uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, mediafile_enum_func, scheduler_mediafile_match_func);
   ESP_LOGI(TAG, "total media files: %u", total_mediafiles);
   if (total_mediafiles > SCHEDULER_MAX_MEDIAFILES) {
     ESP_LOGE(TAG, "too many media files");
+  }
+
+  if (!stream_scheduler_start()) {
+    ESP_LOGE(TAG, "cannot start stream scheduler");
   }
 
   if (total_mediafiles > 0 && total_mediafiles < SCHEDULER_MAX_MEDIAFILES) {
@@ -128,7 +137,7 @@ static void scheduler_thread(void * args) {
 
     while(true) {
       index = 0;
-      recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback, mediafile_match_func);
+      recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback, scheduler_mediafile_match_func);
       taskYIELD();
       random_reset();
     }
@@ -140,14 +149,10 @@ static void scheduler_thread(void * args) {
 }
 
 static void mediafile_enum_func(const char *fname, uint16_t index) {
-  if (stream_is_stream_playlist(fname)) {
+  if (stream_playlist_is_stream(fname)) {
     ESP_LOGI(TAG, "adding %s as a stream with index %d", fname, index);
     stream_scheduler_add_stream(index);
   }
-}
-
-static bool mediafile_match_func(const char *fname) {
-  return string_ends_with(fname, ".mp3") || stream_is_stream_playlist(fname);
 }
 
 static void on_medifile_callback(const char *path, uint16_t index) {
@@ -169,14 +174,17 @@ static void on_medifile_callback(const char *path, uint16_t index) {
   xSemaphoreGive(state.mutex);
 
   if (stream_scheduler_is_known_stream(index)) {
-    if (stream_scheduler_is_possible()) { // play stream here
+    if (stream_scheduler_is_alive(index)) { // play stream here if you can
       if (play(path)) {
         ESP_LOGD(TAG, "stream finished successfuly");
-      } else { // mark this stream as possibly dead
+        stream_scheduler_mark_alive(index);
+      } else {
         ESP_LOGD(TAG, "stream finished with error");
+        stream_scheduler_mark_dead(index);
+        stream_scheduler_force_probe(); // TODO do this from player callback if there is an error in stream
       }
     }
-  } else { // play a file or unknown stream (shouldn't be here)
+  } else if (!stream_scheduler_any_alive_streams()) { // play a file if there are no alive streams
     play(path);
   }
 }

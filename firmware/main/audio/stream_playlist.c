@@ -58,6 +58,8 @@ bool stream_playlist_parse_file(const char *fname, char *result, size_t result_l
         tok = strtok_r(NULL, delims, &saveptr);
       }
       ok = done;
+    } else {
+      ok = false;
     }
     free(buffer);
   }
@@ -71,7 +73,6 @@ static bool fetch_playlist_by_url(const char *url, uint8_t *buffer, size_t buffe
   bool ok = false;
   size_t content_length = 0;
   int response_status = 0;
-  uint8_t retries = 50;
   do {
     response_status = http_get(url, buffer, buffer_size, &content_length);
     if (response_status == 200 || response_status == 201) {
@@ -83,11 +84,11 @@ static bool fetch_playlist_by_url(const char *url, uint8_t *buffer, size_t buffe
       ok = false;
       break;
     }
-  } while(retries-- > 0);
+  } while(false);
   return ok;
 }
 
-bool stream_is_stream_playlist(const char *fname) {
+bool stream_playlist_is_stream(const char *fname) {
   if (!string_ends_with(fname, ".m3u") && !string_ends_with(fname, ".pls")) {
     return false;
   }
