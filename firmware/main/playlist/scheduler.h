@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SCHEDULER_MAX_MEDIAFILES 65534
+#define SCHEDULER_MAX_MEDIAFILES 65534 // NOTE: 65535 is used as blank list item in stream scheduler, @see BLANK_LIST_ITEM
 
 bool scheduler_init();
 bool scheduler_next();

@@ -11,7 +11,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "config/config.h"
-#include "mdns.h"
+//#include "mdns.h"
 #include "driver/gpio.h"
 #include <sys/socket.h>
 #include <netdb.h>
@@ -28,7 +28,7 @@ static void station();
 static bool configure();
 static const char *hostname();
 static void reconnect_thread_hack(void *params);
-static void mdns_setup();
+//static void mdns_setup();
 
 bool wifi_init() {
   event_group = xEventGroupCreate();
@@ -212,9 +212,9 @@ static void reconnect_thread_hack(void *params) {
   vTaskDelete(NULL);
 }
 
-static void mdns_setup() {
+/*static void mdns_setup() {
   mdns_init();
   mdns_hostname_set(hostname());
   mdns_instance_name_set(hostname());
   mdns_service_add("built-in web ui", "_http", "_tcp", 80, NULL, 0);
-}
+}*/

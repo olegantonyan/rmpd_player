@@ -35,7 +35,6 @@ static struct {
 
 
 bool stream_scheduler_init(const char *storage_path) {
-  p.initialized = true;
   for (size_t i = 0; i < STREAM_SCHEDULER_MAX_STREAMS; i++) {
     p.list[i] = BLANK_LIST_ITEM;
     p.dead[i] = BLANK_LIST_ITEM;
@@ -43,14 +42,22 @@ bool stream_scheduler_init(const char *storage_path) {
   p.mutex = xSemaphoreCreateMutex();
   if (p.mutex == NULL) {
     ESP_LOGE(TAG, "cannot create mutex");
+    stream_scheduler_deinit();
     return false;
   }
   p.sema = xSemaphoreCreateBinary();
   if (p.sema == NULL) {
     ESP_LOGE(TAG, "cannot create semaphore");
+    stream_scheduler_deinit();
+    return false;
+  }
+  if (storage_path == NULL) {
+    ESP_LOGE(TAG, "null storage path");
+    stream_scheduler_deinit();
     return false;
   }
   p.storage_path = storage_path;
+  p.initialized = true;
   return true;
 }
 
@@ -62,9 +69,11 @@ void stream_scheduler_deinit() {
   p.initialized = false;
   if (p.mutex != NULL) {
     vSemaphoreDelete(p.mutex);
+    p.mutex = NULL;
   }
   if (p.sema != NULL) {
     vSemaphoreDelete(p.sema);
+    p.sema = NULL;
   }
 }
 
