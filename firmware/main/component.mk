@@ -3,5 +3,8 @@
 #
 # (Uses default behaviour of compiling all source files in directory, adding 'include' to include path.)
 
-COMPONENT_SRCDIRS := . web/ clock/ wifi/ storage/ config/ audio/ util/ playlist/
+COMPONENT_SRCDIRS := . web/ clock/ wifi/ storage/ config/ audio/ util/ playlist/ certs/
 COMPONENT_ADD_INCLUDEDIRS := .
+
+COMPONENT_EMBED_TXTFILES := util/certs/letsencrypt1.pem
+COMPONENT_EMBED_TXTFILES += util/certs/letsencrypt2.pem

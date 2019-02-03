@@ -25,7 +25,7 @@ static const char *TAG = "vs1011";
 #define VS_XCS_GPIO 5
 #define VS_XDCS_GPIO 17
 #define VS_MUTE_GPIO 16
-#define VS_XTAL_FREQ 12000000 // 12288000
+#define VS_XTAL_FREQ 12000000 // 12288000 // 12000000
 #define VS_MAX_CHUNK_SIZE 32
 
 typedef enum {

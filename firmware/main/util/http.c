@@ -10,6 +10,7 @@
 #include "esp_log.h"
 #include "esp_http_client.h"
 #include <errno.h>
+#include "util/certs/certs.h"
 
 static const char *TAG = "http";
 
@@ -17,9 +18,10 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt);
 
 int http_get(const char *uri, uint8_t *data, size_t data_max_length, size_t *content_length) {
   esp_http_client_config_t config = {
-   .url = uri,
-   .event_handler = http_event_handle,
-   .timeout_ms = 5000,
+    .url = uri,
+    .event_handler = http_event_handle,
+    .timeout_ms = 5000,
+    .cert_pem = certs[0]
   };
   esp_http_client_handle_t client = esp_http_client_init(&config);
   esp_err_t err = esp_http_client_perform(client);
