@@ -38,9 +38,14 @@ static esp_err_t status_get_handler(httpd_req_t *req);
 static esp_err_t playback_post_handler(httpd_req_t *req);
 static esp_err_t reboot_post_handler(httpd_req_t *req);
 static esp_err_t system_get_handler(httpd_req_t *req);
+static esp_err_t zones_get_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
 static void render_settings(httpd_req_t *req);
 static void render_status(httpd_req_t *req);
+
+#ifndef MIN
+  #define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
 
 static httpd_uri_t root = {
   .uri       = "/*",
@@ -100,6 +105,12 @@ static httpd_uri_t system_get = {
   .uri       = "/api/system.json",
   .method    = HTTP_GET,
   .handler   = system_get_handler
+};
+
+static httpd_uri_t zones_get = {
+  .uri       = "/zones.json",
+  .method    = HTTP_GET,
+  .handler   = zones_get_handler
 };
 
 bool web_init() {
@@ -552,6 +563,27 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   return ESP_OK;
 }
 
+static esp_err_t zones_get_handler(httpd_req_t *req) {
+  if (!auth_check(req)) {
+    return ESP_OK;
+  }
+  httpd_resp_set_hdr(req, "Connection", "close");
+
+  static const size_t HTTP_CHUNK_SIZE = 1024;
+  const char *data = clock_zones();
+  size_t data_len = strlen(data);
+  if(data_len <= HTTP_CHUNK_SIZE) {
+    httpd_resp_send(req, data, data_len);
+  } else {
+    for(size_t bytes_sent = 0; bytes_sent < data_len; bytes_sent += HTTP_CHUNK_SIZE) {
+      httpd_resp_send_chunk(req, data + bytes_sent, MIN(data_len - bytes_sent, HTTP_CHUNK_SIZE));
+    }
+    httpd_resp_send_chunk(req, NULL, 0);
+  }
+
+  return ESP_OK;
+}
+
 static esp_err_t root_get_handler(httpd_req_t *req) {
   if (!auth_check(req)) {
     return ESP_OK;
@@ -645,6 +677,7 @@ static httpd_handle_t start_webserver() {
   httpd_register_uri_handler(server, &playback_post);
   httpd_register_uri_handler(server, &reboot_post);
   httpd_register_uri_handler(server, &system_get);
+  httpd_register_uri_handler(server, &zones_get);
   httpd_register_uri_handler(server, &root);
   return server;
 }

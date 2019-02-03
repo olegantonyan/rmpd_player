@@ -8,3 +8,5 @@ COMPONENT_ADD_INCLUDEDIRS := .
 
 COMPONENT_EMBED_TXTFILES := util/certs/letsencrypt1.pem
 COMPONENT_EMBED_TXTFILES += util/certs/letsencrypt2.pem
+
+COMPONENT_EMBED_TXTFILES += clock/zones.json
