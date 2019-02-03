@@ -55,7 +55,7 @@ bool stream_scheduler_init(const char *storage_path) {
 }
 
 bool stream_scheduler_start() {
-  return xTaskCreate(thread, "stream_sched", 4096, NULL, 6, NULL) == pdPASS;
+  return xTaskCreate(thread, "stream_sched", 4096, NULL, 5, NULL) == pdPASS;
 }
 
 void stream_scheduler_deinit() {
