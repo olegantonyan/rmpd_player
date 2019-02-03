@@ -37,7 +37,7 @@ bool wifi_init() {
     return false;
   }
 
-  mdns_setup();
+  //mdns_setup(); don't need it now
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
   esp_wifi_set_ps(WIFI_PS_NONE); // disable powersave
 
