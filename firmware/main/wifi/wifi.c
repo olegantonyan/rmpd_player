@@ -90,7 +90,7 @@ static void station() {
 
   if (wifi_config.sta.ssid) {
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-    ESP_LOGI(TAG, "connect to ap ssid:%s password:%s", wifi_config.sta.ssid, wifi_config.sta.password);
+    ESP_LOGI(TAG, "connect to ap ssid:%s", wifi_config.sta.ssid);
   }
 }
 
@@ -192,7 +192,7 @@ static void softap() {
   }
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
   tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, hostname());
-  ESP_LOGI(TAG, "softap ssid:%s password:%s", wifi_config.ap.ssid, wifi_config.ap.password);
+  ESP_LOGI(TAG, "softap ssid:%s", wifi_config.ap.ssid);
 }
 
 static const char *hostname() {
