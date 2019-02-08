@@ -116,13 +116,25 @@ char *config_web_password() {
 }
 
 char *config_deviceid() {
-  char *t = "vanilla";
-  return t;
+  static char buffer[10] = {0};
+  bool ok = nvs_read_string("deviceid", buffer, sizeof(buffer));
+  if (ok) {
+    return buffer;
+  }
+  return "vanillaesp";
+}
+
+char *config_server_password() {
+  static char buffer[16] = {0};
+  bool ok = nvs_read_string("server_pass", buffer, sizeof(buffer));
+  if (ok) {
+    return buffer;
+  }
+  return "vanillaesppass";
 }
 
 char *config_ap_password() {
-  char *t = "12345678";
-  return t;
+  return "12345678";
 }
 
 config_ip_addr_t config_ap_static_ip() {
