@@ -37,6 +37,8 @@ char *config_web_password();
 
 char *config_deviceid();
 char *config_server_password();
+char *config_server_url();
+
 char *config_ap_password();
 
 config_ip_addr_t config_ap_static_ip();

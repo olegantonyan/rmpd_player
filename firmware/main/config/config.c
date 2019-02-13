@@ -133,6 +133,16 @@ char *config_server_password() {
   return "vanillaesppass";
 }
 
+char *config_server_url() {
+  static char buffer[32] = {0};
+  bool ok = nvs_read_string("server_url", buffer, sizeof(buffer));
+  if (ok) {
+    return buffer;
+  }
+//return "http://192.168.1.3:3000";
+  return "https://server.slon-ds.ru/";
+}
+
 char *config_ap_password() {
   return "12345678";
 }
