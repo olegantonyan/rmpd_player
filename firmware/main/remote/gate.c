@@ -7,11 +7,9 @@
 #include <string.h>
 #include "util/certs/certs.h"
 #include "config/config.h"
-#include "cJSON.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include "esp_http_client.h"
 #include "util/url.h"
 
@@ -26,12 +24,10 @@ typedef struct {
 } response_t;
 
 static void thread(void *_args);
-
-static bool now_playing_json(char *buffer, size_t length);
 static int http_post_cmd(const char *send_data, size_t send_data_len, uint32_t send_seq, response_t *response);
 
 bool gate_init() {
-  BaseType_t task_created = xTaskCreate(thread, "remote_gate", 8192 + MAX_RECEIVE_DATA_LENGTH, NULL, 5, NULL);
+  BaseType_t task_created = xTaskCreate(thread, "remote_gate", 6000 + MAX_RECEIVE_DATA_LENGTH, NULL, 5, NULL);
   if (pdPASS != task_created) {
     ESP_LOGE(TAG, "cannot create thread");
     return false;
@@ -39,16 +35,17 @@ bool gate_init() {
   return true;
 }
 
+#include "remote/commands/outgoing/now_playing.h"
 static void thread(void *_args) {
   wifi_wait_connected(portMAX_DELAY);
-  vTaskDelay(pdMS_TO_TICKS(541));
+  vTaskDelay(pdMS_TO_TICKS(541)); // for some reasons, probably
 
   while (true) {
 
-    char *json = malloc(1024);
     response_t recv;
     memset(&recv, 0, sizeof(response_t));
-    if (now_playing_json(json, 1024)) {
+    char *json = now_playing(NULL);
+    if (json != NULL) {
       int status = http_post_cmd(json, strlen(json), 0, &recv);
       if (status >= 200 && status < 300) {
         printf("data: %s\n", recv.data);
@@ -56,39 +53,11 @@ static void thread(void *_args) {
         printf("seq:  %d\n", recv.sequence);
         printf("len:  %d\n", recv.length);
       }
+      free(json);
     };
-    free(json);
 
     vTaskDelay(pdMS_TO_TICKS(5000));
   }
-}
-
-static bool now_playing_json(char *buffer, size_t length) {
-  if (NULL == buffer) {
-    return false;
-  }
-
-  cJSON *root = cJSON_CreateObject();
-
-  time_t now = time(NULL);
-  struct tm timeinfo = { 0 };
-  localtime_r(&now, &timeinfo);
-  char time_buf[40] = { 0 };
-  strftime(time_buf, sizeof(time_buf), "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
-  cJSON_AddItemToObject(root, "localtime", cJSON_CreateString(time_buf));
-
-  cJSON_AddItemToObject(root, "command", cJSON_CreateString("now_playing"));
-
-  cJSON_AddItemToObject(root, "message", cJSON_CreateString("playing something..."));
-
-  cJSON_AddItemToObject(root, "free_space", cJSON_CreateNumber(100500));
-
-  bool ok = false;
-  if(cJSON_PrintPreallocated(root, buffer, length, 0)) {
-    ok = true;
-  }
-  cJSON_Delete(root);
-  return ok;
 }
 
 esp_err_t http_event_handle(esp_http_client_event_t *evt) {

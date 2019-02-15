@@ -8,5 +8,6 @@
 #define STORAGE_SD_MOUNTPOINT "/sdcard"
 
 bool sd_init();
+size_t sd_bytes_free();
 
 #endif
