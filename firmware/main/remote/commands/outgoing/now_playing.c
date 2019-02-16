@@ -3,8 +3,9 @@
 #include <time.h>
 #include "audio/player.h"
 #include "storage/sd.h"
+#include "remote/queue.h"
 
-char *now_playing(void *_args) {
+OutgoingCommandResult_t now_playing(void *_args) {
   cJSON *root = cJSON_CreateObject();
 
   time_t now = time(NULL);
@@ -25,7 +26,11 @@ char *now_playing(void *_args) {
 
   cJSON_AddItemToObject(root, "free_space", cJSON_CreateNumber(sd_bytes_free()));
 
-  char *result = cJSON_Print(root);
+  OutgoingCommandResult_t msg;
+  msg.data = cJSON_Print(root);
+  msg.sequence = 0;
+  msg.queue_timeout = 0;
   cJSON_Delete(root);
-  return result;
+
+  return msg;
 }

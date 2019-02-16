@@ -8,7 +8,7 @@
 #include "freertos/ringbuf.h"
 #include "freertos/event_groups.h"
 
-#define STREAM_BUFFER_MAX_CHUNKS 6
+#define STREAM_BUFFER_MAX_CHUNKS 10
 
 typedef struct {
   int socket;

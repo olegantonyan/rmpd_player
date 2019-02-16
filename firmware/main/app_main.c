@@ -4,7 +4,7 @@
 #include "storage/sd.h"
 #include "playlist/scheduler.h"
 #include "clock/clock.h"
-#include "remote/gate.h"
+#include "remote/control.h"
 
 void app_main() {
   spiffs_init();
@@ -13,5 +13,6 @@ void app_main() {
   sd_init();
   web_init();
   scheduler_init();
-  gate_init();
+
+  remote_control_start(); // should never return 
 }

@@ -4,7 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "remote/commands/outgoing.h"
 
-char *now_playing(void *args);
+OutgoingCommandResult_t now_playing(void *args);
 
 #endif
