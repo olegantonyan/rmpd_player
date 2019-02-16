@@ -26,7 +26,7 @@ bool gate_init() {
 
 static void thread(void *_args) {
   wifi_wait_connected(portMAX_DELAY);
-  vTaskDelay(pdMS_TO_TICKS(541)); // for some reasons, probably
+  vTaskDelay(pdMS_TO_TICKS(1234)); // for some reasons, probably
 
   http_response_t recv;
   QueueMessage_t msg;
@@ -39,6 +39,7 @@ static void thread(void *_args) {
 
         while(true) {
           memset(&recv, 0, sizeof(recv));
+          printf("\n\n%s\n\n", (char *)msg.data);
           int status = http_post_cmd(msg.data, strlen(msg.data), 0, &recv);
           if (status >= 200 && status < 300) {
             printf("data: %s\n", recv.data);

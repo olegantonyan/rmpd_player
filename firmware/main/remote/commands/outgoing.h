@@ -6,14 +6,9 @@
 #include <stddef.h>
 
 typedef enum {
-  NOW_PLAYING = 100
+  NOW_PLAYING = 100,
+  POWER_ON
 } OutgoingCommand_t;
-
-typedef struct {
-  char *data;
-  uint32_t sequence;
-  uint32_t queue_timeout;
-} OutgoingCommandResult_t;
 
 bool outgoing_command(OutgoingCommand_t cmd, void *args);
 
