@@ -8,8 +8,10 @@
 #include "storage/sd.h"
 #include "cJSON.h"
 
-extern bool now_playing(cJSON *json, uint32_t *sequence, const void *args);
-extern bool power_on(cJSON *json, uint32_t *sequence, const void *args);
+extern bool now_playing(CommandArgument_t *arg);
+extern bool power_on(CommandArgument_t *arg);
+extern bool track_end(CommandArgument_t *arg);
+extern bool track_begin(CommandArgument_t *arg);
 
 static const char *TAG = "outgoing_cmd";
 
@@ -17,33 +19,41 @@ static void base_command_fields(cJSON *json);
 
 bool outgoing_command(OutgoingCommand_t cmd, void *args) {
   bool ok = false;
-  cJSON *json = cJSON_CreateObject();
-  const char *cmd_name = NULL;
-  uint32_t sequence = 0;
+  CommandArgument_t arg = {
+    .json = cJSON_CreateObject(),
+    .sequence = 0,
+    .max_retries = 0,
+    .args = args
+  };
 
   switch(cmd) {
     case NOW_PLAYING:
-      ok = now_playing(json, &sequence, args);
-      cmd_name = "now_playing";
+      ok = now_playing(&arg);
       break;
     case POWER_ON:
-      ok = power_on(json, &sequence, args);
-      cmd_name = "power_on";
+      ok = power_on(&arg);
+      break;
+    case TRACK_BEGIN:
+      ok = track_begin(&arg);
+      break;
+    case TRACK_END:
+      ok = track_end(&arg);
       break;
 
     default:
       ESP_LOGE(TAG, "unknown command");
+      ok = false;
       break;
   }
 
   if (ok) {
-    base_command_fields(json);
-    cJSON_AddItemToObject(json, "command", cJSON_CreateString(cmd_name));
+    base_command_fields(arg.json);
 
     QueueMessage_t msg;
     memset(&msg, 0, sizeof(msg));
-    msg.data = cJSON_PrintUnformatted(json);
-    msg.sequence = sequence;
+    msg.data = cJSON_PrintUnformatted(arg.json);
+    msg.sequence = arg.sequence;
+    msg.max_retries = arg.max_retries;
     ok = queue_put(&msg, 0);
     if (!ok) {
       free(msg.data); // no way we can handle this now
@@ -52,7 +62,7 @@ bool outgoing_command(OutgoingCommand_t cmd, void *args) {
   } else {
     ESP_LOGE(TAG, "error executing command %d", cmd);
   }
-  cJSON_Delete(json);
+  cJSON_Delete(arg.json);
 
   return ok;
 }

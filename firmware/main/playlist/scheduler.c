@@ -21,6 +21,8 @@
 #include "config/config.h"
 #include "playlist/stream_scheduler.h"
 #include "wifi/wifi.h"
+#include "remote/commands/outgoing.h"
+#include "playlist/track.h"
 
 static const char *TAG = "scheduler";
 
@@ -190,7 +192,16 @@ static void on_medifile_callback(const char *path, uint16_t index) {
 
 static bool play(const char *path) {
   ESP_LOGD(TAG, "starting '%s'", path);
-  return player_start(path, stream_scheduler_force_probe); // force stream probe after any error regardless of retries #
+
+  Track_t track = {
+    .filename = path,
+    .id = 0
+  };
+  outgoing_command(TRACK_BEGIN, &track);
+  bool ok = player_start(path, stream_scheduler_force_probe); // force stream probe after any error regardless of retries #
+  outgoing_command(TRACK_END, &track);
+
+  return ok;
 }
 
 static void stop() {

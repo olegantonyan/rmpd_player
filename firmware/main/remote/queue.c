@@ -3,7 +3,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
-#define QUEUE_LENGTH 2
+#define QUEUE_LENGTH 8
 
 static bool queue_init();
 

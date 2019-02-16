@@ -37,7 +37,7 @@ static void thread(void *_args) {
     if (queue_receive(&msg, portMAX_DELAY)) {
       if (msg.data != NULL) {
 
-        while(true) {
+        do {
           memset(&recv, 0, sizeof(recv));
           printf("\n\n%s\n\n", (char *)msg.data);
           int status = http_post_cmd(msg.data, strlen(msg.data), 0, &recv);
@@ -49,8 +49,7 @@ static void thread(void *_args) {
             break;
           }
           vTaskDelay(pdMS_TO_TICKS(5678));
-        }
-
+        } while(msg.max_retries-- > 0);
 
         free(msg.data);
         msg.data = NULL;
