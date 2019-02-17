@@ -84,12 +84,28 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
     case HTTP_EVENT_ON_DATA:
       ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
       http_response_t *r = (http_response_t *)evt->user_data;
-      if (r->length + evt->data_len >= REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH) {
-        ESP_LOGE(TAG, "no space left in receive buffer for incomming data");// TODO: dump to SD card
+
+      if(r->datafile.file == NULL) {
+        if (r->length + evt->data_len >= REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH) {
+          ESP_LOGD(TAG, "no space left in receive buffer for incomming data, dumping to filesystem");
+          if (!tempfile_create(&r->datafile)) {
+            ESP_LOGE(TAG, "error creating tempfile for incomming data dump");
+            r->datafile.file = NULL;
+          } else {
+            fwrite(r->data, r->length, 1, r->datafile.file);
+            fwrite(evt->data, evt->data_len, 1, r->datafile.file);
+            tempfile_close(&r->datafile);
+          }
+        } else {
+          memcpy(r->data + r->length, evt->data, evt->data_len);
+          r->length += evt->data_len;
+        }
       } else {
-        memcpy(r->data + r->length, evt->data, evt->data_len);
-        r->length += evt->data_len;
+        tempfile_open(&r->datafile);
+        fwrite(evt->data, evt->data_len, 1, r->datafile.file);
+        tempfile_close(&r->datafile);
       }
+
       break;
     case HTTP_EVENT_ON_FINISH:
       ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");

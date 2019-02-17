@@ -42,6 +42,7 @@ static void thread(void *_args) {
           memset(&recv, 0, sizeof(recv));
           int status = http_post_cmd(msg.data, strlen(msg.data), 0, &recv);
           if (status >= 200 && status < 300) {
+            // TODO tempfile_remove to free resources. in command probably, not here
             if (!incoming_command(recv.data, recv.sequence)) {
               ESP_LOGW(TAG, "error executing incoming command");
             }
