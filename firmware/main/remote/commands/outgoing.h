@@ -18,7 +18,7 @@ typedef struct {
   uint32_t sequence;    // Out
   uint16_t max_retries; // Out
   const void *args;     // In
-} CommandArgument_t;
+} OutgoingCommandArgument_t;
 
 bool outgoing_command(OutgoingCommand_t cmd, void *args);
 

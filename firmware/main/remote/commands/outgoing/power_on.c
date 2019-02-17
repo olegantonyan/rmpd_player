@@ -5,7 +5,7 @@
 #include "remote/queue.h"
 #include "remote/commands/outgoing.h"
 
-bool power_on(CommandArgument_t *arg) {
+bool power_on(OutgoingCommandArgument_t *arg) {
   cJSON_AddItemToObject(arg->json, "command", cJSON_CreateString("power_on"));
   arg->max_retries = 15;
   return true;

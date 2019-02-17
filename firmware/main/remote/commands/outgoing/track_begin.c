@@ -6,7 +6,7 @@
 #include "remote/commands/outgoing.h"
 #include "playlist/track.h"
 
-bool track_begin(CommandArgument_t *arg) {
+bool track_begin(OutgoingCommandArgument_t *arg) {
   cJSON_AddItemToObject(arg->json, "command", cJSON_CreateString("track_begin"));
 
   Track_t *track = (Track_t *)arg->args;

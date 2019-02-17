@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "remote/http.h"
 #include "remote/queue.h"
+#include "remote/commands/incoming.h"
 
 static const char *TAG = "remote_gate";
 
@@ -39,13 +40,11 @@ static void thread(void *_args) {
 
         do {
           memset(&recv, 0, sizeof(recv));
-          printf("\n\n%s\n\n", (char *)msg.data);
           int status = http_post_cmd(msg.data, strlen(msg.data), 0, &recv);
           if (status >= 200 && status < 300) {
-            printf("data: %s\n", recv.data);
-            printf("stat: %d\n", status);
-            printf("seq:  %d\n", recv.sequence);
-            printf("len:  %d\n", recv.length);
+            if (!incoming_command(recv.data, recv.sequence)) {
+              ESP_LOGW(TAG, "error executing incoming command");
+            }
             break;
           }
           vTaskDelay(pdMS_TO_TICKS(5678));

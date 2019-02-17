@@ -43,7 +43,7 @@ int http_post_cmd(const char *send_data, size_t send_data_len, uint32_t send_seq
   esp_http_client_set_header(client, "Content-Type", "application/json");
   esp_http_client_set_header(client, "Accept", "application/json");
 
-  esp_app_desc_t *d = esp_ota_get_app_description();
+  const esp_app_desc_t *d = esp_ota_get_app_description();
   char ua[128] = { 0 };
   snprintf(ua, sizeof(ua), "rmpd %s (%s, FreeRTOS, ESP32, ESP-IDF %s, build at %s %s)", d->version, d->project_name, d->idf_ver, d->date, d->time);
   esp_http_client_set_header(client, "User-Agent", ua);
@@ -85,7 +85,7 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
       ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
       http_response_t *r = (http_response_t *)evt->user_data;
       if (r->length + evt->data_len >= REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH) {
-        ESP_LOGE(TAG, "no space left in receive buffer for incomming data");
+        ESP_LOGE(TAG, "no space left in receive buffer for incomming data");// TODO: dump to SD card
       } else {
         memcpy(r->data + r->length, evt->data, evt->data_len);
         r->length += evt->data_len;

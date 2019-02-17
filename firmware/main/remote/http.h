@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH 1500
+#define REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH 4096
 
 typedef struct {
   uint32_t sequence;

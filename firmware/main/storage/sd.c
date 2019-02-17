@@ -89,7 +89,7 @@ bool sd_init() {
   return true;
 }
 
-size_t sd_bytes_free() {
+uint64_t sd_bytes_free() {
   FATFS *fs = NULL;
   long unsigned int fre_clust = 0;
 
@@ -101,9 +101,9 @@ size_t sd_bytes_free() {
 
   /* Get total sectors and free sectors */
   //size_t tot_sect = (fs->n_fatent - 2) * fs->csize;
-  size_t fre_sect = fre_clust * fs->csize;
+  uint64_t fre_sect = fre_clust * fs->csize;
 
   /* Print the free space (assuming 512 bytes/sector) */
   //printf("%10lu KiB total drive space.\n%10lu KiB available.\n", tot_sect / 2, fre_sect / 2);
-  return fre_sect / 2;
+  return (fre_sect / 2) * 1024;
 }

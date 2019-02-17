@@ -8,10 +8,10 @@
 #include "storage/sd.h"
 #include "cJSON.h"
 
-extern bool now_playing(CommandArgument_t *arg);
-extern bool power_on(CommandArgument_t *arg);
-extern bool track_end(CommandArgument_t *arg);
-extern bool track_begin(CommandArgument_t *arg);
+extern bool now_playing(OutgoingCommandArgument_t *arg);
+extern bool power_on(OutgoingCommandArgument_t *arg);
+extern bool track_end(OutgoingCommandArgument_t *arg);
+extern bool track_begin(OutgoingCommandArgument_t *arg);
 
 static const char *TAG = "outgoing_cmd";
 
@@ -19,7 +19,7 @@ static void base_command_fields(cJSON *json);
 
 bool outgoing_command(OutgoingCommand_t cmd, void *args) {
   bool ok = false;
-  CommandArgument_t arg = {
+  OutgoingCommandArgument_t arg = {
     .json = cJSON_CreateObject(),
     .sequence = 0,
     .max_retries = 0,

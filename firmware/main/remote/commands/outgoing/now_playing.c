@@ -3,7 +3,7 @@
 #include "audio/player.h"
 #include "remote/commands/outgoing.h"
 
-bool now_playing(CommandArgument_t *arg) {
+bool now_playing(OutgoingCommandArgument_t *arg) {
   cJSON_AddItemToObject(arg->json, "command", cJSON_CreateString("now_playing"));
 
   char now_playing[256] = { 0 };
