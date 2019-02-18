@@ -1,45 +1,84 @@
 #include "remote/commands/incoming.h"
-#include "cJSON.h"
 #include "esp_system.h"
 #include "esp_log.h"
 #include <string.h>
 
 extern bool update_setting(const IncomingCommandArgument_t *arg);
+extern bool update_playlist(const IncomingCommandArgument_t *arg);
 
 static const char *TAG = "incoming_cmd";
 
-static bool execute(const char *command, const cJSON *json, uint32_t sequence);
+static const char *parse_command(json_stream *json);
+static bool execute(const char *command, const IncomingCommandArgument_t *arg);
 
-bool incoming_command(const char *data, uint32_t sequence) {
-  cJSON *json = cJSON_Parse(data);
-  if (json == NULL) {
-    const char *error_ptr = cJSON_GetErrorPtr();
-    if (error_ptr != NULL) {
-      ESP_LOGE(TAG, "json parse error: %s", error_ptr);
-    }
-    return false;
+bool incoming_command(const char *data, Tempfile_t *datafile, uint32_t sequence) {
+  IncomingCommandArgument_t arg = {
+    .sequence = sequence,
+    .datafile = datafile
+  };
+  if (datafile != NULL) {
+    ESP_LOGD(TAG, "received data in file %s", datafile->path);
+    tempfile_open(datafile, "r"); // was closed before
+    json_open_stream(&arg.json, datafile->file);
+    /*char b[64] = { 0 };
+    size_t i = fread(b, 1, 63, datafile->file);
+    if (i > 0) {
+      printf("data read: %s\n", b);
+    } else {
+      printf("read %d\n", i);
+    }*/
+  } else if(data != NULL && strcmp("{}", data) != 0) {
+    ESP_LOGD(TAG, "received data: %s", data);
+    json_open_string(&arg.json, data);
+  } else {
+    return true;
   }
 
-  const cJSON *command = cJSON_GetObjectItemCaseSensitive(json, "command");
-  if (cJSON_IsString(command) && (command->valuestring != NULL)) {
-    return execute(command->valuestring, json, sequence);
+  bool ok = false;
+  const char *command = parse_command(&arg.json);
+  if (command != NULL) {
+    ESP_LOGD(TAG, "received command %s", command);
+    json_reset(&arg.json);
+    ok = execute(command, &arg);
   }
-  return true;
+  json_close(&arg.json);
+  tempfile_remove(arg.datafile);
+  return ok;
 }
 
-static bool execute(const char *command, const cJSON *json, uint32_t sequence) {
-  bool ok = false;
-  IncomingCommandArgument_t arg = {
-    .json = json,
-    .sequence = sequence
-  };
+static const char *parse_command(json_stream *json) {
+  size_t len = 0;
+  enum json_type t = JSON_ERROR;
+  bool key_found = false;
+  do {
+    t = json_next(json);
+    switch(t) {
+      case JSON_STRING: {
+        if (json_get_depth(json) == 1) {
+          const char *s = json_get_string(json, &len);
+          if (key_found) {
+            return s;
+          } else if (strcmp(s, "command") == 0) {
+            key_found = true;
+          }
+        }
+        break;
+      }
+      case JSON_ERROR:
+        ESP_LOGE(TAG, "json parse error: %s line %d pos %d", json_get_error(json), json_get_lineno(json), json_get_position(json));
+        break;
+      default:
+        break;
+    }
+  } while (t != JSON_DONE && t != JSON_ERROR);
+  return NULL;
+}
 
+static bool execute(const char *command, const IncomingCommandArgument_t *arg) {
   if (strcmp(command, "update_setting") == 0) {
-    ok = update_setting(&arg);
-  } else {
-    ESP_LOGW(TAG, "unknown/unsupported command '%s'", command);
-    ok = false;
+    return update_setting(arg);
+  } else if (strcmp(command, "update_playlist") == 0) {
+    return update_playlist(arg);
   }
-
-  return ok;
+  return false;
 }

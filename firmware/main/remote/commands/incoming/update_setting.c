@@ -1,4 +1,3 @@
-#include "cJSON.h"
 #include "remote/commands/incoming.h"
 #include <stdio.h>
 

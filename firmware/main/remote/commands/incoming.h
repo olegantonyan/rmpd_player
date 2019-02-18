@@ -4,13 +4,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "cJSON.h"
+#include "pdjson.h"
+#include "util/tempfile.h"
 
 typedef struct {
-  const cJSON *json;
+  json_stream json;
+  Tempfile_t *datafile;
   uint32_t sequence;
 } IncomingCommandArgument_t;
 
-bool incoming_command(const char *data, uint32_t sequence);
+bool incoming_command(const char *data, Tempfile_t *datafile, uint32_t sequence);
 
 #endif
