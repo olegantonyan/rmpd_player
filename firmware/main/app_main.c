@@ -7,7 +7,7 @@
 #include "remote/control.h"
 #include "util/tempfile.h"
 
-
+/*
 #include "pdjson.h"
 #include <stdio.h>
 #include <errno.h>
@@ -65,7 +65,7 @@ void test_json() {
 
   json_close(&json);
   fclose(f);
-}
+}*/
 
 void app_main() {
   // mind order of initialization
@@ -76,6 +76,5 @@ void app_main() {
   tempfile_init();
   web_init();
   scheduler_init();
-  //test_json();
   remote_control_start(); // should never return
 }

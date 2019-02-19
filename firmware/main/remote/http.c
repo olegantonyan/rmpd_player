@@ -89,7 +89,7 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
         if (r->length + evt->data_len >= REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH) {
           ESP_LOGD(TAG, "no space left in receive buffer for incomming data, dumping to filesystem");
           r->datafile = tempfile_create();
-          if (r->datafile == NULL) {
+          if (r->datafile == NULL || r->datafile->file == NULL) {
             ESP_LOGE(TAG, "error creating tempfile for incomming data dump");
             r->datafile = NULL;
           } else {

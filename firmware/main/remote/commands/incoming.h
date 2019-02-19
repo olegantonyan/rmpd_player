@@ -13,6 +13,7 @@ typedef struct {
   uint32_t sequence;
 } IncomingCommandArgument_t;
 
+bool incoming_init();
 bool incoming_command(const char *data, Tempfile_t *datafile, uint32_t sequence);
 
 #endif

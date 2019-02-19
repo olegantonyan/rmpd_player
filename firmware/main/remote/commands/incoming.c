@@ -3,45 +3,49 @@
 #include "esp_log.h"
 #include <string.h>
 
-extern bool update_setting(const IncomingCommandArgument_t *arg);
-extern bool update_playlist(const IncomingCommandArgument_t *arg);
+extern bool update_setting(IncomingCommandArgument_t *arg);
+extern bool update_playlist(IncomingCommandArgument_t *arg);
 
 static const char *TAG = "incoming_cmd";
 
 static const char *parse_command(json_stream *json);
-static bool execute(const char *command, const IncomingCommandArgument_t *arg);
+static bool execute(const char *command, IncomingCommandArgument_t *arg);
 
 bool incoming_command(const char *data, Tempfile_t *datafile, uint32_t sequence) {
   IncomingCommandArgument_t arg = {
     .sequence = sequence,
     .datafile = datafile
   };
-  if (datafile != NULL) {
-    ESP_LOGD(TAG, "received data in file %s", datafile->path);
+  bool in_file = false;
+  if (datafile != NULL && datafile->file != NULL) {
+    ESP_LOGI(TAG, "received data in file %s", datafile->path);
     tempfile_open(datafile, "r"); // was closed before
     json_open_stream(&arg.json, datafile->file);
-    /*char b[64] = { 0 };
-    size_t i = fread(b, 1, 63, datafile->file);
-    if (i > 0) {
-      printf("data read: %s\n", b);
-    } else {
-      printf("read %d\n", i);
-    }*/
+    in_file = true;
   } else if(data != NULL && strcmp("{}", data) != 0) {
     ESP_LOGD(TAG, "received data: %s", data);
     json_open_string(&arg.json, data);
+    in_file = false;
   } else {
-    return true;
+    return false;
   }
+  json_close(&arg.json);
 
   bool ok = false;
   const char *command = parse_command(&arg.json);
   if (command != NULL) {
     ESP_LOGD(TAG, "received command %s", command);
-    json_reset(&arg.json);
+
+    if (in_file) {
+      fseek(datafile->file, 0, SEEK_SET);
+      json_open_stream(&arg.json, datafile->file);
+    } else {
+      json_open_string(&arg.json, data);
+    }
     ok = execute(command, &arg);
+    json_close(&arg.json);
   }
-  json_close(&arg.json);
+  
   tempfile_remove(arg.datafile);
   return ok;
 }
@@ -74,7 +78,7 @@ static const char *parse_command(json_stream *json) {
   return NULL;
 }
 
-static bool execute(const char *command, const IncomingCommandArgument_t *arg) {
+static bool execute(const char *command, IncomingCommandArgument_t *arg) {
   if (strcmp(command, "update_setting") == 0) {
     return update_setting(arg);
   } else if (strcmp(command, "update_playlist") == 0) {
