@@ -20,6 +20,11 @@ typedef struct {
   const void *args;     // In
 } OutgoingCommandArgument_t;
 
+typedef struct {
+  const char *message;
+  uint32_t sequence;
+} AckCommandArgs_t;
+
 bool outgoing_command(OutgoingCommand_t cmd, void *args);
 
 #endif

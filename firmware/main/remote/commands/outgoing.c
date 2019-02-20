@@ -12,6 +12,8 @@ extern bool now_playing(OutgoingCommandArgument_t *arg);
 extern bool power_on(OutgoingCommandArgument_t *arg);
 extern bool track_end(OutgoingCommandArgument_t *arg);
 extern bool track_begin(OutgoingCommandArgument_t *arg);
+extern bool ack_ok(OutgoingCommandArgument_t *arg);
+extern bool ack_fail(OutgoingCommandArgument_t *arg);
 
 static const char *TAG = "outgoing_cmd";
 
