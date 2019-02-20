@@ -164,7 +164,7 @@ bool player_init() {
   player_set_treble_freqlimit(config_treble_freqlimit());
   player_set_treble_amplitude(config_treble_amplitude());
 
-  return xTaskCreate(player_thread, "player", 3096, NULL, 15, NULL) == pdPASS;
+  return xTaskCreate(player_thread, "player", 4096, NULL, 15, NULL) == pdPASS;
 }
 
 void player_set_volume(uint8_t percents) {
