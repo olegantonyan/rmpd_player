@@ -8,7 +8,7 @@
 #include "config/config.h"
 #include "util/files.h"
 #include "util/strings.h"
-#include "cJSON.h"
+#include "pdjson.h"
 
 static const char *TAG = "clock";
 
@@ -16,6 +16,7 @@ extern const char zones_json_start[] asm("_binary_zones_json_start");
 extern const char zones_json_end[]   asm("_binary_zones_json_end");
 
 static bool clock_set_timezone(const char *tzname);
+static const char *parse_json(json_stream *json, const char *key);
 
 bool clock_init() {
   return ds3231_init() && ntp_init();
@@ -32,50 +33,47 @@ const char *clock_zones() {
 static bool clock_set_timezone(const char *tzname) {
   ESP_LOGI(TAG, "set timezone to %s", tzname);
 
-  cJSON *json = cJSON_Parse(clock_zones());
-  if (json == NULL) {
-    const char *error_ptr = cJSON_GetErrorPtr();
-    if (error_ptr != NULL) {
-      ESP_LOGE(TAG, "json parse error: %s", error_ptr);
-    } else {
-      ESP_LOGE(TAG, "json parse error");
-    }
-    return false;
-  }
   bool ok = false;
-  const cJSON *zone = cJSON_GetObjectItemCaseSensitive(json, tzname);
-  if (cJSON_IsString(zone) && (zone->valuestring != NULL)) {
-    ESP_LOGI(TAG, "timezone value: '%s'", zone->valuestring);
-    setenv("TZ", zone->valuestring, 1);
+  json_stream json;
+  json_open_string(&json, clock_zones());
+  const char *tzvalue = parse_json(&json, tzname);
+
+  if (tzvalue != NULL) {
+    ESP_LOGI(TAG, "timezone value: '%s'", tzvalue);
+    setenv("TZ", tzvalue, 1);
     tzset();
     ok = true;
-  } else {
-    ESP_LOGE(TAG, "cannot get timezone value from zones.json");
   }
-
-  cJSON_Delete(json);
+  json_close(&json);
   return ok;
+}
 
-  /*bool ok = false;
-  char line[255];
-  while(fgets(line, sizeof(line), f) != NULL) {
-    if (line[0] == '{' || line[0] == '}') {
-      continue;
+static const char *parse_json(json_stream *json, const char *key) {
+  size_t len = 0;
+  bool key_found = false;
+  enum json_type t = JSON_ERROR;
+  do {
+    t = json_next(json);
+    switch(t) {
+      case JSON_STRING: {
+        if (json_get_depth(json) == 1) {
+          const char *s = json_get_string(json, &len);
+          if (key_found) {
+            return s;
+          } else if (strcmp(s, key) == 0) {
+            key_found = true;
+          }
+        }
+        break;
+      }
+
+      default:
+        break;
+      case JSON_ERROR:
+        ESP_LOGE(TAG, "json parse error: %s line %d pos %d", json_get_error(json), json_get_lineno(json), json_get_position(json));
+        break;
     }
-    string_chomp(line);
-    char *tzname_quoted = malloc(strlen(tzname) + 13);
-    snprintf(tzname_quoted, strlen(tzname) + 2, "\"%s\"", tzname);
-    if (strncmp(tzname_quoted, line, strlen(tzname_quoted)) == 0) {
-      line[strlen(line) - 2] = '\0'; // remove ",
-      char *tzvalue = line + strlen(tzname_quoted) + 3;
-      ESP_LOGI(TAG, "timezone value: '%s'", tzvalue);
-      setenv("TZ", tzvalue, 1);
-      tzset();
-      free(tzname_quoted);
-      ok = true;
-      break;
-    }
-    free(tzname_quoted);
-  }
-  */
+
+  } while (t != JSON_DONE && t != JSON_ERROR);
+  return NULL;
 }
