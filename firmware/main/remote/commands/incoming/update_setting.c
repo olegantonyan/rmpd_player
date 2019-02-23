@@ -4,65 +4,70 @@
 #include <errno.h>
 #include "esp_system.h"
 #include "esp_log.h"
+#include <string.h>
+#include "clock/clock.h"
+#include "remote/commands/outgoing.h"
+#include "config/config.h"
 
 static const char *TAG = "update_setting";
 
-static void test_json(json_stream *json) {
-  size_t len = 0;
-  enum json_type t = JSON_ERROR;
-  do {
-    t = json_next(json);
-    switch(t) {
-      case JSON_DONE:
-        printf("JSON_DONE\n");
-        break;
-      case JSON_OBJECT:
-        printf("JSON_OBJECT\n");
-        break;
-      case JSON_OBJECT_END:
-        printf("JSON_OBJECT_END\n");
-        break;
-      case JSON_ARRAY:
-        printf("JSON_ARRAY\n");
-        break;
-      case JSON_ARRAY_END:
-        printf("JSON_ARRAY_END\n");
-        break;
-      case JSON_STRING:
-        printf("JSON_STRING: %s\n", json_get_string(json, &len));
-        break;
-      case JSON_NUMBER:
-        printf("JSON_NUMBER: %f\n", json_get_number(json));
-        break;
-      case JSON_TRUE:
-        printf("JSON_TRUE\n");
-        break;
-      case JSON_FALSE:
-        printf("JSON_FALSE\n");
-        break;
-      case JSON_NULL:
-        printf("JSON_NULL\n");
-        break;
-
-      default:
-      case JSON_ERROR:
-        ESP_LOGE(TAG, "json parse error: %s line %d pos %d", json_get_error(json), json_get_lineno(json), json_get_position(json));
-        break;
-    }
-
-  } while (t != JSON_DONE && t != JSON_ERROR);
-}
-
-
+static const char *parse_json_timezone(json_stream *json);
 
 bool update_setting(IncomingCommandArgument_t *arg) {
   if (arg == NULL) {
     return false;
   }
 
-  printf("\n\nupdate_setting %d\n\n", arg->sequence);
+  bool ok = true;
+  char *message = "";
+  const char *tz = parse_json_timezone(&arg->json);
+  if (tz != NULL && strlen(tz) > 1) {
+    ok = clock_set_timezone(tz);
+    if (ok) {
+      message = "timezone set successfully";
+      config_save_timezone(tz);
+    }
+  }
 
-  test_json(&arg->json);
+  AckCommandArgs_t a = {
+    .sequence = arg->sequence,
+    .message = message
+  };
+  if (ok) {
+    outgoing_command(ACK_OK, &a);
+  } else {
+    outgoing_command(ACK_FAIL, &a);
+  }
 
   return true;
+}
+
+static const char *parse_json_timezone(json_stream *json) {
+  size_t len = 0;
+  bool key_found = false;
+  enum json_type t = JSON_ERROR;
+  do {
+    t = json_next(json);
+    switch(t) {
+      case JSON_STRING: {
+        if (json_get_depth(json) == 1) {
+          const char *s = json_get_string(json, &len);
+          if (key_found) {
+            return s;
+          } else if (strcmp(s, "time_zone_tzinfo") == 0) {
+            key_found = true;
+          }
+        }
+        break;
+      }
+
+      default:
+        break;
+      case JSON_ERROR:
+        ESP_LOGE(TAG, "json parse error: %s line %d pos %d", json_get_error(json), json_get_lineno(json), json_get_position(json));
+        break;
+    }
+
+  } while (t != JSON_DONE && t != JSON_ERROR);
+  return NULL;
 }

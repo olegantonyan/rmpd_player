@@ -41,6 +41,12 @@ bool outgoing_command(OutgoingCommand_t cmd, void *args) {
     case TRACK_END:
       ok = track_end(&arg);
       break;
+    case ACK_OK:
+      ok = ack_ok(&arg);
+      break;
+    case ACK_FAIL:
+      ok = ack_fail(&arg);
+      break;
 
     default:
       ESP_LOGE(TAG, "unknown command");

@@ -10,7 +10,9 @@ typedef enum {
   NOW_PLAYING = 100,
   POWER_ON,
   TRACK_BEGIN,
-  TRACK_END
+  TRACK_END,
+  ACK_OK,
+  ACK_FAIL
 } OutgoingCommand_t;
 
 typedef struct {

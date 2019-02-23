@@ -15,7 +15,6 @@ static const char *TAG = "clock";
 extern const char zones_json_start[] asm("_binary_zones_json_start");
 extern const char zones_json_end[]   asm("_binary_zones_json_end");
 
-static bool clock_set_timezone(const char *tzname);
 static const char *parse_json(json_stream *json, const char *key);
 
 bool clock_init() {
@@ -30,7 +29,7 @@ const char *clock_zones() {
   return zones_json_start;
 }
 
-static bool clock_set_timezone(const char *tzname) {
+bool clock_set_timezone(const char *tzname) {
   ESP_LOGI(TAG, "set timezone to %s", tzname);
 
   bool ok = false;
