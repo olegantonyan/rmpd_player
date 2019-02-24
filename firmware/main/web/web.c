@@ -1,6 +1,4 @@
 #include "web/web.h"
-#include "storage/spi.h"
-
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -25,10 +23,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "util/sysinfo.h"
+#include "web/fs.h"
 
 static const char *TAG = "web";
 
-static void send_file(FILE* f, httpd_req_t *req);
+static void send_text_file(const char *start, httpd_req_t *req);
+static void send_binary_file(const char *start, const char *end, httpd_req_t *req);
 static esp_err_t root_get_handler(httpd_req_t *req);
 static esp_err_t settings_get_handler(httpd_req_t *req);
 static esp_err_t settings_post_handler(httpd_req_t *req);
@@ -573,17 +573,7 @@ static esp_err_t zones_get_handler(httpd_req_t *req) {
   }
   httpd_resp_set_hdr(req, "Connection", "close");
 
-  static const size_t HTTP_CHUNK_SIZE = 1024;
-  const char *data = clock_zones();
-  size_t data_len = strlen(data);
-  if(data_len <= HTTP_CHUNK_SIZE) {
-    httpd_resp_send(req, data, data_len);
-  } else {
-    for(size_t bytes_sent = 0; bytes_sent < data_len; bytes_sent += HTTP_CHUNK_SIZE) {
-      httpd_resp_send_chunk(req, data + bytes_sent, MIN(data_len - bytes_sent, HTTP_CHUNK_SIZE));
-    }
-    httpd_resp_send_chunk(req, NULL, 0);
-  }
+  send_text_file(clock_zones(), req);
 
   return ESP_OK;
 }
@@ -593,67 +583,50 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
     return ESP_OK;
   }
   httpd_resp_set_hdr(req, "Connection", "close");
-  if(strcmp("/", req->uri) == 0) {
-    FILE* f = fopen(STORAGE_SPI_MOUNTPOINT "/index.html", "r");
-    if (f == NULL) {
-        ESP_LOGE(TAG, "cannot open index.html");
-        httpd_resp_send_404(req);
-        return ESP_OK;
-    }
-    httpd_resp_set_type(req, "text/html");
-    send_file(f, req);
-    fclose(f);
-    return ESP_OK;
-  }
 
-  size_t fname_size = HTTPD_MAX_URI_LEN + strlen(STORAGE_SPI_MOUNTPOINT);
-  char *fname = malloc(fname_size + 4);
-  memset(fname, 0, fname_size);
-  strcpy(fname, STORAGE_SPI_MOUNTPOINT);
-  strcat(fname, "/");
-  strncat(fname, req->uri + 1, fname_size - strlen(fname));
-  FILE* f = fopen(fname, "r");
-  if(f == NULL) {
-    httpd_resp_send_404(req);
-    free(fname);
-    return ESP_OK;
-  }
-
-  if(string_ends_with(fname, ".html")) {
+  if(strcmp("/", req->uri) == 0 || strcmp("/index.html", req->uri) == 0) {
     httpd_resp_set_type(req, "text/html");
-  } else if(string_ends_with(fname, ".css")) {
-    httpd_resp_set_type(req, "text/css");
-  } else if(string_ends_with(fname, ".js")) {
-    httpd_resp_set_type(req, "application/javascript");
-  } else if(string_ends_with(fname, ".ico")) {
+    send_text_file(index_html_start, req);
+  } else if(strcmp("/favicon.ico", req->uri) == 0) {
     httpd_resp_set_type(req, "image/x-icon");
-  } else if(string_ends_with(fname, ".svg")) {
-    httpd_resp_set_type(req, "image/svg+xml");
-  } else if(string_ends_with(fname, ".json")) {
-    httpd_resp_set_type(req, "application/json");
+    send_binary_file(favicon_ico_start, favicon_ico_end, req);
+  }else if(strcmp("/main.css", req->uri) == 0) {
+    httpd_resp_set_type(req, "text/css");
+    send_text_file(main_css_start, req);
+  } else if(strcmp("/main.js", req->uri) == 0) {
+    httpd_resp_set_type(req, "application/javascript");
+    send_text_file(main_js_start, req);
   } else {
-    httpd_resp_set_type(req, "application/octet-stream");
+    httpd_resp_send_404(req);
   }
-  send_file(f, req);
-  fclose(f);
-  free(fname);
+
   return ESP_OK;
 }
 
-static void send_file(FILE* f, httpd_req_t *req) {
+static void send_text_file(const char *data, httpd_req_t *req) {
   static const size_t HTTP_CHUNK_SIZE = 1024;
-  char *buffer = malloc(HTTP_CHUNK_SIZE);
-  if(file_size(f) <= HTTP_CHUNK_SIZE) {
-    size_t bytes_read = fread(buffer, 1, HTTP_CHUNK_SIZE, f);
-    httpd_resp_send(req, buffer, bytes_read);
+  size_t data_len = strlen(data);
+  if(data_len <= HTTP_CHUNK_SIZE) {
+    httpd_resp_send(req, data, data_len);
   } else {
-    size_t bytes_read = 0;
-    while ((bytes_read = fread(buffer, 1, HTTP_CHUNK_SIZE, f)) > 0) {
-      httpd_resp_send_chunk(req, buffer, bytes_read);
+    for(size_t bytes_sent = 0; bytes_sent < data_len; bytes_sent += HTTP_CHUNK_SIZE) {
+      httpd_resp_send_chunk(req, data + bytes_sent, MIN(data_len - bytes_sent, HTTP_CHUNK_SIZE));
     }
     httpd_resp_send_chunk(req, NULL, 0);
   }
-  free(buffer);
+}
+
+static void send_binary_file(const char *start, const char *end, httpd_req_t *req) {
+  static const size_t HTTP_CHUNK_SIZE = 1024;
+  size_t data_len = end - start;
+  if(data_len <= HTTP_CHUNK_SIZE) {
+    httpd_resp_send(req, start, data_len);
+  } else {
+    for(size_t bytes_sent = 0; bytes_sent < data_len; bytes_sent += HTTP_CHUNK_SIZE) {
+      httpd_resp_send_chunk(req, start + bytes_sent, MIN(data_len - bytes_sent, HTTP_CHUNK_SIZE));
+    }
+    httpd_resp_send_chunk(req, NULL, 0);
+  }
 }
 
 static httpd_handle_t start_webserver() {

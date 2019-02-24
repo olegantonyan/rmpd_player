@@ -17,7 +17,7 @@ const plugins = [
     defaultAttribute: 'defer',
   }),
   new ExtractTextPlugin({
-    filename: '[name].[hash].css',
+    filename: '[name].css',
     allChunks: true,
   }),
   new UglifyJsPlugin(),
@@ -33,7 +33,7 @@ module.exports = () => ({
     './node_modules/purecss/build/pure.css',
   ],
   output: {
-    filename: '[name].[hash].js',
+    filename: '[name].js',
     path: path.resolve(__dirname, OUTPUT_DIR),
   },
   module: {
