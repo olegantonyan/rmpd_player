@@ -24,6 +24,7 @@
 #include "clock/clock.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "util/sysinfo.h"
 
 static const char *TAG = "web";
 
@@ -509,6 +510,9 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   cJSON_AddItemToObject(root, "chip_revision", cJSON_CreateNumber(ci.revision));
   cJSON_AddItemToObject(root, "uptime", cJSON_CreateNumber(esp_timer_get_time() / 1000000));
 
+  char ua[128] = { 0 };
+  sysinfo_useragent(ua, sizeof(ua));
+  cJSON_AddItemToObject(root, "useragent", cJSON_CreateString(ua));
 
   bool task_list_ok = true;
   const char *task_list_header = "Task Name\tStatus\tPrio\tStack Free\tTask#\tAffinity\n";
@@ -537,7 +541,7 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   }
   cJSON_AddItemToObject(root, "runtime_stats", cJSON_CreateString(runtime_stats));
 
-  size_t json_size = 1024 + bytes_for_tasks_list * 2;
+  size_t json_size = 1200 + bytes_for_tasks_list * 2;
   char* json = malloc(json_size);
   if (json == NULL) {
     ESP_LOGE(TAG, "json allocation failed");

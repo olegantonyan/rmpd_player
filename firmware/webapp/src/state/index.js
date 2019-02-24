@@ -39,6 +39,7 @@ export default {
     heap_free_min: 0,
     uptime: 0,
     "task_list": "",
-    "runtime_stats": ""
+    "runtime_stats": "",
+    "useragent": ""
   }
 };

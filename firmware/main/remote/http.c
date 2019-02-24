@@ -8,7 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <string.h>
-#include "esp_ota_ops.h"
+#include "util/sysinfo.h"
 
 static const char *TAG = "remote_http";
 
@@ -43,9 +43,9 @@ int http_post_cmd(const char *send_data, size_t send_data_len, uint32_t send_seq
   esp_http_client_set_header(client, "Content-Type", "application/json");
   esp_http_client_set_header(client, "Accept", "application/json");
 
-  const esp_app_desc_t *d = esp_ota_get_app_description();
+
   char ua[128] = { 0 };
-  snprintf(ua, sizeof(ua), "rmpd %s (%s, FreeRTOS, ESP32, ESP-IDF %s, build at %s %s)", d->version, d->project_name, d->idf_ver, d->date, d->time);
+  sysinfo_useragent(ua, sizeof(ua));
   esp_http_client_set_header(client, "User-Agent", ua);
 
   char seqs[20] = { 0 };

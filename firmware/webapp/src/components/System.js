@@ -8,6 +8,11 @@ export default ({ state, actions }) =>
       <table class="pure-table pure-table-horizontal">
         <tbody>
           <tr>
+            <td>Version info</td>
+            <td>{state.system.useragent}</td>
+          </tr>
+
+          <tr>
             <td>Heap free</td>
             <td>{Math.round(state.system.heap_free / 1024)} Kb</td>
           </tr>
