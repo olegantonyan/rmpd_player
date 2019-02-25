@@ -3,6 +3,7 @@
 #include "esp_system.h"
 #include "esp_vfs_fat.h"
 #include <string.h>
+#include <dirent.h>
 
 Tempfile_t *tempfile_create() {
   struct stat st = { 0 };
@@ -56,5 +57,19 @@ bool tempfile_open(Tempfile_t *tf, const char *mode) {
 }
 
 void tempfile_init() {
-  // TODO clean the directory
+  DIR* dp = opendir(TEMPFILE_DIR);
+  if (dp == NULL) {
+    return;
+  }
+
+  char path[PATH_MAX + 1] = { 0 };
+  struct dirent* ep;
+  while((ep = readdir(dp))) {
+    if (ep->d_type == DT_REG ) {
+      memset(path, 0, sizeof(path));
+      snprintf(path, sizeof(path), "%s/%s", TEMPFILE_DIR, ep->d_name);
+      remove(path);
+    }
+  }
+  closedir(dp);
 }
