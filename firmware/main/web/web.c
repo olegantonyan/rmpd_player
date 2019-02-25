@@ -505,9 +505,6 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   }
   cJSON_AddItemToObject(root, "reset_reason", cJSON_CreateString(reset_reason));
 
-  esp_chip_info_t ci;
-  esp_chip_info(&ci);
-  cJSON_AddItemToObject(root, "chip_revision", cJSON_CreateNumber(ci.revision));
   cJSON_AddItemToObject(root, "uptime", cJSON_CreateNumber(esp_timer_get_time() / 1000000));
 
   char ua[128] = { 0 };

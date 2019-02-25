@@ -34,7 +34,6 @@ export default {
     ip_addr: "",
     ap_static_addr: "",
     reset_reason: "",
-    chip_revision: 0,
     heap_free: 0,
     heap_free_min: 0,
     uptime: 0,

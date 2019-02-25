@@ -28,11 +28,6 @@ export default ({ state, actions }) =>
           </tr>
 
           <tr>
-            <td>Chip revision</td>
-            <td>{state.system.chip_revision}</td>
-          </tr>
-
-          <tr>
             <td>MAC address</td>
             <td>{state.system.mac_addr}</td>
           </tr>
