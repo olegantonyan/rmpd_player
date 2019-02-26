@@ -52,10 +52,16 @@ bool wifi_reconfig() {
 }
 
 bool wifi_is_connected() {
+  if (event_group == NULL) {
+    return false;
+  }
   return xEventGroupGetBits(event_group) & WIFI_CONNECTED_BIT;
 }
 
 bool wifi_wait_connected(uint32_t ms) {
+  if (event_group == NULL) {
+    return false;
+  }
   uint32_t ticks = pdMS_TO_TICKS(ms);
   if (ms == portMAX_DELAY) {
     ticks = portMAX_DELAY;
