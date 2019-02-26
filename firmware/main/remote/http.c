@@ -8,7 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <string.h>
-#include "util/sysinfo.h"
+#include "system/sysinfo.h"
 
 static const char *TAG = "remote_http";
 

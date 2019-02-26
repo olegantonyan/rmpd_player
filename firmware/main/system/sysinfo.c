@@ -1,4 +1,4 @@
-#include "util/sysinfo.h"
+#include "system/sysinfo.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
 

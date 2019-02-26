@@ -22,7 +22,7 @@
 #include "clock/clock.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "util/sysinfo.h"
+#include "system/sysinfo.h"
 #include "web/fs.h"
 
 static const char *TAG = "web";
