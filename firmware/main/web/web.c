@@ -24,6 +24,7 @@
 #include "freertos/task.h"
 #include "system/sysinfo.h"
 #include "web/fs.h"
+#include "system/status.h"
 
 static const char *TAG = "web";
 
@@ -166,6 +167,8 @@ static void render_status(httpd_req_t *req) {
   char time_buf[80] = { 0 };
   strftime(time_buf, sizeof(time_buf), "%H:%M:%S %d-%m-%Y %Z", &timeinfo);
   cJSON_AddItemToObject(root, "time", cJSON_CreateString(time_buf));
+
+  cJSON_AddItemToObject(root, "online", cJSON_CreateBool(status_online()));
 
   char* json = malloc(1024);
 
@@ -506,6 +509,8 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   cJSON_AddItemToObject(root, "reset_reason", cJSON_CreateString(reset_reason));
 
   cJSON_AddItemToObject(root, "uptime", cJSON_CreateNumber(esp_timer_get_time() / 1000000));
+
+  cJSON_AddItemToObject(root, "cloud_addr", cJSON_CreateString(config_server_url()));
 
   char ua[128] = { 0 };
   sysinfo_useragent(ua, sizeof(ua));

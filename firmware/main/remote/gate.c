@@ -11,6 +11,7 @@
 #include "remote/http.h"
 #include "remote/queue.h"
 #include "remote/commands/incoming.h"
+#include "system/status.h"
 
 static const char *TAG = "remote_gate";
 
@@ -45,7 +46,10 @@ static void thread(void *_args) {
             if (!incoming_command(recv.data, recv.datafile, recv.sequence)) {
               ESP_LOGD(TAG, "error executing incoming command");
             }
+            status_set_online(true);
             break;
+          } else {
+            status_set_online(false);
           }
           vTaskDelay(pdMS_TO_TICKS(5678));
         } while(msg.max_retries-- > 0);

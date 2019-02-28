@@ -19,7 +19,8 @@ export default {
     seconds_pos: 0,
     time: "",
     volume: 0,
-    random: false
+    random: false,
+    online: false
   },
 
   audio: {
@@ -37,8 +38,9 @@ export default {
     heap_free: 0,
     heap_free_min: 0,
     uptime: 0,
-    "task_list": "",
-    "runtime_stats": "",
-    "useragent": ""
+    task_list: "",
+    runtime_stats: "",
+    useragent: "",
+    cloud_addr: ""
   }
 };

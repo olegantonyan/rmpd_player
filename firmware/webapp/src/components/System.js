@@ -48,6 +48,11 @@ export default ({ state, actions }) =>
           </tr>
 
           <tr>
+            <td>Cloud address</td>
+            <td>{state.system.cloud_addr}</td>
+          </tr>
+
+          <tr>
             <td></td>
             <td>
               <span class="pure-button button-xsmall" onclick={() => actions.system.fetch()}>Refresh</span>
