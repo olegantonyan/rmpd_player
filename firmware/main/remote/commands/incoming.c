@@ -5,6 +5,7 @@
 
 extern bool update_setting(IncomingCommandArgument_t *arg);
 extern bool update_playlist(IncomingCommandArgument_t *arg);
+extern bool update_software(IncomingCommandArgument_t *arg);
 
 static const char *TAG = "incoming_cmd";
 
@@ -45,7 +46,7 @@ bool incoming_command(const char *data, Tempfile_t *datafile, uint32_t sequence)
     ok = execute(command, &arg);
     json_close(&arg.json);
   }
-  
+
   tempfile_remove(arg.datafile);
   return ok;
 }
@@ -83,6 +84,9 @@ static bool execute(const char *command, IncomingCommandArgument_t *arg) {
     return update_setting(arg);
   } else if (strcmp(command, "update_playlist") == 0) {
     return update_playlist(arg);
+  } else if (strcmp(command, "update_software") == 0) {
+    return update_software(arg);
   }
+
   return false;
 }

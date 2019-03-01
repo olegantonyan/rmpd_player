@@ -6,7 +6,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-bool firmware_update_start();
-bool firmware_update_check();
+bool firmware_update_start(const char *url);
 
 #endif
