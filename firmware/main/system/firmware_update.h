@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-bool firmware_update_start(const char *url);
+bool firmware_update_start(const char *url, uint32_t sequence);
+void firmware_update_confirm(bool success);
 
 #endif

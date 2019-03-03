@@ -70,6 +70,32 @@ bool nvs_save_uint8(const char *key, uint8_t value) {
   return ret == ESP_OK;
 }
 
+bool nvs_read_uint32(const char *key, uint32_t *value) {
+  nvs_init();
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  nvs_handle h = open();
+  esp_err_t ret = nvs_get_u32(h, key, value);
+  close(h);
+  xSemaphoreGive(mutex);
+  if (ret != ESP_OK) {
+    ESP_LOGD(TAG, "failed to read %s from nvs: %s", key, esp_err_to_name(ret));
+  }
+  return ret == ESP_OK;
+}
+
+bool nvs_save_uint32(const char *key, uint32_t value) {
+  nvs_init();
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  nvs_handle h = open();
+  esp_err_t ret = nvs_set_u32(h, key, value);
+  close(h);
+  xSemaphoreGive(mutex);
+  if (ret != ESP_OK) {
+    ESP_LOGW(TAG, "failed to write %s to nvs: %s", key, esp_err_to_name(ret));
+  }
+  return ret == ESP_OK;
+}
+
 static nvs_handle open() {
   nvs_handle h;
   esp_err_t ret = nvs_open("storage", NVS_READWRITE, &h);

@@ -51,24 +51,13 @@ bool update_software(IncomingCommandArgument_t *arg) {
   bool ok = false;
   if (full_url != NULL) {
     ESP_LOGI(TAG, "start firmware upgrade from url: %s", full_url);
-    ok = firmware_update_start(full_url);
+    ok = firmware_update_start(full_url, arg->sequence);
   }
   if (malloced) {
     free(full_url);
   }
 
-  // TODO: add rollback and send ack after restart
-  AckCommandArgs_t a = {
-    .sequence = arg->sequence,
-    .message = "firmware upgrade started"
-  };
-  if (ok) {
-    outgoing_command(ACK_OK, &a);
-  } else {
-    outgoing_command(ACK_FAIL, &a);
-  }
-
-  return true;
+  return ok;
 }
 
 static const char *parse_json_distribution_url(json_stream *json) {

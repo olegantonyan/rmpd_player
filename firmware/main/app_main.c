@@ -5,6 +5,7 @@
 #include "clock/clock.h"
 #include "remote/control.h"
 #include "util/tempfile.h"
+#include "system/firmware_update.h"
 
 /*
 #include "pdjson.h"
@@ -74,5 +75,6 @@ void app_main() {
   tempfile_init();
   web_init();
   scheduler_init();
-  remote_control_start(); // should never return
+  remote_control_init();
+  firmware_update_confirm(true); // TODO check if everything is ok
 }

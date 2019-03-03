@@ -5,6 +5,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-void remote_control_start();
+bool remote_control_init();
 
 #endif

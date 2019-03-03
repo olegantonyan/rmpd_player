@@ -18,7 +18,7 @@ static const char *TAG = "remote_gate";
 static void thread(void *_args);
 
 bool gate_init() {
-  BaseType_t task_created = xTaskCreate(thread, "remote_gate", 5500 + REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH, NULL, 5, NULL);
+  BaseType_t task_created = xTaskCreate(thread, TAG, 5500 + REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH, NULL, 5, NULL);
   if (pdPASS != task_created) {
     ESP_LOGE(TAG, "cannot create thread");
     return false;
@@ -41,7 +41,7 @@ static void thread(void *_args) {
 
         do {
           memset(&recv, 0, sizeof(recv));
-          int status = http_post_cmd(msg.data, strlen(msg.data), 0, &recv);
+          int status = http_post_cmd(msg.data, strlen(msg.data), msg.sequence, &recv);
           if (status >= 200 && status < 300) {
             if (!incoming_command(recv.data, recv.datafile, recv.sequence)) {
               ESP_LOGD(TAG, "error executing incoming command");

@@ -14,14 +14,25 @@
 
 static const char *TAG = "remote_ctl";
 
-void remote_control_start() {
+static void thread(void *_args);
+
+bool remote_control_init() {
   if (!gate_init()) {
     ESP_LOGE(TAG, "error initializing remote gate");
-    return;
+    return false;
   }
 
+  BaseType_t task_created = xTaskCreate(thread, TAG, 3000, NULL, 5, NULL);
+  if (pdPASS != task_created) {
+    ESP_LOGE(TAG, "cannot create thread");
+    return false;
+  }
+  
   outgoing_command(POWER_ON, NULL);
+  return true;
+}
 
+static void thread(void *_args) {
   while (true) {
     vTaskDelay(pdMS_TO_TICKS(20000));
     outgoing_command(NOW_PLAYING, NULL);
