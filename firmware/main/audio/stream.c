@@ -63,7 +63,7 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
     ESP_LOGE(TAG, "cannot start thread");
     return false;
   }
-  uint8_t wait_fill = 200;
+  uint16_t wait_fill = STREAM_BUFFER_MAX_CHUNKS * 100;
   do { // wait buffer half-full
     vTaskDelay(pdMS_TO_TICKS(5));
   } while ((xRingbufferGetCurFreeSize(out->buffer) < (read_chunk_size * STREAM_BUFFER_MAX_CHUNKS / 2)) && wait_fill-- > 0);
