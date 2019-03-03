@@ -1,7 +1,7 @@
-#include "playlist/scheduler.h"
+#include "playlist/offline/scheduler.h"
 #include "audio/player.h"
-#include "playlist/random.h"
-#include "playlist/recurse.h"
+#include "playlist/offline/random.h"
+#include "playlist/offline/recurse.h"
 #include "audio/stream_playlist.h"
 #include <string.h>
 #include <stdio.h>

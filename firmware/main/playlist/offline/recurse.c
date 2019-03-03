@@ -1,4 +1,4 @@
-#include "playlist/recurse.h"
+#include "playlist/offline/recurse.h"
 
 #include <dirent.h>
 #include "util/strings.h"

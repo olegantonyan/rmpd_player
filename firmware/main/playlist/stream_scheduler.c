@@ -8,10 +8,10 @@
 #include <string.h>
 #include "esp_system.h"
 #include "esp_log.h"
-#include "playlist/recurse.h"
+#include "playlist/offline/recurse.h"
 #include "wifi/wifi.h"
 #include "audio/stream_playlist.h"
-#include "playlist/scheduler.h"
+#include "playlist/offline/scheduler.h"
 
 static const char *TAG = "stream_sched";
 

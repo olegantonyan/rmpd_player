@@ -3,7 +3,7 @@
 #
 # (Uses default behaviour of compiling all source files in directory, adding 'include' to include path.)
 
-COMPONENT_SRCDIRS := . web/ clock/ wifi/ storage/ config/ audio/ util/ util/certs/ playlist/ remote/ remote/commands/ remote/commands/outgoing remote/commands/incoming system/
+COMPONENT_SRCDIRS := . web/ clock/ wifi/ storage/ config/ audio/ util/ util/certs/ playlist/ playlist/offline remote/ remote/commands/ remote/commands/outgoing remote/commands/incoming system/
 COMPONENT_ADD_INCLUDEDIRS := .
 
 # certificates

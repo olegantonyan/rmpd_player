@@ -1,7 +1,7 @@
 #include "wifi/wifi.h"
 #include "web/web.h"
 #include "storage/sd.h"
-#include "playlist/scheduler.h"
+#include "playlist/offline/scheduler.h"
 #include "clock/clock.h"
 #include "remote/control.h"
 #include "util/tempfile.h"
