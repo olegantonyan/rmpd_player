@@ -34,9 +34,9 @@ bool update_setting(IncomingCommandArgument_t *arg) {
     .message = message
   };
   if (ok) {
-    outgoing_command(ACK_OK, &a);
+    outgoing_command(ACK_OK, &a, NULL);
   } else {
-    outgoing_command(ACK_FAIL, &a);
+    outgoing_command(ACK_FAIL, &a, NULL);
   }
 
   return true;

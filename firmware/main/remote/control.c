@@ -27,14 +27,14 @@ bool remote_control_init() {
     ESP_LOGE(TAG, "cannot create thread");
     return false;
   }
-  
-  outgoing_command(POWER_ON, NULL);
+
+  outgoing_command(POWER_ON, NULL, NULL);
   return true;
 }
 
 static void thread(void *_args) {
   while (true) {
     vTaskDelay(pdMS_TO_TICKS(20000));
-    outgoing_command(NOW_PLAYING, NULL);
+    outgoing_command(NOW_PLAYING, NULL, NULL);
   }
 }

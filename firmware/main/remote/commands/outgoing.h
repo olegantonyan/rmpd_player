@@ -15,11 +15,13 @@ typedef enum {
   ACK_FAIL
 } OutgoingCommand_t;
 
+typedef void (*outgoing_command_callback_t)(bool sent_ok);
+
 typedef struct {
-  cJSON *json;          // In & Out
-  uint32_t sequence;    // Out
-  uint16_t max_retries; // Out
-  const void *args;     // In
+  cJSON *json;                   // In & Out
+  uint32_t sequence;             // Out
+  uint16_t max_retries;          // Out
+  const void *args;              // In
 } OutgoingCommandArgument_t;
 
 typedef struct {
@@ -27,6 +29,6 @@ typedef struct {
   uint32_t sequence;
 } AckCommandArgs_t;
 
-bool outgoing_command(OutgoingCommand_t cmd, void *args);
+bool outgoing_command(OutgoingCommand_t cmd, void *args, outgoing_command_callback_t callback);
 
 #endif

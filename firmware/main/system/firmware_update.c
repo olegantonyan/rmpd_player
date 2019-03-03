@@ -10,6 +10,8 @@
 
 static const char *TAG = "firmware_update";
 
+static void remove_nvs_sequence_callback(bool ok);
+
 bool firmware_update_start(const char *url, uint32_t sequence) {
   esp_http_client_config_t config = {
     .url = url,
@@ -49,8 +51,16 @@ void firmware_update_confirm(bool success) {
     .message = message
   };
   if (success) {
-    outgoing_command(ACK_OK, &a);
+    outgoing_command(ACK_OK, &a, remove_nvs_sequence_callback);
   } else {
-    outgoing_command(ACK_FAIL, &a);
+    outgoing_command(ACK_FAIL, &a, remove_nvs_sequence_callback);
   }
+}
+
+static void remove_nvs_sequence_callback(bool ok) {
+  if (!ok) {
+    return;
+  }
+  ESP_LOGI(TAG, "upgrade acked");
+  nvs_save_uint32("fw_upgdare_seq", 0);
 }

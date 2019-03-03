@@ -197,9 +197,9 @@ static bool play(const char *path) {
     .filename = path,
     .id = 0
   };
-  outgoing_command(TRACK_BEGIN, &track);
+  outgoing_command(TRACK_BEGIN, &track, NULL);
   bool ok = player_start(path, stream_scheduler_force_probe); // force stream probe after any error regardless of retries #
-  outgoing_command(TRACK_END, &track);
+  outgoing_command(TRACK_END, &track, NULL);
 
   return ok;
 }

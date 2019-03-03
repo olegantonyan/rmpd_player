@@ -47,9 +47,15 @@ static void thread(void *_args) {
               ESP_LOGD(TAG, "error executing incoming command");
             }
             status_set_online(true);
+            if (msg.callback != NULL) {
+              msg.callback(true);
+            }
             break;
           } else {
             status_set_online(false);
+            if (msg.callback != NULL) {
+              msg.callback(false);
+            }
           }
           vTaskDelay(pdMS_TO_TICKS(5678));
         } while(msg.max_retries-- > 0);

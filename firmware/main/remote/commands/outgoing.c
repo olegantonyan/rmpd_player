@@ -19,7 +19,7 @@ static const char *TAG = "outgoing_cmd";
 
 static void base_command_fields(cJSON *json);
 
-bool outgoing_command(OutgoingCommand_t cmd, void *args) {
+bool outgoing_command(OutgoingCommand_t cmd, void *args, outgoing_command_callback_t callback) {
   bool ok = false;
   OutgoingCommandArgument_t arg = {
     .json = cJSON_CreateObject(),
@@ -62,6 +62,7 @@ bool outgoing_command(OutgoingCommand_t cmd, void *args) {
     msg.data = cJSON_PrintUnformatted(arg.json);
     msg.sequence = arg.sequence;
     msg.max_retries = arg.max_retries;
+    msg.callback = callback;
     ok = queue_put(&msg, 0);
     if (!ok) {
       free(msg.data); // no way we can handle this now
