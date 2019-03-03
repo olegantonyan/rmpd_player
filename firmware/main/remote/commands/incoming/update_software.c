@@ -9,6 +9,8 @@
 #include "config/config.h"
 #include "system/firmware_update.h"
 #include "util/url.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 static const char *TAG = "update_software";
 
@@ -55,9 +57,10 @@ bool update_software(IncomingCommandArgument_t *arg) {
     free(full_url);
   }
 
+  // TODO: add rollback and send ack after restart
   AckCommandArgs_t a = {
     .sequence = arg->sequence,
-    .message = "firmware upgrade"
+    .message = "firmware upgrade started"
   };
   if (ok) {
     outgoing_command(ACK_OK, &a);
