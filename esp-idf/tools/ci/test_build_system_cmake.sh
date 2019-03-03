@@ -107,8 +107,19 @@ function run_tests()
 	idf.py build || failure "Failed to rebuild with changed app version"
     assert_rebuilt ${APP_BINS}
     assert_not_rebuilt ${BOOTLOADER_BINS} esp-idf/esp32/libesp32.a
+    
+    print_status "Re-building does not change app.bin"
+    take_build_snapshot
+    idf.py build
+    assert_not_rebuilt ${APP_BINS} ${BOOTLOADER_BINS} esp-idf/esp32/libesp32.a
     rm -f ${TESTDIR}/template/version.txt
     
+    print_status "Get the version of app from git describe. Project is not inside IDF and do not have a tag only a hash commit."
+    idf.py build >> log.log || failure "Failed to build"
+    version="Project version: "
+    version+=$(git describe --always --tags --dirty)
+    grep "${version}" log.log || failure "Project version should have a hash commit"
+
     print_status "Moving BUILD_DIR_BASE out of tree"
     clean_build_dir
     OUTOFTREE_BUILD=${TESTDIR}/alt_build
@@ -236,6 +247,21 @@ function run_tests()
     mv CMakeLists.txt.bak CMakeLists.txt
     assert_built ${APP_BINS} ${BOOTLOADER_BINS} ${PARTITION_BIN}
 
+    print_status "Can build with IDF_PATH unset and inferred by cmake when Kconfig needs it to be set"
+    clean_build_dir
+    sed -i.bak 's/ENV{IDF_PATH}/{IDF_PATH}/' CMakeLists.txt
+    export IDF_PATH_BACKUP="$IDF_PATH"
+    mv main/Kconfig.projbuild main/Kconfig.projbuild_bak
+    echo "source \"\$IDF_PATH/examples/wifi/getting_started/station/main/Kconfig.projbuild\"" > main/Kconfig.projbuild
+    (unset IDF_PATH &&
+         cd build &&
+         cmake -G Ninja .. -DIDF_PATH=${IDF_PATH_BACKUP} &&
+         ninja) || failure "Ninja build failed"
+    mv CMakeLists.txt.bak CMakeLists.txt
+    mv main/Kconfig.projbuild_bak main/Kconfig.projbuild
+    assert_built ${APP_BINS} ${BOOTLOADER_BINS} ${PARTITION_BIN}
+
+
     # Next two tests will use this fake 'esp31b' target
     export fake_target=esp31b
     mkdir -p components/$fake_target
@@ -290,6 +316,28 @@ function run_tests()
     mv main/main/main/* main
     rm -rf main/main
     assert_built ${APP_BINS} ${BOOTLOADER_BINS} ${PARTITION_BIN}
+
+    print_status "sdkconfig should have contents both files: sdkconfig and sdkconfig.defaults"
+    idf.py clean > /dev/null;
+    idf.py fullclean > /dev/null;
+    rm -f sdkconfig.defaults;
+    rm -f sdkconfig;
+    echo "CONFIG_PARTITION_TABLE_OFFSET=0x10000" >> sdkconfig.defaults;
+    echo "CONFIG_PARTITION_TABLE_TWO_OTA=y" >> sdkconfig;
+    idf.py reconfigure > /dev/null;
+    grep "CONFIG_PARTITION_TABLE_OFFSET=0x10000" sdkconfig || failure "The define from sdkconfig.defaults should be into sdkconfig"
+    grep "CONFIG_PARTITION_TABLE_TWO_OTA=y" sdkconfig || failure "The define from sdkconfig should be into sdkconfig"
+
+    print_status "Building a project with CMake library imported and PSRAM workaround, all files compile with workaround"
+    cp sdkconfig sdkconfig.psram
+    rm -rf build
+    echo "CONFIG_SPIRAM_SUPPORT=y" >> sdkconfig.psram
+    echo "CONFIG_SPIRAM_CACHE_WORKAROUND=y" >> sdkconfig.psram
+    # note: we do 'reconfigure' here, as we just need to run cmake
+    idf.py -C $IDF_PATH/examples/build_system/cmake/import_lib -B `pwd`/build reconfigure -D SDKCONFIG="`pwd`/sdkconfig.psram"
+    grep -q '"command"' build/compile_commands.json || failure "compile_commands.json missing or has no no 'commands' in it"
+    (grep '"command"' build/compile_commands.json | grep -v mfix-esp32-psram-cache-issue) && failure "All commands in compile_commands.json should use PSRAM cache workaround"
+    rm sdkconfig.psram
 
     print_status "All tests completed"
     if [ -n "${FAILURES}" ]; then

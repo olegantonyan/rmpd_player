@@ -63,8 +63,10 @@ function(ldgen_process_template template output)
         --env       "COMPONENT_KCONFIGS=${COMPONENT_KCONFIGS}"
         --env       "COMPONENT_KCONFIGS_PROJBUILD=${COMPONENT_KCONFIGS_PROJBUILD}"
         --env       "IDF_CMAKE=y"
+        --env       "IDF_PATH=${IDF_PATH}"
         --env       "IDF_TARGET=${IDF_TARGET}"
-        DEPENDS     ${template} $<TARGET_PROPERTY:ldgen,FRAGMENT_FILES> ${SDKCONFIG} ldgen_section_infos
+        DEPENDS     ${template} $<TARGET_PROPERTY:ldgen,FRAGMENT_FILES> ${SDKCONFIG}
+                    ldgen_section_infos
     )
 
     get_filename_component(output_name ${output} NAME)

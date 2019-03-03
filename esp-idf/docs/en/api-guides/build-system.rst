@@ -1,5 +1,6 @@
 Build System
 ************
+:link_to_translation:`zh_CN:[中文]`
 
 This document explains the Espressif IoT Development Framework build system and the
 concept of "components"
@@ -613,6 +614,7 @@ $(COMPONENT_LIBRARY) for the project make process to link into the app binary.
 (Actually, even this is not strictly necessary - if the COMPONENT_ADD_LDFLAGS variable
 is overridden then the component can instruct the linker to link other binaries instead.)
 
+.. note:: When using an external build process with PSRAM, remember to add ``-mfix-esp32-psram-cache-issue`` to the C compiler arguments. See :ref:`CONFIG_SPIRAM_CACHE_WORKAROUND` for details of this flag.
 
 .. _esp-idf-template: https://github.com/espressif/esp-idf-template
 .. _GNU Make Manual: https://www.gnu.org/software/make/manual/make.html

@@ -22,8 +22,8 @@ import re
 import argparse
 from io import open
 
-# regular expression search object for matching Kconfig files
-RE_KCONFIG = re.compile(r'^Kconfig(?:\.projbuild)?$')
+# regular expression for matching Kconfig files
+RE_KCONFIG = r'^Kconfig(?:\.projbuild)?$'
 
 # ouput file with suggestions will get this suffix
 OUTPUT_SUFFIX = '.new'
@@ -34,122 +34,18 @@ OUTPUT_SUFFIX = '.new'
 IGNORE_DIRS = (
     # Kconfigs from submodules need to be ignored:
     os.path.join('components', 'mqtt', 'esp-mqtt'),
-    # Temporary (incompatibility) list:
-    os.path.join('components', 'app_update'),
-    os.path.join('components', 'aws_iot'),
-    os.path.join('components', 'bootloader'),
-    os.path.join('components', 'bt'),
-    os.path.join('components', 'driver'),
-    os.path.join('components', 'esp32'),
-    os.path.join('components', 'esp_adc_cal'),
-    os.path.join('components', 'esp_event'),
-    os.path.join('components', 'esp_http_client'),
-    os.path.join('components', 'esp_http_server'),
-    os.path.join('components', 'esptool_py'),
-    os.path.join('components', 'ethernet'),
-    os.path.join('components', 'fatfs'),
-    os.path.join('components', 'freemodbus'),
-    os.path.join('components', 'freertos'),
-    os.path.join('components', 'heap'),
-    os.path.join('components', 'libsodium'),
-    os.path.join('components', 'log'),
-    os.path.join('components', 'lwip'),
-    os.path.join('components', 'mbedtls'),
-    os.path.join('components', 'mdns'),
-    os.path.join('components', 'mqtt'),
-    os.path.join('components', 'nvs_flash'),
-    os.path.join('components', 'openssl'),
-    os.path.join('components', 'partition_table'),
-    os.path.join('components', 'pthread'),
-    os.path.join('components', 'spi_flash'),
-    os.path.join('components', 'spiffs'),
-    os.path.join('components', 'tcpip_adapter'),
-    os.path.join('components', 'unity'),
-    os.path.join('components', 'vfs'),
-    os.path.join('components', 'wear_levelling'),
-    os.path.join('examples', 'bluetooth', 'a2dp_gatts_coex', 'main'),
-    os.path.join('examples', 'bluetooth', 'a2dp_sink', 'main'),
-    os.path.join('examples', 'bluetooth', 'ble_ibeacon', 'main'),
-    os.path.join('examples', 'bluetooth', 'ble_throughput', 'throughput_client', 'main'),
-    os.path.join('examples', 'bluetooth', 'ble_throughput', 'throughput_server', 'main'),
-    os.path.join('examples', 'bluetooth', 'gatt_server', 'main'),
-    os.path.join('examples', 'ethernet', 'ethernet', 'main'),
-    os.path.join('examples', 'ethernet', 'iperf', 'main'),
-    os.path.join('examples', 'get-started', 'blink', 'main'),
-    os.path.join('examples', 'mesh', 'internal_communication', 'main'),
-    os.path.join('examples', 'mesh', 'manual_networking', 'main'),
-    os.path.join('examples', 'peripherals', 'adc2', 'main'),
-    os.path.join('examples', 'peripherals', 'i2c', 'i2c_self_test', 'main'),
-    os.path.join('examples', 'peripherals', 'i2c', 'i2c_tools', 'main'),
-    os.path.join('examples', 'peripherals', 'sdio', 'host', 'main'),
-    os.path.join('examples', 'peripherals', 'sdio', 'slave', 'main'),
-    os.path.join('examples', 'peripherals', 'spi_master', 'main'),
-    os.path.join('examples', 'peripherals', 'uart', 'nmea0183_parser', 'main'),
-    os.path.join('examples', 'protocols', 'asio', 'chat_client', 'main'),
-    os.path.join('examples', 'protocols', 'asio', 'chat_server', 'main'),
-    os.path.join('examples', 'protocols', 'asio', 'tcp_echo_server', 'main'),
-    os.path.join('examples', 'protocols', 'asio', 'udp_echo_server', 'main'),
-    os.path.join('examples', 'protocols', 'aws_iot', 'subscribe_publish', 'main'),
-    os.path.join('examples', 'protocols', 'aws_iot', 'thing_shadow', 'main'),
-    os.path.join('examples', 'protocols', 'coap_client', 'main'),
-    os.path.join('examples', 'protocols', 'coap_server', 'main'),
-    os.path.join('examples', 'protocols', 'esp_http_client', 'main'),
-    os.path.join('examples', 'protocols', 'http2_request', 'main'),
-    os.path.join('examples', 'protocols', 'http_request', 'main'),
-    os.path.join('examples', 'protocols', 'http_server', 'advanced_tests', 'main'),
-    os.path.join('examples', 'protocols', 'http_server', 'persistent_sockets', 'main'),
-    os.path.join('examples', 'protocols', 'http_server', 'simple', 'main'),
-    os.path.join('examples', 'protocols', 'https_mbedtls', 'main'),
-    os.path.join('examples', 'protocols', 'https_request', 'main'),
-    os.path.join('examples', 'protocols', 'https_server', 'main'),
-    os.path.join('examples', 'protocols', 'mdns', 'main'),
-    os.path.join('examples', 'protocols', 'modbus_slave', 'main'),
-    os.path.join('examples', 'protocols', 'mqtt', 'ssl', 'main'),
-    os.path.join('examples', 'protocols', 'mqtt', 'ssl_mutual_auth', 'main'),
-    os.path.join('examples', 'protocols', 'mqtt', 'tcp', 'main'),
-    os.path.join('examples', 'protocols', 'mqtt', 'ws', 'main'),
-    os.path.join('examples', 'protocols', 'mqtt', 'wss', 'main'),
-    os.path.join('examples', 'protocols', 'openssl_client', 'main'),
-    os.path.join('examples', 'protocols', 'openssl_server', 'main'),
-    os.path.join('examples', 'protocols', 'pppos_client', 'main'),
-    os.path.join('examples', 'protocols', 'sntp', 'main'),
-    os.path.join('examples', 'protocols', 'sockets', 'tcp_client', 'main'),
-    os.path.join('examples', 'protocols', 'sockets', 'tcp_server', 'main'),
-    os.path.join('examples', 'protocols', 'sockets', 'udp_client', 'main'),
-    os.path.join('examples', 'protocols', 'sockets', 'udp_multicast', 'main'),
-    os.path.join('examples', 'protocols', 'sockets', 'udp_server', 'main'),
-    os.path.join('examples', 'provisioning', 'ble_prov', 'main'),
-    os.path.join('examples', 'provisioning', 'console_prov', 'main'),
-    os.path.join('examples', 'provisioning', 'custom_config', 'main'),
-    os.path.join('examples', 'provisioning', 'softap_prov', 'main'),
-    os.path.join('examples', 'system', 'app_trace_to_host', 'main'),
-    os.path.join('examples', 'system', 'base_mac_address', 'main'),
-    os.path.join('examples', 'system', 'console', 'main'),
-    os.path.join('examples', 'system', 'deep_sleep', 'main'),
-    os.path.join('examples', 'system', 'gcov', 'main'),
-    os.path.join('examples', 'system', 'ota', 'native_ota_example', 'main'),
-    os.path.join('examples', 'system', 'ota', 'simple_ota_example', 'main'),
-    os.path.join('examples', 'system', 'sysview_tracing', 'main'),
-    os.path.join('examples', 'wifi', 'espnow', 'main'),
-    os.path.join('examples', 'wifi', 'getting_started', 'softAP', 'main'),
-    os.path.join('examples', 'wifi', 'getting_started', 'station', 'main'),
-    os.path.join('examples', 'wifi', 'power_save', 'main'),
-    os.path.join('examples', 'wifi', 'scan', 'main'),
-    os.path.join('examples', 'wifi', 'simple_sniffer', 'main'),
-    os.path.join('examples', 'wifi', 'wpa2_enterprise', 'main'),
-    os.path.join('examples', 'wifi', 'wps', 'main'),
-    os.path.join('tools', 'kconfig'),
-    os.path.join('tools', 'kconfig_new', 'test'),
-    os.path.join('tools', 'ldgen', 'test', 'data'),
-    os.path.join('tools', 'unit-test-app', 'components', 'test_utils'),
 )
 
 SPACES_PER_INDENT = 4
 
-CONFIG_NAME_MAX_LENGTH = 50
+# TODO decrease the value (after the names have been refactored)
+CONFIG_NAME_MAX_LENGTH = 60
 
 # TODO increase prefix length (after the names have been refactored)
 CONFIG_NAME_MIN_PREFIX_LENGTH = 0
+
+# The checker will not fail if it encounters this string (it can be used for temporarily resolve conflicts)
+RE_NOERROR = re.compile(r'\s+#\s+NOERROR\s+$')
 
 # list or rules for lines
 LINE_ERROR_RULES = [
@@ -157,6 +53,10 @@ LINE_ERROR_RULES = [
     (re.compile(r'\t'),                     'tabulators should be replaced by spaces',      r' ' * SPACES_PER_INDENT),
     (re.compile(r'\s+\n'),                  'trailing whitespaces should be removed',       r'\n'),
     (re.compile(r'.{120}'),                 'line should be shorter than 120 characters',   None),
+    # "\<CR><LF>" is not recognized due to a bug in tools/kconfig/zconf.l. The bug was fixed but the rebuild of
+    # mconf-idf is not enforced and an incorrect version is supplied with all previous IDF versions. Backslashes
+    # cannot be enabled unless everybody updates mconf-idf.
+    (re.compile(r'\\\n'),                   'line cannot be wrapped by backslash',          None),
 ]
 
 
@@ -188,11 +88,17 @@ class LineRuleChecker(BaseChecker):
     checks LINE_ERROR_RULES for each line
     """
     def process_line(self, line, line_number):
+        suppress_errors = RE_NOERROR.search(line) is not None
         errors = []
         for rule in LINE_ERROR_RULES:
             m = rule[0].search(line)
             if m:
-                errors.append(rule[1])
+                if suppress_errors:
+                    # just print but no failure
+                    e = InputError(self.path_in_idf, line_number, rule[1], line)
+                    print(e)
+                else:
+                    errors.append(rule[1])
                 if rule[2]:
                     line = rule[0].sub(rule[2], line)
         if len(errors) > 0:
@@ -213,6 +119,9 @@ class IndentAndNameChecker(BaseChecker):
 
         # stack common prefixes of configs
         self.prefix_stack = []
+
+        # if the line ends with '\' then we force the indent of the next line
+        self.force_next_indent = 0
 
         # menu items which increase the indentation of the next line
         self.re_increase_level = re.compile(r'''^\s*
@@ -290,6 +199,10 @@ class IndentAndNameChecker(BaseChecker):
                     # delete items ("config", "menuconfig", "help") until the appropriate parent
                     self.del_from_level_stack(i)
                     break
+            else:
+                # delete everything when configs are at top level without a parent menu, mainmenu...
+                self.del_from_level_stack(len(self.level_stack))
+
         self.level_stack.append(new_item)
         if self.debug:
             print(self.level_stack)
@@ -324,8 +237,10 @@ class IndentAndNameChecker(BaseChecker):
                 raise InputError(self.path_in_idf, line_number,
                                  '{} is {} characters long and it should be {} at most'
                                  ''.format(name, name_length, CONFIG_NAME_MAX_LENGTH),
-                                 line)  # no suggested correction for this
-            if self.prefix_stack[-1] is None:
+                                 line + '\n')  # no suggested correction for this
+            if len(self.prefix_stack) == 0:
+                self.prefix_stack.append(name)
+            elif self.prefix_stack[-1] is None:
                 self.prefix_stack[-1] = name
             else:
                 # this has nothing common with paths but the algorithm can be used for this also
@@ -369,6 +284,7 @@ class IndentAndNameChecker(BaseChecker):
     def process_line(self, line, line_number):
         stripped_line = line.strip()
         if len(stripped_line) == 0:
+            self.force_next_indent = 0
             return
         current_level = len(self.level_stack)
         m = re.search(r'\S', line)  # indent found as the first non-space character
@@ -380,7 +296,24 @@ class IndentAndNameChecker(BaseChecker):
         if current_level > 0 and self.level_stack[-1] == 'help':
             if current_indent >= current_level * SPACES_PER_INDENT:
                 # this line belongs to 'help'
+                self.force_next_indent = 0
                 return
+
+        if self.force_next_indent > 0:
+            if current_indent != self.force_next_indent:
+                raise InputError(self.path_in_idf, line_number,
+                                 'Indentation consists of {} spaces instead of {}'.format(current_indent,
+                                                                                          self.force_next_indent),
+                                 (' ' * self.force_next_indent) + line.lstrip())
+            else:
+                if not stripped_line.endswith('\\'):
+                    self.force_next_indent = 0
+                return
+
+        elif stripped_line.endswith('\\') and stripped_line.startswith(('config', 'menuconfig', 'choice')):
+            raise InputError(self.path_in_idf, line_number,
+                             'Line-wrap with backslash is not supported here',
+                             line)  # no suggestion for this
 
         self.check_name_and_update_prefix(stripped_line, line_number)
 
@@ -398,6 +331,12 @@ class IndentAndNameChecker(BaseChecker):
                     self.check_common_prefix(line, line_number)
 
         expected_indent = current_level * SPACES_PER_INDENT
+
+        if stripped_line.endswith('\\'):
+            self.force_next_indent = expected_indent + SPACES_PER_INDENT
+        else:
+            self.force_next_indent = 0
+
         if current_indent != expected_indent:
             raise InputError(self.path_in_idf, line_number,
                              'Indentation consists of {} spaces instead of {}'.format(current_indent, expected_indent),
@@ -431,47 +370,51 @@ def main():
     check_ignore_dirs = default_path is not None and os.path.abspath(args.directory) == os.path.abspath(default_path)
 
     for root, dirnames, filenames in os.walk(args.directory):
-        for filename in [f for f in filenames if RE_KCONFIG.search(f)]:
+        for filename in filenames:
             full_path = os.path.join(root, filename)
             path_in_idf = os.path.relpath(full_path, args.directory)
-            if check_ignore_dirs and path_in_idf.startswith(IGNORE_DIRS):
-                print('{}: Ignored'.format(path_in_idf))
-                ignore_counter += 1
-                continue
-            suggestions_full_path = full_path + OUTPUT_SUFFIX
-            with open(full_path, 'r', encoding='utf-8') as f, \
-                    open(suggestions_full_path, 'w', encoding='utf-8', newline='\n') as f_o, \
-                    LineRuleChecker(path_in_idf) as line_checker, \
-                    IndentAndNameChecker(path_in_idf, debug=args.verbose) as indent_and_name_checker:
-                try:
-                    for line_number, line in enumerate(f, start=1):
-                        try:
-                            for checker in [line_checker, indent_and_name_checker]:
-                                checker.process_line(line, line_number)
-                            # The line is correct therefore we echo it to the output file
-                            f_o.write(line)
-                        except InputError as e:
-                            print(e)
-                            failure = True
-                            f_o.write(e.suggested_line)
-                except UnicodeDecodeError:
-                    raise ValueError("The encoding of {} is not Unicode.".format(path_in_idf))
+            if re.search(RE_KCONFIG, filename):
+                if check_ignore_dirs and path_in_idf.startswith(IGNORE_DIRS):
+                    print('{}: Ignored'.format(path_in_idf))
+                    ignore_counter += 1
+                    continue
+                suggestions_full_path = full_path + OUTPUT_SUFFIX
+                with open(full_path, 'r', encoding='utf-8') as f, \
+                        open(suggestions_full_path, 'w', encoding='utf-8', newline='\n') as f_o, \
+                        LineRuleChecker(path_in_idf) as line_checker, \
+                        IndentAndNameChecker(path_in_idf, debug=args.verbose) as indent_and_name_checker:
+                    try:
+                        for line_number, line in enumerate(f, start=1):
+                            try:
+                                for checker in [line_checker, indent_and_name_checker]:
+                                    checker.process_line(line, line_number)
+                                # The line is correct therefore we echo it to the output file
+                                f_o.write(line)
+                            except InputError as e:
+                                print(e)
+                                failure = True
+                                f_o.write(e.suggested_line)
+                    except UnicodeDecodeError:
+                        raise ValueError("The encoding of {} is not Unicode.".format(path_in_idf))
 
-            if failure:
-                print('{} has been saved with suggestions for resolving the issues. Please note that the suggestions '
-                      'can be wrong and you might need to re-run the checker several times for solving all issues.'
-                      ''.format(path_in_idf + OUTPUT_SUFFIX))
-                print('Please fix the errors and run {} for checking the correctness of '
-                      'Kconfigs.'.format(os.path.relpath(os.path.abspath(__file__), args.directory)))
-                sys.exit(1)
-            else:
-                success_couter += 1
-                print('{}: OK'.format(path_in_idf))
-                try:
-                    os.remove(suggestions_full_path)
-                except Exception:
-                    # not a serious error is when the file cannot be deleted
-                    print('{} cannot be deleted!'.format(suggestions_full_path))
+                if failure:
+                    print('{} has been saved with suggestions for resolving the issues. Please note that the '
+                          'suggestions can be wrong and you might need to re-run the checker several times '
+                          'for solving all issues'.format(path_in_idf + OUTPUT_SUFFIX))
+                    print('Please fix the errors and run {} for checking the correctness of '
+                          'Kconfigs.'.format(os.path.relpath(os.path.abspath(__file__), args.directory)))
+                    sys.exit(1)
+                else:
+                    success_couter += 1
+                    print('{}: OK'.format(path_in_idf))
+                    try:
+                        os.remove(suggestions_full_path)
+                    except Exception:
+                        # not a serious error is when the file cannot be deleted
+                        print('{} cannot be deleted!'.format(suggestions_full_path))
+            elif re.search(RE_KCONFIG, filename, re.IGNORECASE):
+                # On Windows Kconfig files are working with different cases!
+                raise ValueError('Incorrect filename of {}. The case should be "Kconfig"!'.format(path_in_idf))
 
     if ignore_counter > 0:
         print('{} files have been ignored.'.format(ignore_counter))
