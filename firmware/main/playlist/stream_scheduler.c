@@ -13,7 +13,7 @@
 #include "audio/stream_playlist.h"
 #include "playlist/scheduler.h"
 
-static const char *TAG = "stream_scheduler";
+static const char *TAG = "stream_sched";
 
 static void thread(void * args);
 static void on_medifile_callback(const char *path, uint16_t index);
@@ -62,7 +62,7 @@ bool stream_scheduler_init(const char *storage_path) {
 }
 
 bool stream_scheduler_start() {
-  return xTaskCreate(thread, "stream_sched", 4096, NULL, 5, NULL) == pdPASS;
+  return xTaskCreate(thread, TAG, 4096, NULL, 5, NULL) == pdPASS;
 }
 
 void stream_scheduler_deinit() {

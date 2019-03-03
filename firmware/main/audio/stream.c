@@ -59,7 +59,7 @@ bool stream_start(const char *url, size_t read_chunk_size, stream_t *out) {
     return false;
   }
 
-  if (xTaskCreate(thread, "stream", 2048, out, 5, NULL) != pdPASS) {
+  if (xTaskCreate(thread, TAG, 2048, out, 5, NULL) != pdPASS) {
     ESP_LOGE(TAG, "cannot start thread");
     return false;
   }
