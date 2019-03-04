@@ -11,5 +11,5 @@ void sysinfo_useragent(char *buffer, size_t length) {
 
   const esp_app_desc_t *d = esp_ota_get_app_description();
 
-  snprintf(buffer, length, "rmpd-esp32 %s (%s, esp-idf %s, chip rev %d, build %s %s)", d->version, d->project_name, d->idf_ver, ci.revision, d->date, d->time);
+  snprintf(buffer, length, "rmpd-esp32 %s (%s %s, chip rev %d, build %s %s)", d->version, d->project_name, d->idf_ver, ci.revision, d->date, d->time);
 }
