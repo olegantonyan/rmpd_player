@@ -97,6 +97,7 @@ uint64_t sd_bytes_free() {
   int res = f_getfree("0:", &fre_clust, &fs);
   if (res != 0) {
     ESP_LOGW(TAG, "error getting free space %d", res);
+    return 0;
   }
 
   /* Get total sectors and free sectors */

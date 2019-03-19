@@ -17,6 +17,8 @@ bool firmware_update_start(const char *url, uint32_t sequence) {
   esp_http_client_config_t config = {
     .url = url,
     .cert_pem = certs(),
+    .max_redirection_count = 4,
+    .disable_auto_redirect = false,
   };
   esp_err_t result = esp_https_ota(&config);
 
