@@ -48,4 +48,7 @@ bool config_save_timezone(const char *arg);
 
 uint8_t config_stream_retries();
 
+bool config_disable_tls_certs_verification();
+bool config_save_disable_tls_certs_verification(bool arg);
+
 #endif

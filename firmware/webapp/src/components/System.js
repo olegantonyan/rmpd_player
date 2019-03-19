@@ -8,54 +8,54 @@ export default ({ state, actions }) =>
       <table class="pure-table pure-table-horizontal">
         <tbody>
           <tr>
-            <td>Version info</td>
+            <td>Версия</td>
             <td>{state.system.useragent}</td>
           </tr>
 
           <tr>
-            <td>Heap free</td>
+            <td>Свободной памяти</td>
             <td>{Math.round(state.system.heap_free / 1024)} Kb</td>
           </tr>
 
           <tr>
-            <td>Heap free minimum</td>
+            <td>Локальный минимум памяти</td>
             <td>{Math.round(state.system.heap_free_min / 1024)} Kb</td>
           </tr>
 
           <tr>
-            <td>Reset reason</td>
+            <td>Причина сброса</td>
             <td>{state.system.reset_reason}</td>
           </tr>
 
           <tr>
-            <td>MAC address</td>
+            <td>MAC адрес</td>
             <td>{state.system.mac_addr}</td>
           </tr>
 
           <tr>
-            <td>IP address (station iface)</td>
+            <td>IP адрес (клиентская точка)</td>
             <td>{state.system.ip_addr}</td>
           </tr>
 
           <tr>
-            <td>IP address (static AP iface)</td>
+            <td>IP адрес (точка доступа)</td>
             <td>{state.system.ap_static_addr}</td>
           </tr>
 
           <tr>
-            <td>Uptime</td>
+            <td>Аптайм</td>
             <td>{seconds_to_string(state.system.uptime)}</td>
           </tr>
 
           <tr>
-            <td>Cloud address</td>
+            <td>Адрес сервера</td>
             <td>{state.system.cloud_addr}</td>
           </tr>
 
           <tr>
             <td></td>
             <td>
-              <span class="pure-button button-xsmall" onclick={() => actions.system.fetch()}>Refresh</span>
+              <span class="pure-button button-xsmall" onclick={() => actions.system.fetch()}>Обновить</span>
             </td>
           </tr>
         </tbody>
@@ -72,7 +72,11 @@ export default ({ state, actions }) =>
       </pre>
 
       <br />
-      <button class="pure-button pure-button-primary" onclick={() => confirm("Will reboot now") ? actions.system.reboot() : void(0)}>Reboot</button>
+      <button class="pure-button pure-button-primary" onclick={() => confirm("Точно?") ? actions.system.reboot() : void(0)}>Перезагрузка</button>
+
+      <div align="right">
+        <input type="checkbox" checked={state.system.disable_tls_certs_verification} onclick={(e) => confirm("Эта опция предназначена для редких ситуаций при прроблемах с TLS сертификатами. Не включайте её если не было таковой инструкции от техподдержки") ? actions.system.set_disable_certs(e.target.checked) : void(0)}/> <em>Disable certificates verification</em>
+      </div>
     </div>
   </div>
 

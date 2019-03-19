@@ -173,3 +173,15 @@ bool config_save_timezone(const char *arg) {
 uint8_t config_stream_retries() {
   return 3;
 }
+
+bool config_disable_tls_certs_verification() {
+  uint8_t value = 0;
+  if (!nvs_read_uint8("nocerts", &value)) {
+    return false;
+  }
+  return value == 0 ? false : true;
+}
+
+bool config_save_disable_tls_certs_verification(bool arg) {
+  return nvs_save_uint8("nocerts", arg ? 1 : 0);
+}

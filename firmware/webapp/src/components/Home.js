@@ -21,7 +21,7 @@ export default ({ state, actions }) =>
         </div>
 
         <div>
-          <input type="checkbox" name="vehicle" checked={state.status.random} onclick={e => actions.status.set_random(e.target.checked)}/> Random
+          <input type="checkbox" checked={state.status.random} onclick={e => actions.status.set_random(e.target.checked)}/> Случайный порядок
         </div>
       </div>
 

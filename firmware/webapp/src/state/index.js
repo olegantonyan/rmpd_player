@@ -41,6 +41,7 @@ export default {
     task_list: "",
     runtime_stats: "",
     useragent: "",
-    cloud_addr: ""
+    cloud_addr: "",
+    disable_tls_certs_verification: false
   }
 };

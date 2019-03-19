@@ -102,5 +102,13 @@ export default {
         .then(data => data.json())
         .then((data) => actions.set(data))
     },
+    set_disable_certs: value => (state, actions) => {
+      fetch("/api/system.json", { method: "POST", body: JSON.stringify({ disable_tls_certs_verification: value }), headers: { "Content-Type": "application/json", "Connection": "close" } })
+        .then(data => data.json())
+        .then(data => {
+          actions.set({ disable_tls_certs_verification: value })
+          actions.fetch()
+        })
+    }
   }
 }

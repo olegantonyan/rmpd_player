@@ -40,6 +40,7 @@ static esp_err_t status_get_handler(httpd_req_t *req);
 static esp_err_t playback_post_handler(httpd_req_t *req);
 static esp_err_t reboot_post_handler(httpd_req_t *req);
 static esp_err_t system_get_handler(httpd_req_t *req);
+static esp_err_t system_post_handler(httpd_req_t *req);
 static esp_err_t zones_get_handler(httpd_req_t *req);
 static httpd_handle_t start_webserver();
 static void render_settings(httpd_req_t *req);
@@ -113,6 +114,12 @@ static httpd_uri_t zones_get = {
   .uri       = "/zones.json",
   .method    = HTTP_GET,
   .handler   = zones_get_handler
+};
+
+static httpd_uri_t system_post = {
+  .uri       = "/api/system.json",
+  .method    = HTTP_POST,
+  .handler   = system_post_handler
 };
 
 bool web_init() {
@@ -512,6 +519,8 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
 
   cJSON_AddItemToObject(root, "cloud_addr", cJSON_CreateString(config_server_url()));
 
+  cJSON_AddItemToObject(root, "disable_tls_certs_verification", cJSON_CreateBool(config_disable_tls_certs_verification()));
+
   char ua[128] = { 0 };
   sysinfo_useragent(ua, sizeof(ua));
   cJSON_AddItemToObject(root, "useragent", cJSON_CreateString(ua));
@@ -566,6 +575,50 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
     free(runtime_stats);
   }
 
+  return ESP_OK;
+}
+
+static esp_err_t system_post_handler(httpd_req_t *req) {
+  if (!auth_check(req)) {
+    return ESP_OK;
+  }
+  httpd_resp_set_hdr(req, "Connection", "close");
+  if (req->content_len > 128) {
+    ESP_LOGE(TAG, "too big request body %d", req->content_len);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  char *buffer = malloc(req->content_len + 4);
+  int ret = httpd_req_recv(req, buffer, req->content_len);
+  if (ret <= 0) {
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+  buffer[ret] = '\0';
+
+  cJSON *json = cJSON_Parse(buffer);
+  if (json == NULL) {
+    const char *error_ptr = cJSON_GetErrorPtr();
+    if (error_ptr != NULL) {
+      ESP_LOGE(TAG, "json parse error: %s", error_ptr);
+    }
+    free(buffer);
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+  }
+
+  const cJSON *disable_tls_certs_verification = cJSON_GetObjectItemCaseSensitive(json, "disable_tls_certs_verification");
+  if (cJSON_IsTrue(disable_tls_certs_verification)) {
+    config_save_disable_tls_certs_verification(true);
+  } else if (cJSON_IsFalse(disable_tls_certs_verification)) {
+    config_save_disable_tls_certs_verification(false);
+  }
+  free(buffer);
+  cJSON_Delete(json);
+
+  render_status(req);
   return ESP_OK;
 }
 
@@ -657,6 +710,7 @@ static httpd_handle_t start_webserver() {
   httpd_register_uri_handler(server, &reboot_post);
   httpd_register_uri_handler(server, &system_get);
   httpd_register_uri_handler(server, &zones_get);
+  httpd_register_uri_handler(server, &system_post);
   httpd_register_uri_handler(server, &root);
   return server;
 }
