@@ -6,8 +6,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define CERTS_TOTAL 2
-
-const char *certs(size_t index);
+const char *certs();
 
 #endif

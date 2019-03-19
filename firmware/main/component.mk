@@ -7,8 +7,7 @@ COMPONENT_SRCDIRS := . web/ clock/ wifi/ storage/ config/ audio/ util/ util/cert
 COMPONENT_ADD_INCLUDEDIRS := .
 
 # certificates
-COMPONENT_EMBED_TXTFILES := util/certs/letsencrypt1.pem
-COMPONENT_EMBED_TXTFILES += util/certs/letsencrypt2.pem
+COMPONENT_EMBED_TXTFILES := util/certs/certs.pem
 
 # timezones
 COMPONENT_EMBED_TXTFILES += clock/zones.json

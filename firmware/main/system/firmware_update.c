@@ -15,7 +15,7 @@ static void remove_nvs_sequence_callback(bool ok);
 bool firmware_update_start(const char *url, uint32_t sequence) {
   esp_http_client_config_t config = {
     .url = url,
-    .cert_pem = certs(0),
+    .cert_pem = certs(),
   };
   esp_err_t result = esp_https_ota(&config);
 

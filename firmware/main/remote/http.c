@@ -32,7 +32,7 @@ int http_post_cmd(const char *send_data, size_t send_data_len, uint32_t send_seq
     .url = url,
     .timeout_ms = 4000,
     .method = HTTP_METHOD_POST,
-    .cert_pem = certs(0),
+    .cert_pem = certs(),
     .auth_type = HTTP_AUTH_TYPE_BASIC,
     .max_redirection_count = 3,
     .disable_auto_redirect = false,
