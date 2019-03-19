@@ -7,6 +7,7 @@
 #include "util/certs/certs.h"
 #include "remote/commands/outgoing.h"
 #include "storage/nvs.h"
+#include "config/config.h"
 
 static const char *TAG = "firmware_update";
 
@@ -22,6 +23,7 @@ bool firmware_update_start(const char *url, uint32_t sequence) {
   if (result == ESP_OK) {
     ESP_LOGI(TAG, "successful upgrade, restarting, sequence %u", sequence);
     nvs_save_uint32("fw_upgdare_seq", sequence);
+    config_save_disable_tls_certs_verification(false);
     esp_restart();
   } else {
     ESP_LOGE(TAG, "upgrade failed: %s", esp_err_to_name(result));
