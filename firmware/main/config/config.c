@@ -140,7 +140,7 @@ char *config_server_url() {
     return buffer;
   }
   //return "http://192.168.1.3:3000";
-  return "https://server.slon-ds.ru/";
+  return "https://cloud.slon-ds.ru/";
 }
 
 char *config_ap_password() {
