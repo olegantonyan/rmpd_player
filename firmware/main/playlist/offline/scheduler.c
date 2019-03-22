@@ -193,7 +193,7 @@ static void on_medifile_callback(const char *path, uint16_t index) {
 static bool play(const char *path) {
   ESP_LOGD(TAG, "starting '%s'", path);
 
-  Track_t track = {
+  Track_t track = { // offline scheduler knows nothing about track ids
     .filename = path,
     .id = 0
   };

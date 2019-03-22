@@ -28,7 +28,7 @@ bool gate_init() {
 
 static void thread(void *_args) {
   wifi_wait_connected(portMAX_DELAY);
-  vTaskDelay(pdMS_TO_TICKS(1234)); // for some reasons, probably
+  vTaskDelay(pdMS_TO_TICKS(500)); // for some reasons, probably
 
   http_response_t recv;
   QueueMessage_t msg;
