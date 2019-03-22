@@ -6,5 +6,6 @@
 #include <stddef.h>
 
 bool remote_control_init();
+void remote_control_force_cycle();
 
 #endif

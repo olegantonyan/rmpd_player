@@ -18,7 +18,7 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "audio/stream_playlist.h"
-#include "remote/commands/outgoing.h"
+#include "remote/control.h"
 
 static const char *TAG = "player";
 
@@ -341,7 +341,7 @@ static void set_now_playing(char *str) {
     state.now_playing = str;
   }
   xSemaphoreGive(state.mutex);
-  outgoing_command(NOW_PLAYING, NULL, NULL);
+  remote_control_force_cycle(); // kick it to force send now_playing
 }
 
 static void set_state(player_state_t new_state) {

@@ -2,6 +2,7 @@
 #include "remote/gate.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "esp_system.h"
 #include "esp_log.h"
 #include <string.h>
@@ -14,6 +15,8 @@
 
 static const char *TAG = "remote_ctl";
 
+static SemaphoreHandle_t sema = NULL;
+
 static void thread(void *_args);
 
 bool remote_control_init() {
@@ -21,6 +24,7 @@ bool remote_control_init() {
     ESP_LOGE(TAG, "error initializing remote gate");
     return false;
   }
+  sema = xSemaphoreCreateMutex();
 
   BaseType_t task_created = xTaskCreate(thread, TAG, 3000, NULL, 5, NULL);
   if (pdPASS != task_created) {
@@ -32,9 +36,21 @@ bool remote_control_init() {
   return true;
 }
 
+void remote_control_force_cycle() {
+  if (sema != NULL) {
+    xSemaphoreGive(sema);
+  }
+}
+
 static void thread(void *_args) {
   while (true) {
-    vTaskDelay(pdMS_TO_TICKS(20000));
+    if (sema != NULL) {
+      xSemaphoreTake(sema, pdMS_TO_TICKS(20000));
+    } else {
+      vTaskDelay(pdMS_TO_TICKS(20000));
+    }
+
     outgoing_command(NOW_PLAYING, NULL, NULL);
+    taskYIELD();
   }
 }
