@@ -1,5 +1,6 @@
 #include "config/config.h"
 #include "storage/nvs.h"
+#include "config/defaults.h"
 
 #define MAX_WIFI_SSID_LENGTH 32
 #define MAX_WIFI_PASS_LENGTH 64
@@ -11,7 +12,8 @@ char *config_wifi_ssid() {
   if (ok) {
     return buffer;
   }
-  return NULL;
+  config_save_wifi_ssid(DEFAULT_WIFI_SSID);
+  return DEFAULT_WIFI_SSID;
 }
 
 char *config_wifi_pass() {
@@ -20,21 +22,29 @@ char *config_wifi_pass() {
   if (ok) {
     return buffer;
   }
-  return NULL;
+  config_save_wifi_pass(DEFAULT_WIFI_PASS);
+  return DEFAULT_WIFI_PASS;
 }
 
 bool config_save_wifi_ssid(const char * arg) {
+  if (arg == NULL) {
+    return false;
+  }
   return nvs_save_string("wifi_ssid", (char *)arg);
 }
 
 bool config_save_wifi_pass(const char * arg) {
+  if (arg == NULL) {
+    return false;
+  }
   return nvs_save_string("wifi_pass", (char *)arg);
 }
 
 uint8_t config_volume() {
   uint8_t value = 0;
   if (!nvs_read_uint8("volume", &value)) {
-    return 100;
+    config_save_volume(DEFAULT_VOLUME);
+    return DEFAULT_VOLUME;
   }
   if (value > 100) {
     return 100;
@@ -49,7 +59,8 @@ bool config_save_volume(uint8_t arg) {
 uint8_t config_bass_freqlimit() {
   uint8_t value = 0;
   if (!nvs_read_uint8("bass_freqlim", &value)) {
-    return 0;
+    config_save_bass_freqlimit(DEFAULT_BASS_FREQLIMIT);
+    return DEFAULT_BASS_FREQLIMIT;
   }
   return value;
 }
@@ -57,7 +68,8 @@ uint8_t config_bass_freqlimit() {
 uint8_t config_bass_amplitude() {
   uint8_t value = 0;
   if (!nvs_read_uint8("bass_amp", &value)) {
-    return 0;
+    config_save_bass_amplitude(DEFAULT_BASS_AMPLITUDE);
+    return DEFAULT_BASS_AMPLITUDE;
   }
   return value;
 }
@@ -65,7 +77,8 @@ uint8_t config_bass_amplitude() {
 uint8_t config_treble_freqlimit() {
   uint8_t value = 0;
   if (!nvs_read_uint8("treb_freqlim", &value)) {
-    return 0;
+    config_save_treble_freqlimit(DEFAULT_TREBLE_FREQLIMIT);
+    return DEFAULT_TREBLE_FREQLIMIT;
   }
   return value;
 }
@@ -73,7 +86,8 @@ uint8_t config_treble_freqlimit() {
 int8_t config_treble_amplitude() {
   uint8_t value = 0;
   if (!nvs_read_uint8("treb_amp", &value)) {
-    return 0;
+    config_save_treble_amplitude(DEFAULT_TREBLE_AMPLITUDE);
+    return DEFAULT_TREBLE_AMPLITUDE;
   }
   return (int8_t)value;
 }
@@ -97,7 +111,8 @@ bool config_save_treble_amplitude(int8_t arg) {
 bool config_random() {
   uint8_t value = 0;
   if (!nvs_read_uint8("random", &value)) {
-    return false;
+    config_save_random(DEFAULT_RANDOM);
+    return DEFAULT_RANDOM;
   }
   return value == 0 ? false : true;
 }
@@ -121,7 +136,8 @@ char *config_deviceid() {
   if (ok) {
     return buffer;
   }
-  return "vanillaesp";
+  nvs_save_string("deviceid", DEFAULT_DEVICEID);
+  return DEFAULT_DEVICEID;
 }
 
 char *config_server_password() {
@@ -130,7 +146,8 @@ char *config_server_password() {
   if (ok) {
     return buffer;
   }
-  return "vanillaesppass";
+  nvs_save_string("server_pass", DEFAULT_SERVERPASS);
+  return DEFAULT_SERVERPASS;
 }
 
 char *config_server_url() {
@@ -139,8 +156,8 @@ char *config_server_url() {
   if (ok) {
     return buffer;
   }
-  //return "http://192.168.1.3:3000";
-  return "https://cloud.slon-ds.ru/";
+  nvs_save_string("server_url", DEFAULT_SERVER);
+  return DEFAULT_SERVER;
 }
 
 char *config_ap_password() {
@@ -149,7 +166,8 @@ char *config_ap_password() {
   if (ok) {
     return buffer;
   }
-  return "12345678";
+  nvs_save_string("ap_pass", DEFAULT_APPASS);
+  return DEFAULT_APPASS;
 }
 
 config_ip_addr_t config_ap_static_ip() {
@@ -168,7 +186,8 @@ char *config_timezone() {
   if (ok) {
     return buffer;
   }
-  return "Europe/Kaliningrad";
+  config_save_timezone(DEFAULT_TIMEZONE);
+  return DEFAULT_TIMEZONE;
 }
 
 bool config_save_timezone(const char *arg) {

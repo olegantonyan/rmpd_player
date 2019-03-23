@@ -20,6 +20,8 @@ static SemaphoreHandle_t sema = NULL;
 static void thread(void *_args);
 
 bool remote_control_init() {
+  outgoing_command(POWER_ON, NULL, NULL);
+  
   if (!gate_init()) {
     ESP_LOGE(TAG, "error initializing remote gate");
     return false;
@@ -32,7 +34,6 @@ bool remote_control_init() {
     return false;
   }
 
-  outgoing_command(POWER_ON, NULL, NULL);
   return true;
 }
 

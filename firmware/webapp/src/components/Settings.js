@@ -64,7 +64,7 @@ export default ({ state, actions }) =>
             <a class="pure-button pure-button-primary" onclick={() => actions.settings.save()} disabled={state.settings.saving}>
               {state.settings.saving ? 'Сохраняем...' : 'Сохранить'}
             </a>
-            <em> будет использован DHCP</em>
+            <em> Будет использован DHCP. Может потребоваться перезагрузка</em>
           </div>
         </fieldset>
       </form>
