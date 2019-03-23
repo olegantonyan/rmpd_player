@@ -144,6 +144,11 @@ char *config_server_url() {
 }
 
 char *config_ap_password() {
+  static char buffer[16] = {0};
+  bool ok = nvs_read_string("ap_pass", buffer, sizeof(buffer));
+  if (ok) {
+    return buffer;
+  }
   return "12345678";
 }
 
