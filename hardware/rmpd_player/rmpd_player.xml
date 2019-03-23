@@ -2,7 +2,7 @@
 <export version="D">
   <design>
     <source>/home/oleg/projects/rmpd_player/hardware/rmpd_player/rmpd_player.sch</source>
-    <date>Tue 29 Jan 2019 11:02:24 EET</date>
+    <date>Sat 23 Mar 2019 16:39:09 EET</date>
     <tool>Eeschema 5.0.2-5.0.2</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -124,7 +124,7 @@
       <tstamp>5C090195</tstamp>
     </comp>
     <comp ref="C8">
-      <value>100n</value>
+      <value>1uF</value>
       <footprint>Capacitors_SMD:C_0805_HandSoldering</footprint>
       <datasheet>~</datasheet>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
