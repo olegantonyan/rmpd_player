@@ -75,7 +75,7 @@ export default ({ state, actions }) =>
       <button class="pure-button pure-button-primary" onclick={() => confirm("Точно?") ? actions.system.reboot() : void(0)}>Перезагрузка</button>
 
       <div align="right">
-        <input type="checkbox" checked={state.system.disable_tls_certs_verification} onclick={(e) => confirm("Эта опция предназначена для редких ситуаций при прроблемах с TLS сертификатами. Не включайте её если не было таковой инструкции от техподдержки") ? actions.system.set_disable_certs(e.target.checked) : void(0)}/> <em>Disable certificates verification</em>
+        <input type="checkbox" checked={state.system.disable_tls_certs_verification} onclick={(e) => confirm("Эта опция предназначена для редких ситуаций при проблемах с TLS сертификатами. Не включайте её если не было таковой инструкции от техподдержки") ? actions.system.set_disable_certs(e.target.checked) : void(0)}/> <em>Disable certificates verification</em>
       </div>
     </div>
   </div>
