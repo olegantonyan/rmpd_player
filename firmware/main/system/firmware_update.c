@@ -35,10 +35,11 @@ bool firmware_update_start(const char *url, uint32_t sequence) {
 }
 
 void firmware_update_confirm(bool success) {
-  char *message = "";
+  char *message = NULL;
   if (success) {
     esp_ota_mark_app_valid_cancel_rollback();
-    message = "firmware update successful";
+    const esp_app_desc_t *d = esp_ota_get_app_description();
+    message = (char *)d->version;
   } else {
     esp_ota_mark_app_invalid_rollback_and_reboot();
     message = "firmware update failed, rolling back";
