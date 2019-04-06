@@ -29,36 +29,62 @@ stamp-h1
 .libs/
 libcoap*.la
 libcoap*.pc
+src/**/.deps/
+src/**/.dirstamp
+src/**/.libs/
+src/**/*.o
+src/**/*.lo
+src/*.lo
+src/*.o
 src/.deps/
 src/.dirstamp
 src/.libs/
-src/*.o
-src/*.lo
 
 # the doc/ folder
 doc/Doxyfile
 doc/Makefile.in
 doc/doxyfile.stamp
 doc/doxygen_sqlite3.db
+doc/DoxygenLayout.xml
 doc/html/
+doc/man_html/
+doc/man_tmp/
+
+# the man/ folder
+man/docbook-xsl.css
+man/Makefile
+man/Makefile.in
+man/*.html
+man/*.txt
+man/*.xml
+man/*.3
+man/*.5
+man/*.7
 
 # the examples/ folder
 examples/.deps/
 examples/*.o
 examples/coap-client
+examples/coap-etsi_iot_01
 examples/coap-rd
 examples/coap-server
-examples/coap-client.5
-examples/coap-client.txt
-examples/coap-rd.5
-examples/coap-rd.txt
-examples/coap-server.5
-examples/coap-server.txt
+examples/coap-tiny
 
 # the include/ folder
-include/coap/coap.h
+include/coap2/coap.h
 
 # the tests/ folder
 tests/.deps
+tests/oss-fuzz/Makefile.ci
 tests/testdriver
 tests/*.o
+
+# ctags - Sublime plugin
+tags
+.tags*
+TAGS
+
+# ignore gcov-generated files
+**/*.gcda
+**/*.gcno
+**/*.gcov

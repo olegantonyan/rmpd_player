@@ -9,8 +9,11 @@
 #include "test_options.h"
 #include "test_pdu.h"
 #include "test_error_response.h"
+#include "test_session.h"
 #include "test_sendqueue.h"
 #include "test_wellknown.h"
+#include "test_tls.h"
+#include "libcoap.h"
 
 #ifdef __GNUC__
 #define UNUSED_PARAM __attribute__ ((unused))
@@ -28,17 +31,21 @@ main(int argc UNUSED_PARAM, char **argv UNUSED_PARAM) {
     return -2;
   }
 
+  coap_startup();
   t_init_uri_tests();
   t_init_option_tests();
   t_init_pdu_tests();
   t_init_error_response_tests();
+  t_init_session_tests();
   t_init_sendqueue_tests();
   t_init_wellknown_tests();
+  t_init_tls_tests();
 
   CU_basic_set_mode(run_mode);
   result = CU_basic_run_tests();
 
   CU_cleanup_registry();
+  coap_cleanup();
 
   return result;
 }

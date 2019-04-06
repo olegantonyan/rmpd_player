@@ -8,10 +8,27 @@
  * use.
  */
 
-#ifndef _COAP_LIST_H_
-#define _COAP_LIST_H_
+/*
+ * examples/coap_list.[ch] are DEPRECATED.  You should be using
+ * struct coap_optlist_t instead with the following functions which are a part
+ * of libcoap.
+ *
+ * coap_new_optlist()
+ * coap_insert_optlist()
+ * coap_delete_optlist()
+ * coap_add_optlist_pdu()
+ *
+ * See 'man coap_pdu_setup' for further information.
+ *
+ * examples/coap_list.[ch] files will be removed in a future release
+ * They are left here to support building backward compatibility of old versions
+ * of coap-client
+ */
 
-#include "utlist.h"
+#ifndef COAP_LIST_H_
+#define COAP_LIST_H_
+
+#include <coap2/utlist.h>
 
 typedef struct coap_list_t {
   struct coap_list_t *next;
@@ -30,4 +47,4 @@ int coap_delete(coap_list_t *node);
 /* removes all items from given queue and frees the allocated storage */
 void coap_delete_list(coap_list_t *queue);
 
-#endif /* _COAP_LIST_H_ */
+#endif /* COAP_LIST_H_ */

@@ -25,7 +25,7 @@
 #include "freertos/semphr.h"
 #include <esp_types.h>
 #include "esp_err.h"
-#include "esp_intr.h"
+#include "esp_intr_alloc.h"
 #include "esp_intr_alloc.h"
 #include "esp_attr.h"
 #include "esp_freertos_hooks.h"
@@ -35,7 +35,7 @@
 #include "driver/timer.h"
 #include "driver/periph_ctrl.h"
 #include "esp_task_wdt.h"
-#include "esp_system_internal.h"
+#include "esp_private/system_internal.h"
 
 static const char *TAG = "task_wdt";
 

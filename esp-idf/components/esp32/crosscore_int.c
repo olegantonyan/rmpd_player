@@ -16,11 +16,11 @@
 
 #include "esp_attr.h"
 #include "esp_err.h"
-#include "esp_intr.h"
+#include "esp_intr_alloc.h"
 #include "esp_intr_alloc.h"
 
-#include "rom/ets_sys.h"
-#include "rom/uart.h"
+#include "esp32/rom/ets_sys.h"
+#include "esp32/rom/uart.h"
 
 #include "soc/cpu.h"
 #include "soc/dport_reg.h"

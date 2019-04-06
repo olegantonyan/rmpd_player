@@ -21,12 +21,13 @@ static void thread(void *_args);
 
 bool remote_control_init() {
   outgoing_command(POWER_ON, NULL, NULL);
-  
+
   if (!gate_init()) {
     ESP_LOGE(TAG, "error initializing remote gate");
     return false;
   }
-  sema = xSemaphoreCreateMutex();
+
+  sema = xSemaphoreCreateBinary();
 
   BaseType_t task_created = xTaskCreate(thread, TAG, 3000, NULL, 5, NULL);
   if (pdPASS != task_created) {

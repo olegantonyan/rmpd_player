@@ -34,6 +34,7 @@ initializer that should be kept in sync
 #define HTTPD_DEFAULT_CONFIG() {                        \
         .task_priority      = tskIDLE_PRIORITY+5,       \
         .stack_size         = 4096,                     \
+        .core_id            = tskNO_AFFINITY,           \
         .server_port        = 80,                       \
         .ctrl_port          = 32768,                    \
         .max_open_sockets   = 7,                        \
@@ -139,6 +140,7 @@ typedef bool (*httpd_uri_match_func_t)(const char *reference_uri,
 typedef struct httpd_config {
     unsigned    task_priority;      /*!< Priority of FreeRTOS task which runs the server */
     size_t      stack_size;         /*!< The maximum stack size allowed for the server task */
+    BaseType_t  core_id;            /*!< The core the HTTP server task will run on */
 
     /**
      * TCP Port number for receiving and transmitting HTTP traffic
@@ -362,6 +364,18 @@ typedef struct httpd_req {
      * function for freeing the session context, please specify that here.
      */
     httpd_free_ctx_fn_t free_ctx;
+
+    /**
+     * Flag indicating if Session Context changes should be ignored
+     *
+     * By default, if you change the sess_ctx in some URI handler, the http server
+     * will internally free the earlier context (if non NULL), after the URI handler
+     * returns. If you want to manage the allocation/reallocation/freeing of
+     * sess_ctx yourself, set this flag to true, so that the server will not
+     * perform any checks on it. The context will be cleared by the server
+     * (by calling free_ctx or free()) only if the socket gets closed.
+     */
+    bool ignore_sess_ctx_changes;
 } httpd_req_t;
 
 /**

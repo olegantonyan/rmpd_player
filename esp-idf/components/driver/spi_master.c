@@ -123,10 +123,10 @@ We have two bits to control the interrupt:
 #include "driver/spi_master.h"
 #include "soc/dport_reg.h"
 #include "soc/spi_periph.h"
-#include "rom/ets_sys.h"
+#include "esp32/rom/ets_sys.h"
 #include "esp_types.h"
 #include "esp_attr.h"
-#include "esp_intr.h"
+#include "esp_intr_alloc.h"
 #include "esp_intr_alloc.h"
 #include "esp_log.h"
 #include "esp_err.h"
@@ -138,7 +138,7 @@ We have two bits to control the interrupt:
 #include "soc/soc.h"
 #include "soc/soc_memory_layout.h"
 #include "soc/dport_reg.h"
-#include "rom/lldesc.h"
+#include "esp32/rom/lldesc.h"
 #include "driver/gpio.h"
 #include "driver/periph_ctrl.h"
 #include "esp_heap_caps.h"
@@ -871,8 +871,14 @@ static void SPI_MASTER_ISR_ATTR spi_new_trans(spi_device_t *dev, spi_trans_priv_
 
     //SPI iface needs to be configured for a delay in some cases.
     //configure dummy bits
-    host->hw->user.usr_dummy=(dev->cfg.dummy_bits+extra_dummy) ? 1 : 0;
-    host->hw->user1.usr_dummy_cyclelen=dev->cfg.dummy_bits+extra_dummy-1;
+    int base_dummy_bits;
+    if (trans->flags & SPI_TRANS_VARIABLE_DUMMY) {
+        base_dummy_bits = ((spi_transaction_ext_t *)trans)->dummy_bits;
+    } else {
+        base_dummy_bits = dev->cfg.dummy_bits;
+    }
+    host->hw->user.usr_dummy=(base_dummy_bits+extra_dummy) ? 1 : 0;
+    host->hw->user1.usr_dummy_cyclelen=base_dummy_bits+extra_dummy-1;
 
     int miso_long_delay = 0;
     if (dev->clk_cfg.miso_delay<0) {

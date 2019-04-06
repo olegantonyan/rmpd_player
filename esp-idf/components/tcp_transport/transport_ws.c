@@ -8,6 +8,7 @@
 #include "esp_transport_tcp.h"
 #include "esp_transport_ws.h"
 #include "esp_transport_utils.h"
+#include "transport_strcasestr.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/sha1.h"
 
@@ -60,10 +61,9 @@ static char *trimwhitespace(const char *str)
     return (char *)str;
 }
 
-
 static char *get_http_header(const char *buffer, const char *key)
 {
-    char *found = strstr(buffer, key);
+    char *found = transport_strcasestr(buffer, key);
     if (found) {
         found += strlen(key);
         char *found_end = strstr(found, "\r\n");
@@ -230,14 +230,16 @@ static int ws_read(esp_transport_handle_t t, char *buffer, int len, int timeout_
         data_ptr += 8;
         payload_len_buff = len - 10;
     }
+
+    if (payload_len > payload_len_buff) {
+        ESP_LOGD(TAG, "Actual data to receive (%d) are longer than ws buffer (%d)", payload_len, payload_len_buff);
+        payload_len = payload_len_buff;
+    }
+
     // Then receive and process payload
     if ((rlen = esp_transport_read(ws->parent, data_ptr, payload_len, timeout_ms)) <= 0) {
         ESP_LOGE(TAG, "Error read data");
         return rlen;
-    }
-    if (payload_len > payload_len_buff) {
-        ESP_LOGD(TAG, "Actual data received (%d) are longer than mqtt buffer (%d)", payload_len, payload_len_buff);
-        payload_len = payload_len_buff;
     }
 
     if (mask) {

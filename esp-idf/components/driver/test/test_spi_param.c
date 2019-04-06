@@ -91,12 +91,12 @@ static void local_test_start(spi_device_handle_t *spi, int freq, const spitest_p
 
     slave_pull_up(&buscfg, slvcfg.spics_io_num);
 
-    TEST_ESP_OK(spi_bus_initialize(HSPI_HOST, &buscfg, pset->master_dma_chan));
-    TEST_ESP_OK(spi_bus_add_device(HSPI_HOST, &devcfg, spi));
+    TEST_ESP_OK(spi_bus_initialize(TEST_SPI_HOST, &buscfg, pset->master_dma_chan));
+    TEST_ESP_OK(spi_bus_add_device(TEST_SPI_HOST, &devcfg, spi));
 
     //slave automatically use iomux pins if pins are on VSPI_* pins
     buscfg.quadhd_io_num = -1;
-    TEST_ESP_OK(spi_slave_initialize(VSPI_HOST, &buscfg, &slvcfg, pset->slave_dma_chan));
+    TEST_ESP_OK(spi_slave_initialize(TEST_SLAVE_HOST, &buscfg, &slvcfg, pset->slave_dma_chan));
 
     //initialize master and slave on the same pins break some of the output configs, fix them
     if (pset->master_iomux) {
@@ -170,7 +170,7 @@ static void local_test_loop(const void* arg1, void* arg2)
             vRingbufferReturnItem(context->slave_context.data_received, rcv_data);
         }
         master_free_device_bus(spi);
-        TEST_ASSERT(spi_slave_free(VSPI_HOST) == ESP_OK);
+        TEST_ASSERT(spi_slave_free(TEST_SLAVE_HOST) == ESP_OK);
     }
 }
 
@@ -465,9 +465,9 @@ static const ptest_func_t slave_test_func = {
     .def_param = spitest_def_param,
 };
 
-#define TEST_SPI_MASTER_SLAVE(name, param_group) \
+#define TEST_SPI_MASTER_SLAVE(name, param_group, extra_tag) \
     PARAM_GROUP_DECLARE(name, param_group) \
-    TEST_MASTER_SLAVE(name, param_group, "[spi_ms][test_env=Example_SPI_Multi_device][timeout=120]", &master_test_func, &slave_test_func)
+    TEST_MASTER_SLAVE(name, param_group, "[spi_ms][test_env=Example_SPI_Multi_device][timeout=120]"#extra_tag, &master_test_func, &slave_test_func)
 
 /************ Master Code ***********************************************/
 static void test_master_init(void** arg)
@@ -514,8 +514,8 @@ static void test_master_start(spi_device_handle_t *spi, int freq, const spitest_
     devpset.input_delay_ns = pset->slave_tv_ns;
     devpset.clock_speed_hz = freq;
     if (pset->master_limit != 0 && freq > pset->master_limit) devpset.flags |= SPI_DEVICE_NO_DUMMY;
-    TEST_ESP_OK(spi_bus_initialize(HSPI_HOST, &buspset, pset->master_dma_chan));
-    TEST_ESP_OK(spi_bus_add_device(HSPI_HOST, &devpset, spi));
+    TEST_ESP_OK(spi_bus_initialize(TEST_SPI_HOST, &buspset, pset->master_dma_chan));
+    TEST_ESP_OK(spi_bus_add_device(TEST_SPI_HOST, &devpset, spi));
 
     //prepare data for the slave
     for (int i = 0; i < pset->test_size; i ++) {
@@ -634,7 +634,7 @@ static void timing_slave_start(int speed, const spitest_param_set_t* pset, spite
     //Enable pull-ups on SPI lines so we don't detect rogue pulses when no master is connected.
     slave_pull_up(&slv_buscfg, slvcfg.spics_io_num);
 
-    TEST_ESP_OK( spi_slave_initialize(VSPI_HOST, &slv_buscfg, &slvcfg, pset->slave_dma_chan) );
+    TEST_ESP_OK(spi_slave_initialize(TEST_SLAVE_HOST, &slv_buscfg, &slvcfg, pset->slave_dma_chan));
 
     //prepare data for the master
     for (int i = 0; i < pset->test_size; i++) {
@@ -694,7 +694,7 @@ static void test_slave_loop(const void *arg1, void* arg2)
             //clean
             vRingbufferReturnItem( context->slave_context.data_received, rcv_data );
         }
-        TEST_ASSERT(spi_slave_free(VSPI_HOST) == ESP_OK);
+        TEST_ASSERT(spi_slave_free(TEST_SLAVE_HOST) == ESP_OK);
     }
 }
 
@@ -789,7 +789,7 @@ static spitest_param_set_t timing_conf[] = {
         .slave_tv_ns = TV_WITH_ESP_SLAVE_GPIO,
     },
 };
-TEST_SPI_MASTER_SLAVE(TIMING, timing_conf)
+TEST_SPI_MASTER_SLAVE(TIMING, timing_conf, "")
 
 /************ Mode Test ***********************************************/
 #define FREQ_LIMIT_MODE SPI_MASTER_FREQ_16M
@@ -976,4 +976,4 @@ spitest_param_set_t mode_conf[] = {
       .slave_dma_chan = 1,
     },
 };
-TEST_SPI_MASTER_SLAVE(MODE, mode_conf)
+TEST_SPI_MASTER_SLAVE(MODE, mode_conf, "[ignore]")

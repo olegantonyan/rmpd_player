@@ -544,6 +544,23 @@ menu "ESP32-specific"
                 of the crash.
     endchoice
 
+    config GDBSTUB_SUPPORT_TASKS
+        bool "GDBStub: enable listing FreeRTOS tasks"
+        default y
+        depends on ESP32_PANIC_GDBSTUB
+        help
+            If enabled, GDBStub can supply the list of FreeRTOS tasks to GDB.
+            Thread list can be queried from GDB using 'info threads' command.
+            Note that if GDB task lists were corrupted, this feature may not work.
+            If GDBStub fails, try disabling this feature.
+
+    config GDBSTUB_MAX_TASKS
+        int "GDBStub: maximum number of tasks supported"
+        default 32
+        depends on GDBSTUB_SUPPORT_TASKS
+        help
+            Set the number of tasks which GDB Stub will support.
+
     config ESP32_DEBUG_OCDAWARE
         bool "Make exception and panic handlers JTAG/OCD aware"
         default y
@@ -758,6 +775,19 @@ menu "ESP32-specific"
             bool "Internal 8.5MHz oscillator, divided by 256 (~33kHz)"
     endchoice
 
+    config ESP32_RTC_EXTERNAL_CRYSTAL_ADDITIONAL_CURRENT
+        bool "Additional current for external 32kHz crystal"
+        depends on ESP32_RTC_CLOCK_SOURCE_EXTERNAL_CRYSTAL
+        default "n"
+        help
+            Choose which additional current is used for rtc external crystal.
+
+            - With some 32kHz crystal configurations, the X32N and X32P pins may not
+              have enough drive strength to keep the crystal oscillating during deep sleep.
+              If this option is enabled, additional current from touchpad 9 is provided
+              internally to drive the 32kHz crystal. If this option is enabled, deep sleep current
+              is slightly higher (4-5uA) and the touchpad and ULP wakeup sources are not available.
+
     config ESP32_RTC_CLK_CAL_CYCLES
         int "Number of cycles for RTC_SLOW_CLK calibration"
         default 3000 if ESP32_RTC_CLOCK_SOURCE_EXTERNAL_CRYSTAL
@@ -924,6 +954,8 @@ menu Wi-Fi
             If enabled, WiFi & Bluetooth coexistence is controlled by software rather than hardware.
             Recommended for heavy traffic scenarios. Both coexistence configuration options are
             automatically managed, no user intervention is required.
+            If only Bluetooth is used, it is recommended to disable this option to reduce binary file
+            size.
 
     choice SW_COEXIST_PREFERENCE
         prompt "WiFi/Bluetooth coexistence performance preference"

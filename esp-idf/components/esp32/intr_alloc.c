@@ -26,7 +26,7 @@
 #include "esp_err.h"
 //#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
-#include "esp_intr.h"
+#include "esp_intr_alloc.h"
 #include "esp_attr.h"
 #include "esp_intr_alloc.h"
 #include "esp_ipc.h"
@@ -118,7 +118,7 @@ const static int_desc_t int_desc[32]={
     { 3, INTTP_LEVEL, {INTDESC_NORMAL, INTDESC_NORMAL} }, //23
     { 4, INTTP_LEVEL, {INTDESC_RESVD,  INTDESC_NORMAL} }, //24
     { 4, INTTP_LEVEL, {INTDESC_RESVD,  INTDESC_RESVD } }, //25
-    { 5, INTTP_LEVEL, {INTDESC_RESVD,  INTDESC_RESVD } }, //26
+    { 5, INTTP_LEVEL, {INTDESC_NORMAL, INTDESC_RESVD } }, //26
     { 3, INTTP_LEVEL, {INTDESC_RESVD,  INTDESC_RESVD } }, //27
     { 4, INTTP_EDGE,  {INTDESC_NORMAL, INTDESC_NORMAL} }, //28
     { 3, INTTP_NA,    {INTDESC_SPECIAL,INTDESC_SPECIAL}}, //29

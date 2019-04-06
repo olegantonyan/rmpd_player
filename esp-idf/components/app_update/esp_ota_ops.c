@@ -32,11 +32,11 @@
 #include "sdkconfig.h"
 
 #include "esp_ota_ops.h"
-#include "rom/queue.h"
-#include "rom/crc.h"
+#include "sys/queue.h"
+#include "esp32/rom/crc.h"
 #include "soc/dport_reg.h"
 #include "esp_log.h"
-#include "esp_flash_data_types.h"
+#include "esp_flash_partitions.h"
 #include "bootloader_common.h"
 #include "sys/param.h"
 #include "esp_system.h"
@@ -107,13 +107,6 @@ static esp_err_t image_validate(const esp_partition_t *partition, esp_image_load
     if (esp_image_verify(load_mode, &part_pos, &data) != ESP_OK) {
         return ESP_ERR_OTA_VALIDATE_FAILED;
     }
-
-#ifdef CONFIG_SECURE_SIGNED_ON_UPDATE
-    esp_err_t ret = esp_secure_boot_verify_signature(partition->address, data.image_len);
-    if (ret != ESP_OK) {
-        return ESP_ERR_OTA_VALIDATE_FAILED;
-    }
-#endif
 
     return ESP_OK;
 }

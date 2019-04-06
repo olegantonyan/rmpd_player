@@ -26,14 +26,16 @@ coap_config.h coap_config.h.in* compile config.guess config.h* config.log config
 depcomp
 doc/Doxyfile doc/doxyfile.stamp doc/doxygen_sqlite3.db doc/Makefile doc/Makefile.in
 examples/*.o  examples/coap-client examples/coap-server examples/coap-rd
-examples/coap-*.5 examples/coap-*.txt examples/Makefile.in
-include/coap/coap.h
+examples/Makefile examples/Makefile.in
+include/coap2/coap.h
 install-sh
-libcoap-1.pc libtool ltmain.sh
+libcoap-*.pc libtool ltmain.sh
+man/coap*.[357] man/coap*.txt man/Makefile man/Makefile.in
 missing
 Makefile Makefile.in
 stamp-h1 src/.dirstamp libcoap*.la* src/*.*o
-tests/*.o tests/Makefile tests/testdriver
+tests/*.o tests/Makefile tests/Makefile.in tests/testdriver
+tests/oss-fuzz/Makefile.ci
 m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 m4/ltversion.m4
 "
 
