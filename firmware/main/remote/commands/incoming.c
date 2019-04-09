@@ -15,7 +15,8 @@ static bool execute(const char *command, IncomingCommandArgument_t *arg);
 bool incoming_command(const char *data, Tempfile_t *datafile, uint32_t sequence) {
   IncomingCommandArgument_t arg = {
     .sequence = sequence,
-    .datafile = datafile
+    .datafile = datafile,
+    .data = data
   };
   bool in_file = false;
   if (datafile != NULL && datafile->file != NULL) {
@@ -23,10 +24,12 @@ bool incoming_command(const char *data, Tempfile_t *datafile, uint32_t sequence)
     tempfile_open(datafile, "r"); // was closed before
     json_open_stream(&arg.json, datafile->file);
     in_file = true;
+    arg.data = NULL;
   } else if(data != NULL && strcmp("{}", data) != 0) {
     ESP_LOGD(TAG, "received data: %s", data);
     json_open_string(&arg.json, data);
     in_file = false;
+    arg.datafile = NULL;
   } else {
     return false;
   }

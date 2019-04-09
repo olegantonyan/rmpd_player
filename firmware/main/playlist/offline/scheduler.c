@@ -31,7 +31,8 @@ static struct s_state {
   uint16_t current;
   uint16_t next;
   uint16_t total;
-} state = { NULL, 0, 0, 0 };
+  TaskHandle_t thread_handle;
+} state = { NULL, 0, 0, 0, NULL };
 
 static void scheduler_thread(void * args);
 static bool play(const char *path);
@@ -52,7 +53,7 @@ bool scheduler_init() {
 
   scheduler_set_random(config_random());
 
-  return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, NULL) == pdPASS;
+  return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, &state.thread_handle) == pdPASS;
 }
 
 bool scheduler_random() {
@@ -98,6 +99,20 @@ bool scheduler_prev() {
 
 bool scheduler_mediafile_match_func(const char *fname) {
   return string_ends_with(fname, ".mp3") || stream_playlist_is_stream(fname);
+}
+
+void scheduler_suspend() {
+  if (state.thread_handle == NULL) {
+    return;
+  }
+  vTaskSuspend(state.thread_handle);
+}
+
+void scheduler_resume() {
+  if (state.thread_handle == NULL) {
+    return;
+  }
+  vTaskResume(state.thread_handle);
 }
 
 static void scheduler_thread(void * args) {
@@ -147,6 +162,7 @@ static void scheduler_thread(void * args) {
 
   stream_scheduler_deinit();
 
+  state.thread_handle = NULL;
   vTaskDelete(NULL);
 }
 

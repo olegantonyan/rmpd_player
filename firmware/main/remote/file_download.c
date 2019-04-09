@@ -23,7 +23,7 @@ remove("/sdcard/download.aaa");
 int res = file_download_start("http://192.168.1.3:3000/rails/active_storage/blobs/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBWdz09IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--875f1583cf8ad0aa2d9cdfb39bc25147ec484b3b/09%20The%20Immaculate%20Deception.mp3", "/sdcard/download.aa");
 ESP_LOGI(TAG, "STATUS %d", res);
 */
-int file_download_start(const char *url, const char *download_path) {
+int file_download_start(const char *url, const char *download_path, size_t buffer_size) {
   esp_http_client_config_t config = {
     .event_handler = http_event_handle,
     .url = url,
@@ -33,10 +33,14 @@ int file_download_start(const char *url, const char *download_path) {
     .max_redirection_count = 4,
     .disable_auto_redirect = false,
     .user_data = (void *)download_path,
-    .buffer_size = 2048
+    .buffer_size = buffer_size
   };
   ESP_LOGI(TAG, "request to %s", config.url);
   esp_http_client_handle_t client = esp_http_client_init(&config);
+  if (client == NULL) {
+    ESP_LOGE(TAG, "cannot initialize http client");
+    return false;
+  }
 
   char ua[128] = { 0 };
   sysinfo_useragent(ua, sizeof(ua));

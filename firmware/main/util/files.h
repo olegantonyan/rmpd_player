@@ -7,5 +7,7 @@
 #include <stdio.h>
 
 size_t file_size(FILE *f);
+bool file_copy(const char *src, const char *dst);
+int mkdir_p(const char *path);
 
 #endif

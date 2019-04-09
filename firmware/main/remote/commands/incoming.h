@@ -8,8 +8,9 @@
 #include "util/tempfile.h"
 
 typedef struct {
-  json_stream json;
-  Tempfile_t *datafile;
+  json_stream json;      // either data or datafile will be present depending on size
+  const char *data;   //
+  Tempfile_t *datafile;  //
   uint32_t sequence;
 } IncomingCommandArgument_t;
 

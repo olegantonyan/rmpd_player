@@ -4,65 +4,103 @@
 #include <errno.h>
 #include "esp_system.h"
 #include "esp_log.h"
+#include "util/tempfile.h"
+#include "playlist/cloud/downloader.h"
 
 static const char *TAG = "update_playlist";
 
-static void test_json(json_stream *json) {
-  size_t len = 0;
-  enum json_type t = JSON_ERROR;
-  do {
-    t = json_next(json);
-    switch(t) {
-      case JSON_DONE:
-        printf("JSON_DONE\n");
-        break;
-      case JSON_OBJECT:
-        printf("JSON_OBJECT\n");
-        break;
-      case JSON_OBJECT_END:
-        printf("JSON_OBJECT_END\n");
-        break;
-      case JSON_ARRAY:
-        printf("JSON_ARRAY\n");
-        break;
-      case JSON_ARRAY_END:
-        printf("JSON_ARRAY_END\n");
-        break;
-      case JSON_STRING:
-        printf("JSON_STRING: %s\n", json_get_string(json, &len));
-        break;
-      case JSON_NUMBER:
-        printf("JSON_NUMBER: %f\n", json_get_number(json));
-        break;
-      case JSON_TRUE:
-        printf("JSON_TRUE\n");
-        break;
-      case JSON_FALSE:
-        printf("JSON_FALSE\n");
-        break;
-      case JSON_NULL:
-        printf("JSON_NULL\n");
-        break;
-
-      default:
-      case JSON_ERROR:
-        ESP_LOGE(TAG, "json parse error: %s line %d pos %d", json_get_error(json), json_get_lineno(json), json_get_position(json));
-        break;
-    }
-
-  } while (t != JSON_DONE && t != JSON_ERROR);
-}
-
+static bool extract_playlist(const char *src_file_path, const char *src_string, const char *dst_file_path);
 
 bool update_playlist(IncomingCommandArgument_t *arg) {
   if (arg == NULL) {
     return false;
   }
 
-  printf("\n\n update_playlist %d\n\n", arg->sequence);
-  // TODO run in thread
+  Tempfile_t *playlist = tempfile_create();
+  if (playlist == NULL) {
+    ESP_LOGE(TAG, "cannot create tempfile for playlist");
+    return false;
+  }
 
-  test_json(&arg->json);
+  tempfile_close(playlist); // don't need it open here
 
+  bool ok = true;
+  if (arg->data) {
+    ok = extract_playlist(NULL, arg->data, playlist->path);
+  } else if (arg->datafile) {
+    ok = extract_playlist(arg->datafile->path, NULL, playlist->path);
+  } else {
+    ESP_LOGE(TAG, "neither datafile or data provided");
+  }
+  if (ok) {
+    ok = cloud_downloader_start(playlist);
+    if (!ok) {
+      ESP_LOGE(TAG, "error starting plauliost download");
+    }
+  } else {
+    ESP_LOGE(TAG, "error extracting playlist");
+  }
+
+  return ok;
+}
+
+static bool extract_playlist(const char *src_file_path, const char *src_string, const char *dst_file_path) {
+  FILE *src_file = NULL;
+
+  if (src_file_path != NULL) {
+    src_file = fopen(src_file_path, "r");
+    if (src_file == NULL) {
+      return false;
+    }
+  } else if (src_string != NULL) {
+    src_file = NULL;
+  } else {
+    return false;
+  }
+
+  uint8_t buffer = 0;
+  size_t string_read_pointer = 0;
+
+  remove(dst_file_path);
+  FILE *dst_file = fopen(dst_file_path, "a");
+  if (dst_file == NULL) {
+    return false;
+  }
+
+  bool found_first_brace_open = false;
+  bool found_second_brace_open = false;
+  int8_t nesting = 0;
+
+  while (src_file == NULL ? ((buffer = src_string[string_read_pointer++]) != '\0') : (fread(&buffer, 1, 1, src_file) > 0)) {
+
+    if (found_second_brace_open) {
+      if (buffer == '{') {
+        nesting++;
+      } else if (buffer == '}') {
+        nesting--;
+      }
+
+      if (nesting < 0) {
+        fwrite("}", 1, 1, dst_file);
+        break;
+      } else {
+        fwrite(&buffer, 1, 1, dst_file);
+      }
+    } else {
+      if (buffer == '{') {
+        if (found_first_brace_open) {
+          found_second_brace_open = true;
+          fwrite("{", 1, 1, dst_file);
+        } else {
+          found_first_brace_open = true;
+        }
+      }
+    }
+  }
+
+  fclose(dst_file);
+  if (src_file != NULL) {
+    fclose(src_file);
+  }
   return true;
 }
