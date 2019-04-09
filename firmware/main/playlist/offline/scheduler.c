@@ -106,6 +106,7 @@ void scheduler_suspend() {
     return;
   }
   vTaskSuspend(state.thread_handle);
+  player_stop();
 }
 
 void scheduler_resume() {

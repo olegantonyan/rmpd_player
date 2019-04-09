@@ -12,7 +12,6 @@
 #include "remote/file_download.h"
 #include "config/config.h"
 #include "playlist/offline/scheduler.h"
-#include "audio/player.h"
 
 static const char *TAG = "downloader";
 
@@ -65,7 +64,6 @@ static void thread(void *args) {
     if (mkdir_p(CLOUD_SCHEDULER_FILES_PATH) != 0) {
       ESP_LOGE(TAG, "cannot create subdir %s", CLOUD_SCHEDULER_FILES_PATH);
     } else {
-      player_stop();
       scheduler_suspend();
       if (download_from_playlist(tmp_playlist)) {
         file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH);
@@ -115,7 +113,7 @@ static bool download_file(const char *url, const char *filename) {
   }
   snprintf(buffer, pathlen, "%s/%s", CLOUD_SCHEDULER_FILES_PATH, filename);
   remove(buffer); // remove file if it exists
-  int result = file_download_start(full_url, buffer, 25000);
+  int result = file_download_start(full_url, buffer, 10000);
 
   bool ok = true;
   if (result < 200 || result > 299) {

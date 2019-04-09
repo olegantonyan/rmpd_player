@@ -24,6 +24,7 @@ int res = file_download_start("http://192.168.1.3:3000/rails/active_storage/blob
 ESP_LOGI(TAG, "STATUS %d", res);
 */
 int file_download_start(const char *url, const char *download_path, size_t buffer_size) {
+  FILE *file = fopen(download_path, "ab+");
   esp_http_client_config_t config = {
     .event_handler = http_event_handle,
     .url = url,
@@ -32,13 +33,14 @@ int file_download_start(const char *url, const char *download_path, size_t buffe
     .cert_pem = certs(),
     .max_redirection_count = 4,
     .disable_auto_redirect = false,
-    .user_data = (void *)download_path,
+    .user_data = (void *)file,
     .buffer_size = buffer_size
   };
   ESP_LOGI(TAG, "request to %s", config.url);
   esp_http_client_handle_t client = esp_http_client_init(&config);
   if (client == NULL) {
     ESP_LOGE(TAG, "cannot initialize http client");
+    fclose(file);
     return false;
   }
 
@@ -54,6 +56,8 @@ int file_download_start(const char *url, const char *download_path, size_t buffe
     ESP_LOGW(TAG, "http status get request failed: %s", esp_err_to_name(err));
   }
   esp_http_client_cleanup(client);
+  fflush(file);
+  fclose(file);
   return status;
 }
 
@@ -73,11 +77,8 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
       break;
     case HTTP_EVENT_ON_DATA:
       ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
-      const char *filepath = (const char *)evt->user_data;
-      FILE *f = fopen(filepath, "ab+");
+      FILE *f = (FILE *)evt->user_data;
       fwrite(evt->data, evt->data_len, 1, f);
-      fflush(f);
-      fclose(f);
       break;
     case HTTP_EVENT_ON_FINISH:
       ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
