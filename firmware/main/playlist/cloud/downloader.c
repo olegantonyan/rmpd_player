@@ -36,7 +36,7 @@ bool cloud_downloader_start(Tempfile_t *tmp_playlist) {
     return false;
   }
 
-  BaseType_t task_created = xTaskCreate(thread, TAG, 9000, (void *)tmp_playlist, 8, NULL);
+  BaseType_t task_created = xTaskCreate(thread, TAG, 8192, (void *)tmp_playlist, 15, NULL);
   if (pdPASS != task_created) {
     ESP_LOGE(TAG, "cannot create thread");
     return false;
@@ -113,14 +113,14 @@ static bool download_file(const char *url, const char *filename) {
   }
   snprintf(buffer, pathlen, "%s/%s", CLOUD_SCHEDULER_FILES_PATH, filename);
   remove(buffer); // remove file if it exists
-  int result = file_download_start(full_url, buffer, 10000);
+  int result = file_download_start(full_url, buffer, 16384);
 
   bool ok = true;
   if (result < 200 || result > 299) {
     ESP_LOGE(TAG, "error downloading file from %s to %s", full_url, buffer);
     ok = false;
   } else {
-    ESP_LOGE(TAG, "downloaded file %s", buffer);
+    ESP_LOGI(TAG, "downloaded file %s", buffer);
   }
   free(buffer);
   if (malloced_full_url) {

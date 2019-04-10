@@ -109,6 +109,10 @@ bool player_stop() {
 }
 
 bool player_get_now_playing(char *buffer, size_t length) {
+  if (state.mutex == NULL) {
+    return false;
+  }
+  
   bool result = false;
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   if (state.now_playing != NULL) {
