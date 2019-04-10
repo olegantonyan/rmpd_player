@@ -64,7 +64,7 @@ static void thread(void *args) {
     if (mkdir_p(CLOUD_SCHEDULER_FILES_PATH) != 0) {
       ESP_LOGE(TAG, "cannot create subdir %s", CLOUD_SCHEDULER_FILES_PATH);
     } else {
-      scheduler_suspend();
+      scheduler_stop_process();
       if (download_from_playlist(tmp_playlist)) {
         file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH);
       }

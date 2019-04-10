@@ -7,12 +7,25 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
+
 #include <string.h>
 #include "system/sysinfo.h"
 
 static const char *TAG = "file_download";
 
+typedef struct {
+  FILE *file;
+  uint8_t *buffer;
+  size_t max_size;
+  size_t bytes_in_buffer;
+  bool stop_flag;
+  SemaphoreHandle_t received_sema;
+  SemaphoreHandle_t written_sema;
+} FileWriterArg_t;
+
 static esp_err_t http_event_handle(esp_http_client_event_t *evt);
+static void file_write_thread(void *args);
 
 /*
 need at least 6kb stack
@@ -24,40 +37,63 @@ int res = file_download_start("http://192.168.1.3:3000/rails/active_storage/blob
 ESP_LOGI(TAG, "STATUS %d", res);
 */
 int file_download_start(const char *url, const char *download_path, size_t buffer_size) {
-  FILE *file = fopen(download_path, "ab+");
-  esp_http_client_config_t config = {
-    .event_handler = http_event_handle,
-    .url = url,
-    .timeout_ms = 6000,
-    .method = HTTP_METHOD_GET,
-    .cert_pem = certs(),
-    .max_redirection_count = 4,
-    .disable_auto_redirect = false,
-    .user_data = (void *)file,
-    .buffer_size = buffer_size
-  };
-  ESP_LOGI(TAG, "request to %s", config.url);
-  esp_http_client_handle_t client = esp_http_client_init(&config);
-  if (client == NULL) {
-    ESP_LOGE(TAG, "cannot initialize http client");
-    fclose(file);
-    return false;
-  }
+  FileWriterArg_t f;
+  f.file = fopen(download_path, "ab+");
+  f.buffer = malloc(buffer_size);
+  f.max_size = buffer_size;
+  f.received_sema = xSemaphoreCreateBinary();
+  f.written_sema = xSemaphoreCreateBinary();
+  f.stop_flag = false;
+  xSemaphoreGive(f.written_sema);
 
-  char ua[128] = { 0 };
-  sysinfo_useragent(ua, sizeof(ua));
-  esp_http_client_set_header(client, "User-Agent", ua);
-
-  esp_err_t err = esp_http_client_perform(client);
   int status = -1;
-  if (err == ESP_OK) {
-    status = esp_http_client_get_status_code(client);
-  } else {
-    ESP_LOGW(TAG, "http status get request failed: %s", esp_err_to_name(err));
-  }
-  esp_http_client_cleanup(client);
-  fflush(file);
-  fclose(file);
+  do {
+    BaseType_t task_created = xTaskCreate(file_write_thread, "dl_file_write", 2048, (void *)&f, 15, NULL);
+    if (pdPASS != task_created) {
+      ESP_LOGE(TAG, "cannot create file writer thread thread");
+      break;
+    }
+
+    esp_http_client_config_t config = {
+      .event_handler = http_event_handle,
+      .url = url,
+      .timeout_ms = 6000,
+      .method = HTTP_METHOD_GET,
+      .cert_pem = certs(),
+      .max_redirection_count = 4,
+      .disable_auto_redirect = false,
+      .user_data = (void *)&f,
+      .buffer_size = buffer_size
+    };
+    ESP_LOGI(TAG, "request to %s", config.url);
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    if (client == NULL) {
+      ESP_LOGE(TAG, "cannot initialize http client");
+      break;
+    }
+
+    char ua[128] = { 0 };
+    sysinfo_useragent(ua, sizeof(ua));
+    esp_http_client_set_header(client, "User-Agent", ua);
+
+    esp_err_t err = esp_http_client_perform(client);
+    if (err == ESP_OK) {
+      status = esp_http_client_get_status_code(client);
+    } else {
+      ESP_LOGW(TAG, "http status get request failed: %s", esp_err_to_name(err));
+    }
+    esp_http_client_cleanup(client);
+  } while(false);
+
+  f.stop_flag = true;
+  xSemaphoreGive(f.received_sema);
+  xSemaphoreTake(f.written_sema, portMAX_DELAY);
+  fflush(f.file);
+  fclose(f.file);
+  free(f.buffer);
+  vSemaphoreDelete(f.received_sema);
+  vSemaphoreDelete(f.written_sema);
+
   return status;
 }
 
@@ -77,8 +113,15 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
       break;
     case HTTP_EVENT_ON_DATA:
       ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
-      FILE *f = (FILE *)evt->user_data;
-      fwrite(evt->data, evt->data_len, 1, f);
+      FileWriterArg_t *f = (FileWriterArg_t *)evt->user_data;
+      if(evt->data_len > f->max_size) {
+        ESP_LOGE(TAG, "received more bytes than we can save to file");
+      } else {
+        xSemaphoreTake(f->written_sema, portMAX_DELAY);
+        f->bytes_in_buffer = evt->data_len;
+        memcpy(f->buffer, evt->data, evt->data_len);
+        xSemaphoreGive(f->received_sema);
+      }
       break;
     case HTTP_EVENT_ON_FINISH:
       ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
@@ -88,4 +131,20 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
       break;
   }
   return ESP_OK;
+}
+
+static void file_write_thread(void *args) {
+  FileWriterArg_t *f = (FileWriterArg_t *)args;
+
+  while(true) {
+    xSemaphoreTake(f->received_sema, portMAX_DELAY);
+    if(f->stop_flag) {
+      break;
+    }
+    fwrite(f->buffer, f->bytes_in_buffer, 1, f->file);
+    xSemaphoreGive(f->written_sema);
+  }
+
+  xSemaphoreGive(f->written_sema);
+  vTaskDelete(NULL);
 }

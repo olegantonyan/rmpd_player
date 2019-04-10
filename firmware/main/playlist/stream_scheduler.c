@@ -31,7 +31,8 @@ static struct {
   SemaphoreHandle_t mutex;
   const char *storage_path;
   SemaphoreHandle_t sema;
-} p = { false, { 0 },  { 0 }, NULL, NULL, NULL };
+  TaskHandle_t thread_handle;
+} p = { false, { 0 },  { 0 }, NULL, NULL, NULL, NULL };
 
 
 bool stream_scheduler_init(const char *storage_path) {
@@ -62,10 +63,12 @@ bool stream_scheduler_init(const char *storage_path) {
 }
 
 bool stream_scheduler_start() {
-  return xTaskCreate(thread, TAG, 4096, NULL, 5, NULL) == pdPASS;
+  return xTaskCreate(thread, TAG, 4096, NULL, 5, &p.thread_handle) == pdPASS;
 }
 
 void stream_scheduler_deinit() {
+  vTaskDelete(p.thread_handle);
+  p.thread_handle = NULL;
   p.initialized = false;
   if (p.mutex != NULL) {
     vSemaphoreDelete(p.mutex);

@@ -12,7 +12,6 @@ bool scheduler_prev();
 bool scheduler_set_random(bool arg);
 bool scheduler_random();
 bool scheduler_mediafile_match_func(const char *fname);
-void scheduler_suspend();
-void scheduler_resume();
+void scheduler_stop_process();
 
 #endif

@@ -101,19 +101,13 @@ bool scheduler_mediafile_match_func(const char *fname) {
   return string_ends_with(fname, ".mp3") || stream_playlist_is_stream(fname);
 }
 
-void scheduler_suspend() {
+void scheduler_stop_process() {
   if (state.thread_handle == NULL) {
     return;
   }
   vTaskSuspend(state.thread_handle);
+  stream_scheduler_deinit();
   player_stop();
-}
-
-void scheduler_resume() {
-  if (state.thread_handle == NULL) {
-    return;
-  }
-  vTaskResume(state.thread_handle);
 }
 
 static void scheduler_thread(void * args) {
