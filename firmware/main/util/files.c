@@ -17,7 +17,7 @@ bool file_copy(const char *src, const char *dst) {
     return false;
   }
 
-  FILE *df = fopen(src, "wb+");
+  FILE *df = fopen(dst, "wb+");
   if (df == NULL) {
     return false;
   }
@@ -26,9 +26,13 @@ bool file_copy(const char *src, const char *dst) {
   size_t bytes_read = 0;
   while ((bytes_read = fread(buffer, sizeof(uint8_t), sizeof(buffer), sf)) > 0) {
     if (fwrite(buffer, sizeof(uint8_t), bytes_read, df) != bytes_read) {
+      fclose(sf);
+      fclose(df);
       return false;
     }
   }
+  fclose(sf);
+  fclose(df);
   return true;
 }
 

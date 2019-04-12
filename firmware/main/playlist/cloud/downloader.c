@@ -71,15 +71,26 @@ static void thread(void *args) {
   Tempfile_t *tmp_playlist = ta->tmp_playlist;
   uint32_t sequence = ta->sequence;
 
+  bool ok = true;
+
   if (tmp_playlist == NULL) {
     ESP_LOGE(TAG, "no tempfile");
+    ok = false;
   } else {
     if (mkdir_p(CLOUD_SCHEDULER_FILES_PATH) != 0) {
       ESP_LOGE(TAG, "cannot create subdir %s", CLOUD_SCHEDULER_FILES_PATH);
+      ok = false;
     } else {
       scheduler_stop_process();
       if (download_from_playlist(tmp_playlist)) {
-        file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH);
+        remove(CLOUD_SCHEDULER_PLAYLIST_PATH);
+        // TODO remove fles not from playlist
+        if (!file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
+          ESP_LOGE(TAG, "error saving playlist file");
+          ok = false;
+        }
+      } else {
+        ok = false;
       }
       tempfile_remove(tmp_playlist);
     }
@@ -87,11 +98,20 @@ static void thread(void *args) {
 
   ESP_LOGI(TAG, "finish files download");
 
-  AckCommandArgs_t a = {
-    .sequence = sequence,
-    .message = "files download complete"
-  };
-  outgoing_command(ACK_OK, &a, NULL);
+  if (ok) {
+    AckCommandArgs_t a = {
+      .sequence = sequence,
+      .message = "files download complete"
+    };
+    outgoing_command(ACK_OK, &a, NULL);
+  } else {
+    AckCommandArgs_t a = {
+      .sequence = sequence,
+      .message = "files download error"
+    };
+    outgoing_command(ACK_FAIL, &a, NULL);
+  }
+
 
   free(args);
   xEventGroupClearBits(event_group, RUNNING_BIT);
