@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "util/tempfile.h"
 
-bool cloud_downloader_start(Tempfile_t *tmp_playlist);
+bool cloud_downloader_start(Tempfile_t *tmp_playlist, uint32_t sequence);
 bool cloud_downloader_is_running();
 
 #endif

@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include "util/tempfile.h"
 #include "playlist/cloud/downloader.h"
+#include "remote/commands/outgoing.h"
 
 static const char *TAG = "update_playlist";
 
@@ -33,9 +34,14 @@ bool update_playlist(IncomingCommandArgument_t *arg) {
     ESP_LOGE(TAG, "neither datafile or data provided");
   }
   if (ok) {
-    ok = cloud_downloader_start(playlist);
+    ok = cloud_downloader_start(playlist, arg->sequence);
     if (!ok) {
-      ESP_LOGE(TAG, "error starting plauliost download");
+      ESP_LOGE(TAG, "error starting playlist download");
+      AckCommandArgs_t a = {
+        .sequence = arg->sequence,
+        .message = "cannot start playlist download"
+      };
+      outgoing_command(ACK_FAIL, &a, NULL);
     }
   } else {
     ESP_LOGE(TAG, "error extracting playlist");

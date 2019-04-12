@@ -12,6 +12,7 @@
 #include "remote/file_download.h"
 #include "config/config.h"
 #include "playlist/offline/scheduler.h"
+#include "remote/commands/outgoing.h"
 
 static const char *TAG = "downloader";
 
@@ -23,7 +24,12 @@ static bool download_from_playlist(Tempfile_t *tmp_playlist);
 static bool extract_and_download(json_stream *json);
 static bool download_file(const char *url, const char *filename);
 
-bool cloud_downloader_start(Tempfile_t *tmp_playlist) {
+typedef struct {
+  Tempfile_t *tmp_playlist;
+  uint32_t sequence;
+} ThreadArg_t;
+
+bool cloud_downloader_start(Tempfile_t *tmp_playlist, uint32_t sequence) {
   if (event_group == NULL) {
     event_group = xEventGroupCreate();
     if (event_group == NULL) {
@@ -36,7 +42,11 @@ bool cloud_downloader_start(Tempfile_t *tmp_playlist) {
     return false;
   }
 
-  BaseType_t task_created = xTaskCreate(thread, TAG, 8192, (void *)tmp_playlist, 15, NULL);
+  ThreadArg_t *ta = malloc(sizeof(ThreadArg_t)); // free in thread
+  ta->tmp_playlist = tmp_playlist;
+  ta->sequence = sequence;
+
+  BaseType_t task_created = xTaskCreate(thread, TAG, 8192, (void *)ta, 15, NULL);
   if (pdPASS != task_created) {
     ESP_LOGE(TAG, "cannot create thread");
     return false;
@@ -57,7 +67,10 @@ static void thread(void *args) {
   ESP_LOGI(TAG, "begin files download");
   // TODO update_playlist command outgoing
 
-  Tempfile_t *tmp_playlist = (Tempfile_t *)args;
+  ThreadArg_t *ta = (ThreadArg_t *)args;
+  Tempfile_t *tmp_playlist = ta->tmp_playlist;
+  uint32_t sequence = ta->sequence;
+
   if (tmp_playlist == NULL) {
     ESP_LOGE(TAG, "no tempfile");
   } else {
@@ -73,8 +86,14 @@ static void thread(void *args) {
   }
 
   ESP_LOGI(TAG, "finish files download");
-  // TODO ack
 
+  AckCommandArgs_t a = {
+    .sequence = sequence,
+    .message = "files download complete"
+  };
+  outgoing_command(ACK_OK, &a, NULL);
+
+  free(args);
   xEventGroupClearBits(event_group, RUNNING_BIT);
   vTaskDelete(NULL);
 }
