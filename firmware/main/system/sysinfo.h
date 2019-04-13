@@ -7,5 +7,6 @@
 #include <stdio.h>
 
 void sysinfo_useragent(char *buffer, size_t length);
+const char *sysinfo_reset_reason();
 
 #endif

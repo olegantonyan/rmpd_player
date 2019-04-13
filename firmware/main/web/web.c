@@ -499,21 +499,7 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   snprintf(mac_str, sizeof(mac_str), "%d.%d.%d.%d", ap_ad.oct1, ap_ad.oct2, ap_ad.oct3, ap_ad.oct4);
   cJSON_AddItemToObject(root, "ap_static_addr", cJSON_CreateString(mac_str));
 
-  const char *reset_reason = "";
-  switch(esp_reset_reason()) {
-    case ESP_RST_UNKNOWN:   reset_reason = "unknown"; break;    //!< Reset reason can not be determined
-    case ESP_RST_POWERON:   reset_reason = "poweron"; break;     //!< Reset due to power-on event
-    case ESP_RST_EXT:       reset_reason = "ext"; break;        //!< Reset by external pin (not applicable for ESP32)
-    case ESP_RST_SW:        reset_reason = "sw"; break;         //!< Software reset via esp_restart
-    case ESP_RST_PANIC:     reset_reason = "panic"; break;      //!< Software reset due to exception/panic
-    case ESP_RST_INT_WDT:   reset_reason = "int_wdt"; break;    //!< Reset (software or hardware) due to interrupt watchdog
-    case ESP_RST_TASK_WDT:  reset_reason = "task_wdt"; break;   //!< Reset due to task watchdog
-    case ESP_RST_WDT:       reset_reason = "wdt"; break;        //!< Reset due to other watchdogs
-    case ESP_RST_DEEPSLEEP: reset_reason = "deepsleep"; break;  //!< Reset after exiting deep sleep mode
-    case ESP_RST_BROWNOUT:  reset_reason = "brownout"; break;   //!< Brownout reset (software or hardware)
-    case ESP_RST_SDIO:      reset_reason = "sdio"; break;       //!< Reset over SDIO
-  }
-  cJSON_AddItemToObject(root, "reset_reason", cJSON_CreateString(reset_reason));
+  cJSON_AddItemToObject(root, "reset_reason", cJSON_CreateString(sysinfo_reset_reason()));
 
   cJSON_AddItemToObject(root, "uptime", cJSON_CreateNumber(esp_timer_get_time() / 1000000));
 
@@ -689,6 +675,7 @@ static httpd_handle_t start_webserver() {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.max_uri_handlers = 20;
   config.max_open_sockets = 10;
+  config.stack_size = 3600;
 
   /* Use the URI wildcard matching function in order to
      * allow the same handler to respond to multiple different

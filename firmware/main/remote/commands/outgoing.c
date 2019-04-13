@@ -14,6 +14,7 @@ extern bool track_end(OutgoingCommandArgument_t *arg);
 extern bool track_begin(OutgoingCommandArgument_t *arg);
 extern bool ack_ok(OutgoingCommandArgument_t *arg);
 extern bool ack_fail(OutgoingCommandArgument_t *arg);
+extern bool update_playlist_progress(OutgoingCommandArgument_t *arg);
 
 static const char *TAG = "outgoing_cmd";
 
@@ -46,6 +47,9 @@ bool outgoing_command(OutgoingCommand_t cmd, void *args, outgoing_command_callba
       break;
     case ACK_FAIL:
       ok = ack_fail(&arg);
+      break;
+    case UPDATE_PLAYLIST:
+      ok = update_playlist_progress(&arg);
       break;
 
     default:

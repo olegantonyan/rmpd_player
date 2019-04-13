@@ -155,6 +155,8 @@ static void scheduler_thread(void * args) {
   stream_scheduler_deinit();
 
   state.thread_handle = NULL;
+  //vSemaphoreDelete(state.mutex);
+  //state.mutex = NULL;
   vTaskDelete(NULL);
 }
 

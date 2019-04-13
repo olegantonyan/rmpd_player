@@ -20,9 +20,10 @@ static const EventBits_t RUNNING_BIT = BIT0;
 static EventGroupHandle_t event_group = NULL;
 
 static void thread(void *args);
-static bool download_from_playlist(Tempfile_t *tmp_playlist);
-static bool extract_and_download(json_stream *json);
+static bool download_from_playlist(Tempfile_t *tmp_playlist, uint32_t sequence);
+static bool extract_and_download(json_stream *json, uint32_t sequence);
 static bool download_file(const char *url, const char *filename);
+static void notify(uint32_t files_done, uint32_t sequence);
 
 typedef struct {
   Tempfile_t *tmp_playlist;
@@ -46,7 +47,7 @@ bool cloud_downloader_start(Tempfile_t *tmp_playlist, uint32_t sequence) {
   ta->tmp_playlist = tmp_playlist;
   ta->sequence = sequence;
 
-  BaseType_t task_created = xTaskCreate(thread, TAG, 8192, (void *)ta, 15, NULL);
+  BaseType_t task_created = xTaskCreate(thread, TAG, 7500, (void *)ta, 15, NULL);
   if (pdPASS != task_created) {
     ESP_LOGE(TAG, "cannot create thread");
     return false;
@@ -82,7 +83,7 @@ static void thread(void *args) {
       ok = false;
     } else {
       offline_scheduler_deinit();
-      if (download_from_playlist(tmp_playlist)) {
+      if (download_from_playlist(tmp_playlist, sequence)) {
         remove(CLOUD_SCHEDULER_PLAYLIST_PATH);
         // TODO remove fles not from playlist
         if (!file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
@@ -112,17 +113,16 @@ static void thread(void *args) {
     outgoing_command(ACK_FAIL, &a, NULL);
   }
 
-
   free(args);
   xEventGroupClearBits(event_group, RUNNING_BIT);
   vTaskDelete(NULL);
 }
 
-static bool download_from_playlist(Tempfile_t *tmp_playlist) {
+static bool download_from_playlist(Tempfile_t *tmp_playlist, uint32_t sequence) {
   json_stream json;
   tempfile_open(tmp_playlist, "r");
   json_open_stream(&json, tmp_playlist->file);
-  bool ok = extract_and_download(&json);
+  bool ok = extract_and_download(&json, sequence);
   json_close(&json);
   return ok;
 }
@@ -168,7 +168,16 @@ static bool download_file(const char *url, const char *filename) {
   return ok;
 }
 
-static bool extract_and_download(json_stream *json) {
+static void notify(uint32_t files_done, uint32_t sequence) {
+  UpdatePlaylistCommandArgs_t a = {
+    .sequence = sequence,
+    .files_done = files_done
+  };
+  outgoing_command(UPDATE_PLAYLIST, &a, NULL);
+}
+
+static bool extract_and_download(json_stream *json, uint32_t sequence) {
+  uint32_t files_done = 0;
   size_t len = 0;
   enum json_type t = JSON_ERROR;
   bool url_found = false;
@@ -214,6 +223,8 @@ static bool extract_and_download(json_stream *json) {
           memset(filename, 0, sizeof(filename));
           url_found = false;
           filename_found = false;
+          files_done++;
+          notify(files_done, sequence);
         }
 
         break;
