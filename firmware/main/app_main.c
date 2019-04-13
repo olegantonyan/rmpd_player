@@ -6,6 +6,8 @@
 #include "remote/control.h"
 #include "util/tempfile.h"
 #include "system/firmware_update.h"
+#include "audio/player.h"
+#include "playlist/cloud/scheduler.h"
 
 /*
 #include "pdjson.h"
@@ -74,7 +76,14 @@ void app_main() {
   sd_init();
   tempfile_init();
   web_init();
-  scheduler_init();
+
+  player_init();
+  if (cloud_scheduler_is_enabled()) {
+    cloud_scheduler_init();
+  } else {
+    offline_scheduler_init();
+  }
+
   remote_control_init();
   firmware_update_confirm(true); // TODO check if everything is ok
 }

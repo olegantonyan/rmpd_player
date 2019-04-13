@@ -1,17 +1,17 @@
-#ifndef __SCHEDULER_H
-#define __SCHEDULER_H
+#ifndef __OFFLINE_SCHEDULER_H
+#define __OFFLINE_SCHEDULER_H
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SCHEDULER_MAX_MEDIAFILES 65534 // NOTE: 65535 is used as blank list item in stream scheduler, @see BLANK_LIST_ITEM
+#define OFFLINE_SCHEDULER_MAX_MEDIAFILES 65534 // NOTE: 65535 is used as blank list item in stream scheduler, @see BLANK_LIST_ITEM
 
-bool scheduler_init();
-bool scheduler_next();
-bool scheduler_prev();
-bool scheduler_set_random(bool arg);
-bool scheduler_random();
-bool scheduler_mediafile_match_func(const char *fname);
-void scheduler_stop_process();
+bool offline_scheduler_init();
+bool offline_scheduler_next();
+bool offline_scheduler_prev();
+bool offline_scheduler_set_random(bool arg);
+bool offline_scheduler_random();
+bool offline_scheduler_mediafile_match_func(const char *fname);
+void offline_scheduler_deinit();
 
 #endif

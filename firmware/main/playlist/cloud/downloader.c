@@ -81,7 +81,7 @@ static void thread(void *args) {
       ESP_LOGE(TAG, "cannot create subdir %s", CLOUD_SCHEDULER_FILES_PATH);
       ok = false;
     } else {
-      scheduler_stop_process();
+      offline_scheduler_deinit();
       if (download_from_playlist(tmp_playlist)) {
         remove(CLOUD_SCHEDULER_PLAYLIST_PATH);
         // TODO remove fles not from playlist

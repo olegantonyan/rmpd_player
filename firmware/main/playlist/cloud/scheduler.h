@@ -8,4 +8,7 @@
 #define CLOUD_SCHEDULER_FILES_PATH    (STORAGE_SD_MOUNTPOINT "/cloud/mediafiles")
 #define CLOUD_SCHEDULER_PLAYLIST_PATH (STORAGE_SD_MOUNTPOINT "/cloud/mediafiles/playlist.json")
 
+bool cloud_scheduler_is_enabled();
+bool cloud_scheduler_init();
+
 #endif

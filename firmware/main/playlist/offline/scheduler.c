@@ -24,7 +24,7 @@
 #include "remote/commands/outgoing.h"
 #include "playlist/track.h"
 
-static const char *TAG = "scheduler";
+static const char *TAG = "offline_sched";
 
 static struct s_state {
   SemaphoreHandle_t mutex;
@@ -40,27 +40,23 @@ static void stop();
 static void on_medifile_callback(const char *path, uint16_t index);
 static void mediafile_enum_func(const char *fname, uint16_t index);
 
-bool scheduler_init() {
-  if (!player_init()) {
-    ESP_LOGE(TAG, "error initializing player");
-    return false;
-  }
+bool offline_scheduler_init() {
   state.mutex = xSemaphoreCreateMutex();
   if (state.mutex == NULL) {
     ESP_LOGE(TAG, "cannot create mutex");
     return false;
   }
 
-  scheduler_set_random(config_random());
+  offline_scheduler_set_random(config_random());
 
   return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, &state.thread_handle) == pdPASS;
 }
 
-bool scheduler_random() {
+bool offline_scheduler_random() {
   return config_random();
 }
 
-bool scheduler_set_random(bool arg) {
+bool offline_scheduler_set_random(bool arg) {
   ESP_LOGI(TAG, "set random %d", (int)arg);
 
   if (arg != config_random()) {
@@ -69,7 +65,7 @@ bool scheduler_set_random(bool arg) {
   return true;
 }
 
-bool scheduler_next() {
+bool offline_scheduler_next() {
   ESP_LOGD(TAG, "next");
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   if (state.current >= (state.total - 1)) {
@@ -83,7 +79,7 @@ bool scheduler_next() {
   return true;
 }
 
-bool scheduler_prev() {
+bool offline_scheduler_prev() {
   ESP_LOGD(TAG, "prev");
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   if (state.current == 0) {
@@ -97,11 +93,12 @@ bool scheduler_prev() {
   return true;
 }
 
-bool scheduler_mediafile_match_func(const char *fname) {
+bool offline_scheduler_mediafile_match_func(const char *fname) {
   return string_ends_with(fname, ".mp3") || stream_playlist_is_stream(fname);
 }
 
-void scheduler_stop_process() {
+void offline_scheduler_deinit() {
+  ESP_LOGI(TAG, "stopping offline scheduler");
   if (state.thread_handle == NULL) {
     return;
   }
@@ -124,9 +121,9 @@ static void scheduler_thread(void * args) {
   }
 
   uint16_t index = 0;
-  uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, mediafile_enum_func, scheduler_mediafile_match_func);
+  uint32_t total_mediafiles = recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, mediafile_enum_func, offline_scheduler_mediafile_match_func);
   ESP_LOGI(TAG, "total media files: %u", total_mediafiles);
-  if (total_mediafiles > SCHEDULER_MAX_MEDIAFILES) {
+  if (total_mediafiles > OFFLINE_SCHEDULER_MAX_MEDIAFILES) {
     ESP_LOGE(TAG, "too many media files");
   }
 
@@ -134,11 +131,11 @@ static void scheduler_thread(void * args) {
     ESP_LOGE(TAG, "cannot start stream scheduler");
   }
 
-  if (total_mediafiles > 0 && total_mediafiles < SCHEDULER_MAX_MEDIAFILES) {
+  if (total_mediafiles > 0 && total_mediafiles < OFFLINE_SCHEDULER_MAX_MEDIAFILES) {
     xSemaphoreTake(state.mutex, portMAX_DELAY);
     state.total = (uint16_t)total_mediafiles;
     random_init(state.total - 1);
-    if (scheduler_random()) {
+    if (offline_scheduler_random()) {
       state.next = random_next();
     }
     xSemaphoreGive(state.mutex);
@@ -149,7 +146,7 @@ static void scheduler_thread(void * args) {
 
     while(true) {
       index = 0;
-      recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback, scheduler_mediafile_match_func);
+      recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback, offline_scheduler_mediafile_match_func);
       taskYIELD();
       random_reset();
     }
@@ -175,7 +172,7 @@ static void on_medifile_callback(const char *path, uint16_t index) {
   }
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   state.current = index;
-  if (scheduler_random()) {
+  if (offline_scheduler_random()) {
     state.next = random_next();
   } else {
     if (state.next >= (state.total - 1)) {

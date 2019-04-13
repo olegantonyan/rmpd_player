@@ -136,7 +136,7 @@ static void thread(void * args) {
   uint16_t index = 0;
   do {
     index = 0;
-    recurse_dir(p.storage_path, 0, &index, on_medifile_callback, scheduler_mediafile_match_func);
+    recurse_dir(p.storage_path, 0, &index, on_medifile_callback, offline_scheduler_mediafile_match_func);
 
     if (stream_scheduler_any_alive_streams()) {
       xSemaphoreTake(p.sema, pdMS_TO_TICKS(1 * 3600 * 1000));
