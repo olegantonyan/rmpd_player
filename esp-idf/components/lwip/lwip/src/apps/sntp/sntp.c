@@ -204,19 +204,6 @@ static u32_t sntp_last_timestamp_sent[2];
 #endif /* SNTP_CHECK_RESPONSE >= 2 */
 
 /**
- * Weak callbacks to implement setting system time
- */
-extern void __attribute__((weak)) sntp_setsystemtime_us(u32_t t, u32_t us)
-{
-  SNTP_SET_SYSTEM_TIME_US(t, us);
-}
-extern void __attribute__((weak)) sntp_setsystemtime(u32_t t)
-{
-  SNTP_SET_SYSTEM_TIME(t);
-}
-
-
-/**
  * SNTP processing of received timestamp
  */
 static void
@@ -232,14 +219,14 @@ sntp_process(u32_t *receive_timestamp)
 
 #if SNTP_CALC_TIME_US
   u32_t us = lwip_ntohl(receive_timestamp[1]) / 4295;
-  sntp_setsystemtime_us(t, us);
+  SNTP_SET_SYSTEM_TIME_US(t, us);
   /* display local time from GMT time */
   LWIP_DEBUGF(SNTP_DEBUG_TRACE, ("sntp_process: %s, %"U32_F" us", ctime(&tim), us));
 
 #else /* SNTP_CALC_TIME_US */
 
   /* change system time and/or the update the RTC clock */
-  sntp_setsystemtime(t);
+  SNTP_SET_SYSTEM_TIME(t);
   /* display local time from GMT time */
   LWIP_DEBUGF(SNTP_DEBUG_TRACE, ("sntp_process: %s", ctime(&tim)));
 #endif /* SNTP_CALC_TIME_US */

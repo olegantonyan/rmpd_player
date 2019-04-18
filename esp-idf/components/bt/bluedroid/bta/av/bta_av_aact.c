@@ -73,26 +73,6 @@ enum {
     BTA_AV_CLOSING_SST
 };
 
-
-/* the call out functions for audio stream */
-/* const tBTA_AV_CO_FUNCTS bta_av_a2d_cos =
-{
-    bta_av_co_audio_init,
-    bta_av_co_audio_disc_res,
-    bta_av_co_audio_getconfig,
-    bta_av_co_audio_setconfig,
-    bta_av_co_audio_open,
-    bta_av_co_audio_close,
-    bta_av_co_audio_start,
-    bta_av_co_audio_stop,
-    bta_av_co_audio_src_data_path,
-    bta_av_co_audio_delay
-};
-*/
-tBTA_AV_CO_FUNCTS *p_bta_av_a2d_cos = NULL;
-
-
-
 /* ssm action functions for audio stream */
 const tBTA_AV_SACT bta_av_a2d_action[] = {
     bta_av_do_disc_a2d,     /* BTA_AV_DO_DISC  */
@@ -1293,9 +1273,10 @@ void bta_av_setconfig_rsp (tBTA_AV_SCB *p_scb, tBTA_AV_DATA *p_data)
             /* if SBC is used by the SNK as INT, discover req is not sent in bta_av_config_ind.
                        * call disc_res now */
             /* this is called in A2DP SRC path only, In case of SINK we don't need it  */
-            if (local_sep == AVDT_TSEP_SRC)
+            if (local_sep == AVDT_TSEP_SRC) {
                 p_scb->p_cos->disc_res(p_scb->hndl, num, num, 0, p_scb->peer_addr,
                                        UUID_SERVCLASS_AUDIO_SOURCE);
+            }
         } else {
             /* we do not know the peer device and it is using non-SBC codec
              * we need to know all the SEPs on SNK */

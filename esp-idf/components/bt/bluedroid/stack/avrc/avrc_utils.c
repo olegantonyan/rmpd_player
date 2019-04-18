@@ -58,6 +58,7 @@ BOOLEAN AVRC_IsValidAvcType(UINT8 pdu_id, UINT8 avc_type)
         case AVRC_PDU_INFORM_BATTERY_STAT_OF_CT:   /* 0x18 */
         case AVRC_PDU_REQUEST_CONTINUATION_RSP:    /* 0x40 */
         case AVRC_PDU_ABORT_CONTINUATION_RSP:      /* 0x41 */
+        case AVRC_PDU_SET_ABSOLUTE_VOLUME:         /* 0x50 */
             if (avc_type == AVRC_CMD_CTRL) {
                 result = TRUE;
             }
@@ -120,10 +121,11 @@ BOOLEAN avrc_is_valid_player_attrib_value(UINT8 attrib, UINT8 value)
         result = TRUE;
     }
 
-    if (!result)
+    if (!result) {
         AVRC_TRACE_ERROR(
             "avrc_is_valid_player_attrib_value() found not matching attrib(x%x)-value(x%x) pair!",
             attrib, value);
+    }
 
     return result;
 }

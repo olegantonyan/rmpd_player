@@ -148,6 +148,7 @@ static void btc_av_event_free_data(btc_sm_event_t event, void *p_data);
 *************************************************************************/
 
 extern tBTA_AV_CO_FUNCTS bta_av_a2d_cos;
+extern tBTA_AVRC_CO_FUNCTS bta_avrc_cos;
 /*****************************************************************************
 ** Local helper functions
 ******************************************************************************/
@@ -1199,10 +1200,13 @@ static void bte_av_media_callback(tBTA_AV_EVT event, tBTA_AV_MEDIA *p_data)
             BTC_TRACE_ERROR("ERROR dump_codec_info A2D_ParsSbcInfo fail:%d\n", a2d_status);
         }
     }
+    UNUSED(que_len);
 }
 #else
 static void bte_av_media_callback(tBTA_AV_EVT event, tBTA_AV_MEDIA *p_data)
 {
+    UNUSED(event);
+    UNUSED(p_data);
     BTC_TRACE_WARNING("%s : event %u\n", __func__, event);
 }
 #endif
@@ -1230,7 +1234,7 @@ bt_status_t btc_av_execute_service(BOOLEAN b_enable, UINT8 tsep)
                      | BTA_AV_FEAT_RCTG | BTA_AV_FEAT_METADATA | BTA_AV_FEAT_VENDOR
                      | BTA_AV_FEAT_RCCT | BTA_AV_FEAT_ADV_CTRL,
                      bte_av_callback);
-        BTA_AvRegister(BTA_AV_CHNL_AUDIO, BTC_AV_SERVICE_NAME, 0, bte_av_media_callback, &bta_av_a2d_cos, tsep);
+        BTA_AvRegister(BTA_AV_CHNL_AUDIO, BTC_AV_SERVICE_NAME, 0, bte_av_media_callback, &bta_av_a2d_cos, &bta_avrc_cos, tsep);
     } else {
         BTA_AvDeregister(btc_av_cb.bta_handle);
         BTA_AvDisable();

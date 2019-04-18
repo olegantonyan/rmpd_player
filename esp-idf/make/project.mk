@@ -397,6 +397,7 @@ endif #CONFIG_WARN_WRITE_STRINGS
 
 # Flags which control code generation and dependency generation, both for C and C++
 COMMON_FLAGS = \
+	-Wno-frame-address \
 	-ffunction-sections -fdata-sections \
 	-fstrict-volatile-bitfields \
 	-mlongcalls \
@@ -425,6 +426,9 @@ endif
 ifdef CONFIG_OPTIMIZATION_ASSERTIONS_DISABLED
 CPPFLAGS += -DNDEBUG
 endif
+
+# IDF uses some GNU extension from libc
+CPPFLAGS += -D_GNU_SOURCE
 
 # Enable generation of debugging symbols
 # (we generate even in Release mode, as this has no impact on final binary size.)

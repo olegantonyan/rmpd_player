@@ -162,7 +162,7 @@ static esp_err_t encrypt_flash_contents(uint32_t flash_crypt_cnt, bool flash_cry
 
     /* If the last flash_crypt_cnt bit is burned or write-disabled, the
        device can't re-encrypt itself. */
-    if (flash_crypt_wr_dis || flash_crypt_cnt == 0xFF) {
+    if (flash_crypt_wr_dis) {
         ESP_LOGE(TAG, "Cannot re-encrypt data (FLASH_CRYPT_CNT 0x%02x write disabled %d", flash_crypt_cnt, flash_crypt_wr_dis);
         return ESP_FAIL;
     }
@@ -199,8 +199,8 @@ static esp_err_t encrypt_flash_contents(uint32_t flash_crypt_cnt, bool flash_cry
     ESP_LOGD(TAG, "All flash regions checked for encryption pass");
 
     /* Set least significant 0-bit in flash_crypt_cnt */
-    int ffs_inv = __builtin_ffs((~flash_crypt_cnt) & 0xFF);
-    /* ffs_inv shouldn't be zero, as zero implies flash_crypt_cnt == 0xFF */
+    int ffs_inv = __builtin_ffs((~flash_crypt_cnt) & EFUSE_RD_FLASH_CRYPT_CNT);
+    /* ffs_inv shouldn't be zero, as zero implies flash_crypt_cnt == EFUSE_RD_FLASH_CRYPT_CNT (0x7F) */
     uint32_t new_flash_crypt_cnt = flash_crypt_cnt + (1 << (ffs_inv - 1));
     ESP_LOGD(TAG, "FLASH_CRYPT_CNT 0x%x -> 0x%x", flash_crypt_cnt, new_flash_crypt_cnt);
     REG_SET_FIELD(EFUSE_BLK0_WDATA0_REG, EFUSE_FLASH_CRYPT_CNT, new_flash_crypt_cnt);
@@ -224,18 +224,18 @@ static esp_err_t encrypt_bootloader()
             return err;
         }
 
-        if (esp_secure_boot_enabled()) {
-            /* If secure boot is enabled and bootloader was plaintext, also
-               need to encrypt secure boot IV+digest.
-            */
-            ESP_LOGD(TAG, "Encrypting secure bootloader IV & digest...");
-            err = esp_flash_encrypt_region(FLASH_OFFS_SECURE_BOOT_IV_DIGEST,
-                                           FLASH_SECTOR_SIZE);
-            if (err != ESP_OK) {
-                ESP_LOGE(TAG, "Failed to encrypt bootloader IV & digest in place: 0x%x", err);
-                return err;
-            }
+#ifdef CONFIG_SECURE_BOOT_ENABLED
+        /* If secure boot is enabled and bootloader was plaintext, also
+         * need to encrypt secure boot IV+digest.
+         */
+        ESP_LOGD(TAG, "Encrypting secure bootloader IV & digest...");
+        err = esp_flash_encrypt_region(FLASH_OFFS_SECURE_BOOT_IV_DIGEST,
+                                       FLASH_SECTOR_SIZE);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to encrypt bootloader IV & digest in place: 0x%x", err);
+            return err;
         }
+#endif
     }
     else {
         ESP_LOGW(TAG, "no valid bootloader was found");
