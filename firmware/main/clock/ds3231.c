@@ -182,7 +182,6 @@ static bool i2c_write(uint8_t reg, uint8_t *data, size_t size) {
 static void set_system_time(time_t secs) {
   struct timeval tv = { .tv_sec = secs, .tv_usec = 0 };
   settimeofday(&tv, NULL);
-  clock_set_timezone_from_config();
 }
 
 static void start_condition() {

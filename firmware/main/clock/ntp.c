@@ -20,19 +20,16 @@ static const char *TAG = "ntp";
 static void thread(void * args);
 
 bool ntp_init() {
-  return xTaskCreate(thread, TAG, 4096, NULL, 10, NULL) == pdPASS;
-}
-
-void time_sync_notification_cb(struct timeval *tv)
-{
-    ESP_LOGI(TAG, "Notification of a time synchronization event");
+  return xTaskCreate(thread, TAG, 3000, NULL, 5, NULL) == pdPASS;
 }
 
 static void thread(void * args) {
   wifi_wait_connected(portMAX_DELAY);
 
+  ESP_LOGI(TAG, "initializing ntp");
+
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
-  sntp_setservername(0, "pool.ntp.org");
+  sntp_setservername(0, "0.ru.pool.ntp.org");
   sntp_setservername(1, "time.google.com");
   sntp_setservername(2, "time-a-g.nist.gov ");
   sntp_setservername(3, "time-b-g.nist.gov");
@@ -42,14 +39,12 @@ static void thread(void * args) {
   sntp_setservername(7, "2.opensuse.pool.ntp.org");
   sntp_setservername(8, "utcnist.colorado.edu ");
   sntp_setservername(9, "time.windows.com");
-  sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+  //sntp_set_time_sync_notification_cb(time_sync_notification_cb);
   sntp_init();
 
-  while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED) {
-    ESP_LOGI(TAG, "waiting");
-    vTaskDelay(pdMS_TO_TICKS(1234));
+  while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET) {
+    vTaskDelay(pdMS_TO_TICKS(1146));
   }
-  clock_set_timezone_from_config();
 
   time_t now = time(NULL);
   struct tm timeinfo = { 0 };

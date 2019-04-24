@@ -18,6 +18,7 @@ extern const char zones_json_end[]   asm("_binary_zones_json_end");
 static const char *parse_json(json_stream *json, const char *key);
 
 bool clock_init() {
+  clock_set_timezone_from_config();
   return ds3231_init() && ntp_init();
 }
 
