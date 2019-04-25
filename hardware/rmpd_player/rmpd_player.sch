@@ -1,6 +1,6 @@
 EESchema Schematic File Version 4
 LIBS:rmpd_player-cache
-EELAYER 26 0
+EELAYER 29 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
@@ -1248,7 +1248,7 @@ Wire Wire Line
 Wire Wire Line
 	15150 3850 15200 3850
 $Comp
-L Connector:Micro_SD_Card J5
+L rmpd_player-rescue:Micro_SD_Card-Connector J5
 U 1 1 5C2C64F7
 P 2550 1750
 F 0 "J5" H 2500 2467 50  0000 C CNN
