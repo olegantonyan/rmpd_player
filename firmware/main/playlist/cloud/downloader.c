@@ -66,7 +66,6 @@ static void thread(void *args) {
   xEventGroupSetBits(event_group, RUNNING_BIT);
 
   ESP_LOGI(TAG, "begin files download");
-  // TODO update_playlist command outgoing
 
   ThreadArg_t *ta = (ThreadArg_t *)args;
   Tempfile_t *tmp_playlist = ta->tmp_playlist;
@@ -85,8 +84,9 @@ static void thread(void *args) {
       offline_scheduler_deinit();
       if (download_from_playlist(tmp_playlist, sequence)) {
         remove(CLOUD_SCHEDULER_PLAYLIST_PATH);
-        // TODO remove fles not from playlist
-        if (!file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
+        if (file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
+          // TODO remove fles not from playlist
+        } else {
           ESP_LOGE(TAG, "error saving playlist file");
           ok = false;
         }
@@ -151,16 +151,21 @@ static bool download_file(const char *url, const char *filename) {
     return false;
   }
   snprintf(buffer, pathlen, "%s/%s", CLOUD_SCHEDULER_FILES_PATH, filename);
-  remove(buffer); // remove file if it exists
-  int result = file_download_start(full_url, buffer, 16384);
 
+  //TODO download into temp localtion, then move to permanent
   bool ok = true;
-  if (result < 200 || result > 299) {
-    ESP_LOGE(TAG, "error downloading file from %s to %s", full_url, buffer);
-    ok = false;
+  if (!file_exists(buffer)) {
+    int result = file_download_start(full_url, buffer, 8192);
+    if (result < 200 || result > 299) {
+      ESP_LOGE(TAG, "error downloading file from %s to %s", full_url, buffer);
+      ok = false;
+    } else {
+      ESP_LOGI(TAG, "downloaded file %s", buffer);
+    }
   } else {
-    ESP_LOGI(TAG, "downloaded file %s", buffer);
+    ESP_LOGI(TAG, "file %s already exists, skipping", buffer);
   }
+
   free(buffer);
   if (malloced_full_url) {
     free(full_url);

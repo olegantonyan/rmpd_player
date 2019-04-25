@@ -102,6 +102,10 @@ void offline_scheduler_deinit() {
   if (state.thread_handle == NULL) {
     return;
   }
+  if (eTaskGetState(state.thread_handle) == eSuspended) {
+    return;
+  }
+
   vTaskSuspend(state.thread_handle);
   stream_scheduler_deinit();
   player_stop();

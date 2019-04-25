@@ -3,12 +3,17 @@
 #include <sys/stat.h> /* mkdir(2) */
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 size_t file_size(FILE *f) {
   fseek(f, 0, SEEK_END);
   size_t sz = ftell(f);
   fseek(f, 0, SEEK_SET);
   return sz;
+}
+
+bool file_exists(const char *path) {
+  return access(path, F_OK) != -1;
 }
 
 bool file_copy(const char *src, const char *dst) {
