@@ -151,7 +151,7 @@ char *config_server_password() {
 }
 
 char *config_server_url() {
-  return "https://server.slon-ds.ru/";
+  //return "http://192.168.1.3:3000";
   static char buffer[32] = {0};
   bool ok = nvs_read_string("server_url", buffer, sizeof(buffer));
   if (ok) {

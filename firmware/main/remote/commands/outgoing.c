@@ -7,6 +7,7 @@
 #include <time.h>
 #include "storage/sd.h"
 #include "cJSON.h"
+#include "system/sysinfo.h"
 
 extern bool now_playing(OutgoingCommandArgument_t *arg);
 extern bool power_on(OutgoingCommandArgument_t *arg);
@@ -84,9 +85,13 @@ static void base_command_fields(cJSON *json) {
   time_t now = time(NULL);
   struct tm timeinfo = { 0 };
   localtime_r(&now, &timeinfo);
-  char time_buf[40] = { 0 };
-  strftime(time_buf, sizeof(time_buf), "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
-  cJSON_AddItemToObject(json, "localtime", cJSON_CreateString(time_buf));
+  char buf[64] = { 0 };
+  strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
+  cJSON_AddItemToObject(json, "localtime", cJSON_CreateString(buf));
 
   cJSON_AddItemToObject(json, "free_space", cJSON_CreateNumber(sd_bytes_free()));
+
+  buf[0] = '\0';
+  sysinfo_sta_ip_addr(buf, sizeof(buf));
+  cJSON_AddItemToObject(json, "ip_addr", cJSON_CreateString(buf));
 }

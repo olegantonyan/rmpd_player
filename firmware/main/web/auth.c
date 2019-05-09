@@ -43,7 +43,7 @@ bool auth_check(httpd_req_t *req) {
 }
 
 static void reject(httpd_req_t *req) {
-  httpd_resp_set_hdr(req, "WWW-Authenticate", "Basic realm = \"slon-ds player\"");
+  httpd_resp_set_hdr(req, "WWW-Authenticate", "Basic realm = \"login: admin\"");
   httpd_resp_set_status(req, "401");
   const char *txt = "Unauthorized";
   httpd_resp_send(req, txt, strlen(txt));

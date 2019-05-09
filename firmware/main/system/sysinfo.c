@@ -1,6 +1,7 @@
 #include "system/sysinfo.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
+#include "tcpip_adapter.h"
 
 void sysinfo_useragent(char *buffer, size_t length) {
   if (buffer == NULL) {
@@ -30,4 +31,10 @@ const char *sysinfo_reset_reason() {
     case ESP_RST_SDIO:      reset_reason = "sdio"; break;       //!< Reset over SDIO
   }
   return reset_reason;
+}
+
+void sysinfo_sta_ip_addr(char *buffer, size_t length) {
+  tcpip_adapter_ip_info_t ip_info;
+  tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
+  ip4addr_ntoa_r(&ip_info.ip, buffer, length);
 }

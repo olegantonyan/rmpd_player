@@ -489,10 +489,8 @@ static esp_err_t system_get_handler(httpd_req_t *req) {
   snprintf(mac_str, sizeof(mac_str), "%.2X:%.2X:%.2X:%.2X:%.2X:%.2X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   cJSON_AddItemToObject(root, "mac_addr", cJSON_CreateString(mac_str));
 
-  tcpip_adapter_ip_info_t ip_info;
-  char ip[128] = { 0 };
-  tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
-  ip4addr_ntoa_r(&ip_info.ip, ip, sizeof(ip));
+  char ip[64] = { 0 };
+  sysinfo_sta_ip_addr(ip, sizeof(ip));
   cJSON_AddItemToObject(root, "ip_addr", cJSON_CreateString(ip));
 
   config_ip_addr_t ap_ad = config_ap_static_ip();
