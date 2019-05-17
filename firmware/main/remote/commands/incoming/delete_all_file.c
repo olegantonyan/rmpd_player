@@ -64,6 +64,7 @@ static bool remove_directory(const char *path) {
     if (ep->d_type == DT_DIR) {
       if (strcmp(ep->d_name, ".") != 0 && strcmp(ep->d_name, "..") != 0) {
         remove_directory(newpath);
+        rmdir(newpath);
       }
     } else {
       remove(newpath);
