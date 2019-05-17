@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "remote/commands/outgoing.h"
+#include "playlist/offline/scheduler.h"
 
 static const char *TAG = "delete_all_file";
 
@@ -25,6 +26,8 @@ bool delete_all_file(IncomingCommandArgument_t *arg) {
   }
 
   ESP_LOGI(TAG, "started delete all files");
+
+  offline_scheduler_deinit();
 
   bool ok = remove_directory(STORAGE_SD_MOUNTPOINT);
 
