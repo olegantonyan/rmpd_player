@@ -8,6 +8,7 @@
 #include "esp_log.h"
 #include "pdjson.h"
 #include "util/files.h"
+#include "util/tempfile.h"
 #include "playlist/cloud/scheduler.h"
 #include "remote/file_download.h"
 #include "config/config.h"
@@ -145,28 +146,40 @@ static bool download_file(const char *url, const char *filename) {
     malloced_full_url = true;
   }
 
-  size_t pathlen = strlen(filename) + strlen(CLOUD_SCHEDULER_FILES_PATH) + 5;
-  char *buffer = malloc(pathlen);
-  if (buffer == NULL) {
+
+  size_t filepath_permanent_len = strlen(filename) + strlen(CLOUD_SCHEDULER_FILES_PATH) + 5;
+  char *filepath_permanent = malloc(filepath_permanent_len);
+  if (filepath_permanent == NULL) {
     return false;
   }
-  snprintf(buffer, pathlen, "%s/%s", CLOUD_SCHEDULER_FILES_PATH, filename);
+  snprintf(filepath_permanent, filepath_permanent_len, "%s/%s", CLOUD_SCHEDULER_FILES_PATH, filename);
 
-  //TODO download into temp localtion, then move to permanent
+  size_t filepath_temp_len = strlen(filename) + strlen(TEMPFILE_DIR) + 5;
+  char *filepath_temp = malloc(filepath_temp_len);
+  if (filepath_permanent == NULL) {
+    return false;
+  }
+  snprintf(filepath_temp, filepath_temp_len, "%s/%s", TEMPFILE_DIR, filename);
+
+
   bool ok = true;
-  if (!file_exists(buffer)) {
-    int result = file_download_start(full_url, buffer, 8192);
+  if (!file_exists(filepath_permanent)) {
+    int result = file_download_start(full_url, filepath_temp, 8192);
     if (result < 200 || result > 299) {
-      ESP_LOGE(TAG, "error downloading file from %s to %s", full_url, buffer);
+      ESP_LOGE(TAG, "error downloading file from %s to %s", full_url, filepath_temp);
+      remove(filepath_temp);
       ok = false;
     } else {
-      ESP_LOGI(TAG, "downloaded file %s", buffer);
+      rename(filepath_temp, filepath_permanent);
+      ESP_LOGI(TAG, "downloaded file %s", filepath_permanent);
     }
   } else {
-    ESP_LOGI(TAG, "file %s already exists, skipping", buffer);
+    ESP_LOGI(TAG, "file %s already exists, skipping", filepath_permanent);
   }
 
-  free(buffer);
+  free(filepath_permanent);
+  free(filepath_temp);
+
   if (malloced_full_url) {
     free(full_url);
   }
