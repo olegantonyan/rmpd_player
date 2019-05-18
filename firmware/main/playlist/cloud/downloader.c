@@ -227,15 +227,18 @@ static bool download_file(const char *url, const char *filename) {
 
   bool ok = true;
   if (!file_exists(filepath_permanent)) {
-    int result = file_download_start(full_url, filepath_temp, 8192);
-    if (result < 200 || result > 299) {
-      ESP_LOGE(TAG, "error downloading file from %s to %s", full_url, filepath_temp);
-      remove(filepath_temp);
-      ok = false;
-    } else {
-      rename(filepath_temp, filepath_permanent);
-      ESP_LOGI(TAG, "downloaded file %s", filepath_permanent);
+    int result = 0;
+    while (true) {
+      result = file_download_start(full_url, filepath_temp, 8192);
+      if (result < 200 || result > 299) {
+        ESP_LOGW(TAG, "error downloading file from %s to %s, retrying...", full_url, filepath_temp);
+        vTaskDelay(pdMS_TO_TICKS(3000));
+      } else {
+        break;
+      }
     }
+    rename(filepath_temp, filepath_permanent);
+    ESP_LOGI(TAG, "downloaded file %s", filepath_permanent);
   } else {
     ESP_LOGI(TAG, "file %s already exists, skipping", filepath_permanent);
   }

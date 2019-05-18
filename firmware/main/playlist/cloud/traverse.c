@@ -3,6 +3,8 @@
 #include <string.h>
 #include "esp_system.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 static const char *TAG = "traverse";
 
@@ -82,6 +84,7 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, void (*callback
       filename_found = false;
     }
 
+    taskYIELD();
   } while (t != JSON_DONE && t != JSON_ERROR);
 
   return true;

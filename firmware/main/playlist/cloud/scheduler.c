@@ -50,7 +50,9 @@ bool cloud_scheduler_deinit() {
   }
   player_stop();
   xEventGroupSetBits(event_group, STOP_BIT);
-  return xEventGroupWaitBits(event_group, STOPPED_BIT, pdTRUE,	pdFALSE, portMAX_DELAY) & STOPPED_BIT;
+  bool ok = xEventGroupWaitBits(event_group, STOPPED_BIT, pdTRUE,	pdFALSE, portMAX_DELAY) & STOPPED_BIT;
+  vTaskDelay(pdMS_TO_TICKS(50)); // HACK to "ensure" thread has died
+  return ok;
 }
 
 static bool is_stopping() {
