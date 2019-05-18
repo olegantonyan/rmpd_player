@@ -49,7 +49,7 @@ bool offline_scheduler_init() {
 
   offline_scheduler_set_random(config_random());
 
-  return xTaskCreate(scheduler_thread, "scheduler", 4096, NULL, 6, &state.thread_handle) == pdPASS;
+  return xTaskCreate(scheduler_thread, TAG, 4096, NULL, 6, &state.thread_handle) == pdPASS;
 }
 
 bool offline_scheduler_random() {

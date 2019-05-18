@@ -11,5 +11,6 @@
 
 bool cloud_scheduler_is_enabled();
 bool cloud_scheduler_init();
+bool cloud_scheduler_deinit();
 
 #endif

@@ -93,6 +93,7 @@ static void thread(void *args) {
     } else {
       offline_scheduler_deinit();
       if (download_from_playlist(tmp_playlist, sequence)) {
+        cloud_scheduler_deinit();
         remove(CLOUD_SCHEDULER_PLAYLIST_PATH);
         if (file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
           cleanup_nonplaylist_files(CLOUD_SCHEDULER_PLAYLIST_PATH, CLOUD_SCHEDULER_FILES_PATH);
@@ -100,6 +101,7 @@ static void thread(void *args) {
           ESP_LOGE(TAG, "error saving playlist file");
           ok = false;
         }
+        cloud_scheduler_init();
       } else {
         ok = false;
       }
