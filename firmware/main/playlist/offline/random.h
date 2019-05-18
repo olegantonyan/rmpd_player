@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define RANDOM_MAX_TRAIL 128
+#define RANDOM_MAX_TRAIL 32
 
 void random_init(uint16_t max);
 uint16_t random_next();
