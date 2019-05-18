@@ -67,6 +67,9 @@ bool offline_scheduler_set_random(bool arg) {
 
 bool offline_scheduler_next() {
   ESP_LOGD(TAG, "next");
+  if (state.mutex == NULL) {
+    return false;
+  }
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   if (state.current >= (state.total - 1)) {
     state.next = 0;
@@ -81,6 +84,9 @@ bool offline_scheduler_next() {
 
 bool offline_scheduler_prev() {
   ESP_LOGD(TAG, "prev");
+  if (state.mutex == NULL) {
+    return false;
+  }
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   if (state.current == 0) {
     state.next = state.total - 1;
