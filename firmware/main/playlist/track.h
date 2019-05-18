@@ -6,7 +6,7 @@
 
 typedef struct {
   const char *filename;
-  uint32_t id;
+  int64_t id;
 } Track_t;
 
 #endif
