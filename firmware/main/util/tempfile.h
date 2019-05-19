@@ -20,5 +20,6 @@ Tempfile_t *tempfile_create();
 bool tempfile_remove(Tempfile_t *tf);
 bool tempfile_close(Tempfile_t *tf);
 bool tempfile_open(Tempfile_t *tf, const char *mode);
+bool tempfile_rename(Tempfile_t *tf, const char *new_path);
 
 #endif

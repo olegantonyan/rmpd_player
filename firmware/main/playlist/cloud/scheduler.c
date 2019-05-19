@@ -40,7 +40,7 @@ bool cloud_scheduler_init() {
     return false;
   }
 
-  return xTaskCreate(scheduler_thread, TAG, 4096, NULL, 6, NULL) == pdPASS;
+  return xTaskCreate(scheduler_thread, TAG, 3000, NULL, 6, NULL) == pdPASS;
 }
 
 bool cloud_scheduler_deinit() {

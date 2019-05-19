@@ -96,17 +96,17 @@ static void thread(void *args) {
       if (download_from_playlist(tmp_playlist, sequence)) {
         cloud_scheduler_deinit();
         remove(CLOUD_SCHEDULER_PLAYLIST_PATH);
-        if (file_copy(tmp_playlist->path, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
+        if (tempfile_rename(tmp_playlist, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
+          // TODO do it in background thread afterwards and on boot
           cleanup_nonplaylist_files(CLOUD_SCHEDULER_PLAYLIST_PATH, CLOUD_SCHEDULER_FILES_PATH);
         } else {
-          ESP_LOGE(TAG, "error saving playlist file");
+          ESP_LOGE(TAG, "error saving playlist file: %s", strerror(errno));
           ok = false;
         }
         cloud_scheduler_init();
       } else {
         ok = false;
       }
-      tempfile_remove(tmp_playlist);
     }
   }
 
@@ -231,7 +231,7 @@ static bool download_file(const char *url, const char *filename) {
   if (!file_exists(filepath_permanent)) {
     int result = 0;
     while (true) {
-      result = file_download_start(full_url, filepath_temp, 4096);
+      result = file_download_start(full_url, filepath_temp, 8192);
       if (result < 200 || result > 299) {
         ESP_LOGW(TAG, "error downloading file from %s to %s, retrying...", full_url, filepath_temp);
         vTaskDelay(pdMS_TO_TICKS(1000));

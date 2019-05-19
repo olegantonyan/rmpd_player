@@ -672,8 +672,8 @@ static httpd_handle_t start_webserver() {
   httpd_handle_t server = NULL;
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.max_uri_handlers = 20;
-  config.max_open_sockets = 10;
-  config.stack_size = 3600;
+  config.max_open_sockets = 8;
+  config.stack_size = 3500;
 
   /* Use the URI wildcard matching function in order to
      * allow the same handler to respond to multiple different

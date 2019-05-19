@@ -40,6 +40,17 @@ bool tempfile_remove(Tempfile_t *tf) {
   return ok;
 }
 
+bool tempfile_rename(Tempfile_t *tf, const char *new_path) {
+  tempfile_close(tf);
+  bool ok = rename(tf->path, new_path) == 0;
+  if (ok) {
+    realloc(tf->path, strlen(new_path) + 2);
+    tf->path[0] = '\0';
+    strcpy(tf->path, new_path);
+  }
+  return ok;
+}
+
 bool tempfile_close(Tempfile_t *tf) {
   if (tf == NULL || tf->file == NULL) {
     return false;
