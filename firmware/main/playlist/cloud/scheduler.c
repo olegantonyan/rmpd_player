@@ -73,6 +73,7 @@ static void scheduler_thread(void *args) {
     json_stream json;
     json_open_stream(&json, f);
     traverse_playlist(&json, NULL, on_file_parse_callback);
+    json_close(&json);
     fclose(f);
 
     taskYIELD();

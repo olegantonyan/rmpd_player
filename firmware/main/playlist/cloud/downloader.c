@@ -49,6 +49,7 @@ bool cloud_downloader_start(Tempfile_t *tmp_playlist, uint32_t sequence) {
     }
   }
   if (cloud_downloader_is_running()) {
+    // TODO stop it
     ESP_LOGE(TAG, "download is already running");
     return false;
   }
@@ -57,7 +58,7 @@ bool cloud_downloader_start(Tempfile_t *tmp_playlist, uint32_t sequence) {
   ta->tmp_playlist = tmp_playlist;
   ta->sequence = sequence;
 
-  BaseType_t task_created = xTaskCreate(thread, TAG, 7500, (void *)ta, 15, NULL);
+  BaseType_t task_created = xTaskCreate(thread, TAG, 7500, (void *)ta, 5, NULL);
   if (pdPASS != task_created) {
     ESP_LOGE(TAG, "cannot create thread");
     return false;
@@ -157,6 +158,7 @@ static void cleanup_nonplaylist_files(const char *playlist_path, const char *med
       };
       json_open_stream(&json, f);
       bool ok = traverse_playlist(&json, (void *)&ctx, cleanup_nonplaylist_files_callback);
+      json_close(&json);
       fclose(f);
 
       if (ok && !ctx.found) {
@@ -229,10 +231,10 @@ static bool download_file(const char *url, const char *filename) {
   if (!file_exists(filepath_permanent)) {
     int result = 0;
     while (true) {
-      result = file_download_start(full_url, filepath_temp, 8192);
+      result = file_download_start(full_url, filepath_temp, 4096);
       if (result < 200 || result > 299) {
         ESP_LOGW(TAG, "error downloading file from %s to %s, retrying...", full_url, filepath_temp);
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
       } else {
         break;
       }
