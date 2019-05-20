@@ -16,6 +16,7 @@
 #include "remote/commands/outgoing.h"
 #include "playlist/cloud/traverse.h"
 #include <dirent.h>
+#include "playlist/cloud/cleanup_files.h"
 
 static const char *TAG = "downloader";
 
@@ -27,18 +28,11 @@ static bool download_from_playlist(Tempfile_t *tmp_playlist, uint32_t sequence);
 static bool extract_and_download(json_stream *json, uint32_t sequence);
 static bool download_file(const char *url, const char *filename);
 static void notify(uint32_t files_done, uint32_t sequence);
-static void cleanup_nonplaylist_files(const char *playlist_path, const char *mediafiles_path);
-static void cleanup_nonplaylist_files_callback(const Track_t *track, void *ctx);
 
 typedef struct {
   Tempfile_t *tmp_playlist;
   uint32_t sequence;
 } ThreadArg_t;
-
-typedef struct {
-  const char *target_filename;
-  bool found;
-} CleanupNonPlaylistContext_t;
 
 bool cloud_downloader_start(Tempfile_t *tmp_playlist, uint32_t sequence) {
   if (event_group == NULL) {
@@ -76,6 +70,8 @@ bool cloud_downloader_is_running() {
 static void thread(void *args) {
   xEventGroupSetBits(event_group, RUNNING_BIT);
 
+  cloud_cleanup_files_stop();
+
   ESP_LOGI(TAG, "begin files download");
 
   ThreadArg_t *ta = (ThreadArg_t *)args;
@@ -97,8 +93,7 @@ static void thread(void *args) {
         cloud_scheduler_deinit();
         remove(CLOUD_SCHEDULER_PLAYLIST_PATH);
         if (tempfile_rename(tmp_playlist, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
-          // TODO do it in background thread afterwards and on boot
-          cleanup_nonplaylist_files(CLOUD_SCHEDULER_PLAYLIST_PATH, CLOUD_SCHEDULER_FILES_PATH);
+          ESP_LOGI(TAG, "playlist file saved to %s", CLOUD_SCHEDULER_PLAYLIST_PATH);
         } else {
           ESP_LOGE(TAG, "error saving playlist file: %s", strerror(errno));
           ok = false;
@@ -129,59 +124,6 @@ static void thread(void *args) {
   free(args);
   xEventGroupClearBits(event_group, RUNNING_BIT);
   vTaskDelete(NULL);
-}
-
-static void cleanup_nonplaylist_files(const char *playlist_path, const char *mediafiles_path) {
-  DIR *dp = opendir(mediafiles_path);
-  if (dp == NULL) {
-    ESP_LOGE(TAG, "error opening directory %s: %s", mediafiles_path, strerror(errno));
-    return;
-  }
-
-  while(true) {
-    struct dirent *ep = readdir(dp);
-    if (!ep) {
-      break;
-    }
-
-    if (ep->d_type == DT_REG && strcmp(ep->d_name, CLOUD_SCHEDULER_PLAYLIST_FILENAME) != 0) {
-
-      FILE *f = fopen(playlist_path, "r");
-      if (f == NULL) {
-        ESP_LOGE(TAG, "error opening playlist file to cleanup nonplaylist files");
-        return;
-      }
-      json_stream json;
-      CleanupNonPlaylistContext_t ctx = {
-        .target_filename = (const char *)ep->d_name,
-        .found = false
-      };
-      json_open_stream(&json, f);
-      bool ok = traverse_playlist(&json, (void *)&ctx, cleanup_nonplaylist_files_callback);
-      json_close(&json);
-      fclose(f);
-
-      if (ok && !ctx.found) {
-        ESP_LOGI(TAG, "removing non-playlist file %s", ep->d_name);
-        size_t newpath_len = strlen(mediafiles_path) + strlen(ep->d_name) + 4;
-        char *newpath = malloc(newpath_len);
-        snprintf(newpath, newpath_len, "%s/%s", mediafiles_path, ep->d_name);
-        remove(newpath);
-        free(newpath);
-      }
-
-    }
-    taskYIELD();
-  }
-
-  closedir(dp);
-}
-
-static void cleanup_nonplaylist_files_callback(const Track_t *track, void *context) {
-  CleanupNonPlaylistContext_t *ctx = (CleanupNonPlaylistContext_t *)context;
-  if (strcmp(ctx->target_filename, track->filename) == 0) {
-    ctx->found = true;
-  }
 }
 
 static bool download_from_playlist(Tempfile_t *tmp_playlist, uint32_t sequence) {

@@ -13,11 +13,12 @@
 #include "pdjson.h"
 #include "audio/player.h"
 #include "remote/commands/outgoing.h"
+#include "playlist/cloud/cleanup_files.h"
 
 static const char *TAG = "cloud_sched";
 
 static void scheduler_thread(void *args);
-static void on_file_parse_callback(const Track_t *track, void *ctx);
+static bool on_file_parse_callback(const Track_t *track, void *ctx);
 static bool is_stopping();
 
 static const EventBits_t STOP_BIT = BIT0;
@@ -40,11 +41,14 @@ bool cloud_scheduler_init() {
     return false;
   }
 
+  cloud_cleanup_files_start();
+
   return xTaskCreate(scheduler_thread, TAG, 3000, NULL, 6, NULL) == pdPASS;
 }
 
 bool cloud_scheduler_deinit() {
   ESP_LOGI(TAG, "de-initializing");
+  cloud_cleanup_files_stop();
   if (event_group == NULL) {
     return false;
   }
@@ -82,9 +86,9 @@ static void scheduler_thread(void *args) {
   vTaskDelete(NULL);
 }
 
-static void on_file_parse_callback(const Track_t *track, void *_ctx) {
+static bool on_file_parse_callback(const Track_t *track, void *_ctx) {
   if (is_stopping()) {
-    return;
+    return false;
   }
 
   size_t fullpath_len = strlen(CLOUD_SCHEDULER_FILES_PATH) + strlen(track->filename) + 4;
@@ -98,4 +102,5 @@ static void on_file_parse_callback(const Track_t *track, void *_ctx) {
     ESP_LOGE(TAG, "no such file: %s", fullpath);
   }
   free(fullpath);
+  return true;
 }

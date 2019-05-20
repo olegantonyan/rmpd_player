@@ -8,16 +8,16 @@
 
 static const char *TAG = "traverse";
 
-static bool traverse_playlist_json(json_stream *json, void *ctx, void (*callback)(const Track_t *track, void *ctx));
+static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback)(const Track_t *track, void *ctx));
 
-bool traverse_playlist(json_stream *playlist,  void *ctx, void (*callback)(const Track_t *track, void *ctx)) {
+bool traverse_playlist(json_stream *playlist,  void *ctx, bool (*callback)(const Track_t *track, void *ctx)) {
   if (callback == NULL) {
     return false;
   }
   return traverse_playlist_json(playlist, ctx, callback);
 }
 
-static bool traverse_playlist_json(json_stream *json, void *ctx, void (*callback)(const Track_t *track, void *ctx)) {
+static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback)(const Track_t *track, void *ctx)) {
   enum json_type t = JSON_ERROR;
   bool filename_found = false;
   bool id_found = false;
@@ -76,7 +76,9 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, void (*callback
         .filename = (const char *)filename,
         .id = id
       };
-      callback(&track, ctx);
+      if (!callback(&track, ctx)) {
+        return true;
+      }
 
       id = 0;
       memset(filename, 0, sizeof(filename));
