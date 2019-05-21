@@ -19,6 +19,7 @@
 #include "esp_log.h"
 #include "audio/stream_playlist.h"
 #include "remote/control.h"
+#include "util/read_ahead.h"
 
 static const char *TAG = "player";
 
@@ -112,7 +113,7 @@ bool player_get_now_playing(char *buffer, size_t length) {
   if (state.mutex == NULL) {
     return false;
   }
-  
+
   bool result = false;
   xSemaphoreTake(state.mutex, portMAX_DELAY);
   if (state.now_playing != NULL) {
@@ -325,8 +326,10 @@ static bool play_file(player_message_t *pm) {
     ESP_LOGE(TAG, "failed to open file '%s' for reading", pm->filename);
     return false;
   }
-  vs1011_play(file_read_func, file_size(f), (void *)f, vs1011_callback);
+  ReadAhead_t *ra = read_ahead_init(f, VS1011_BUFFER_SIZE);
+  vs1011_play(file_read_func, file_size(f), (void *)ra, vs1011_callback);
   fclose(f);
+  read_ahead_deinit(ra);
   return true;
 }
 
@@ -386,7 +389,7 @@ static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
     xEventGroupSetBits(event_group, PLAYER_STOPED_BIT);
     return 0;
   }
-  return fread(buffer, 1, buffer_size, (FILE *)ctx);
+  return read_ahead_next((ReadAhead_t *)ctx, buffer, buffer_size);
 }
 
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
