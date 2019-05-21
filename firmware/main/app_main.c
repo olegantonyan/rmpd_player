@@ -8,6 +8,7 @@
 #include "system/firmware_update.h"
 #include "audio/player.h"
 #include "playlist/cloud/scheduler.h"
+#include "playlist/cloud/cleanup_files.h"
 
 /*
 #include "pdjson.h"
@@ -80,6 +81,7 @@ void app_main() {
   player_init();
   if (cloud_scheduler_is_enabled()) {
     cloud_scheduler_init();
+    cloud_cleanup_files_start(300000);
   } else {
     offline_scheduler_init();
   }

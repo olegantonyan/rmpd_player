@@ -90,6 +90,7 @@ static void thread(void *args) {
     } else {
       offline_scheduler_deinit();
       if (download_from_playlist(tmp_playlist, sequence)) {
+        cloud_cleanup_files_stop();
         cloud_scheduler_deinit();
         remove(CLOUD_SCHEDULER_PLAYLIST_PATH);
         if (tempfile_rename(tmp_playlist, CLOUD_SCHEDULER_PLAYLIST_PATH)) {
@@ -99,6 +100,7 @@ static void thread(void *args) {
           ok = false;
         }
         cloud_scheduler_init();
+        cloud_cleanup_files_start(0);
       } else {
         ok = false;
       }

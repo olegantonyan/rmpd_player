@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/timers.h"
 #include "esp_system.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
@@ -20,6 +21,7 @@ static const EventBits_t STOP_BIT = BIT0;
 static const EventBits_t STOPPED_BIT = BIT1;
 static EventGroupHandle_t event_group = NULL;
 static TaskHandle_t thread_handle = NULL;
+static TimerHandle_t cleanup_tmr = NULL;
 
 typedef struct {
   const char *target_filename;
@@ -30,23 +32,36 @@ static void doit(const char *playlist_path, const char *mediafiles_path, const c
 static bool callback(const Track_t *track, void *ctx);
 static void thread(void *arg);
 static bool is_stopping();
+static void cleanup_tmr_callback(TimerHandle_t tmr);
 
-bool cloud_cleanup_files_start() {
-  ESP_LOGI(TAG, "starting");
-  if (cloud_cleanup_files_is_running()) {
-    if (!cloud_cleanup_files_stop()) {
-      ESP_LOGE(TAG, "cannot stop running process");
+bool cloud_cleanup_files_start(uint32_t delay_ms) {
+  if (delay_ms == 0) {
+    ESP_LOGI(TAG, "starting");
+    if (cloud_cleanup_files_is_running()) {
+      if (!cloud_cleanup_files_stop()) {
+        ESP_LOGE(TAG, "cannot stop running process");
+        return false;
+      }
+    }
+
+    event_group = xEventGroupCreate();
+    if (event_group == NULL) {
+      ESP_LOGE(TAG, "cannot create event group");
       return false;
     }
-  }
 
-  event_group = xEventGroupCreate();
-  if (event_group == NULL) {
-    ESP_LOGE(TAG, "cannot create event group");
-    return false;
+    return xTaskCreate(thread, TAG, 3000, NULL, tskIDLE_PRIORITY, &thread_handle) == pdPASS;
+  } else {
+    ESP_LOGI(TAG, "scheduling delayed start (%d ms)", delay_ms);
+    if (cleanup_tmr == NULL) {
+      cleanup_tmr = xTimerCreate("cleanup_tmr", pdMS_TO_TICKS(delay_ms), pdFALSE, (void *)0, cleanup_tmr_callback);
+      if (cleanup_tmr == NULL) {
+        ESP_LOGE(TAG, "cannot create timer");
+        return false;
+      }
+    }
+    return xTimerStart(cleanup_tmr, portMAX_DELAY);
   }
-
-  return xTaskCreate(thread, TAG, 3000, NULL, tskIDLE_PRIORITY, &thread_handle) == pdPASS;
 }
 
 bool cloud_cleanup_files_is_running() {
@@ -56,6 +71,12 @@ bool cloud_cleanup_files_is_running() {
 bool cloud_cleanup_files_stop() {
   ESP_LOGI(TAG, "stopping");
 
+  if (cleanup_tmr != NULL) {
+    if (xTimerIsTimerActive(cleanup_tmr)) {
+      xTimerStop(cleanup_tmr, portMAX_DELAY);
+    }
+  }
+
   if (event_group == NULL || !cloud_cleanup_files_is_running()) {
     return true;
   }
@@ -64,6 +85,10 @@ bool cloud_cleanup_files_stop() {
   bool ok = xEventGroupWaitBits(event_group, STOPPED_BIT, pdTRUE,	pdFALSE, portMAX_DELAY) & STOPPED_BIT;
   vTaskDelay(pdMS_TO_TICKS(50)); // HACK to "ensure" thread has died
   return ok;
+}
+
+static void cleanup_tmr_callback(TimerHandle_t tmr) {
+  cloud_cleanup_files_start(0);
 }
 
 static bool is_stopping() {
