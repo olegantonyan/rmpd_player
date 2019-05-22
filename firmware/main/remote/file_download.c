@@ -142,7 +142,8 @@ static void file_write_thread(void *args) {
     if(f->stop_flag) {
       break;
     }
-    write(fileno(f->file), f->buffer, f->bytes_in_buffer);
+    //write(fileno(f->file), f->buffer, f->bytes_in_buffer);
+    fwrite(f->buffer, f->bytes_in_buffer, 1, f->file);
     xSemaphoreGive(f->written_sema);
   }
 

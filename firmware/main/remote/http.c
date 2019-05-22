@@ -94,8 +94,10 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
             ESP_LOGE(TAG, "error creating tempfile for incomming data dump");
             r->datafile = NULL;
           } else {
-            write(fileno(r->datafile->file), r->data, r->length);
-            write(fileno(r->datafile->file), evt->data, evt->data_len);
+            fwrite(r->data, r->length, 1, r->datafile->file);
+            fwrite(evt->data, evt->data_len, 1, r->datafile->file);
+            //write(fileno(r->datafile->file), r->data, r->length);
+            //write(fileno(r->datafile->file), evt->data, evt->data_len);
             tempfile_close(r->datafile);
           }
         } else {
@@ -104,7 +106,8 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
         }
       } else {
         tempfile_open(r->datafile, "ab+");
-        write(fileno(r->datafile->file), evt->data, evt->data_len);
+        fwrite(evt->data, evt->data_len, 1, r->datafile->file);
+        //write(fileno(r->datafile->file), evt->data, evt->data_len);
         tempfile_close(r->datafile);
       }
 
