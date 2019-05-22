@@ -8,6 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include <unistd.h>
 
 #include <string.h>
 #include "system/sysinfo.h"
@@ -141,7 +142,8 @@ static void file_write_thread(void *args) {
     if(f->stop_flag) {
       break;
     }
-    fwrite(f->buffer, f->bytes_in_buffer, 1, f->file);
+    write(fileno(f->file), f->buffer, f->bytes_in_buffer);
+    //fwrite(f->buffer, f->bytes_in_buffer, 1, f->file);
     xSemaphoreGive(f->written_sema);
   }
 

@@ -4,12 +4,13 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <unistd.h>
 
 static const char *TAG = "read_ahead";
 
 static void thread(void *arg);
 static bool start(ReadAhead_t *ra);
-static size_t read(ReadAhead_t *ra);
+static size_t read_file(ReadAhead_t *ra);
 
 ReadAhead_t *read_ahead_init(FILE *file, size_t buffer_size) {
   ReadAhead_t *result = malloc(sizeof(ReadAhead_t));
@@ -77,18 +78,22 @@ void read_ahead_deinit(ReadAhead_t *ra) {
 
 static void thread(void *arg) {
   ReadAhead_t *ra = (ReadAhead_t *)arg;
-  read(ra);
+  read_file(ra);
   xSemaphoreGive(ra->sema);
   vTaskDelete(NULL);
 }
 
 static bool start(ReadAhead_t *ra) {
-  return xTaskCreate(thread, TAG, 3000, (void *)ra, tskIDLE_PRIORITY, NULL) == pdPASS;
+  return xTaskCreate(thread, TAG, 3000, (void *)ra, 20, NULL) == pdPASS;
 }
 
-static size_t read(ReadAhead_t *ra) {
+static size_t read_file(ReadAhead_t *ra) {
   xSemaphoreTake(ra->mutex, portMAX_DELAY);
-  ra->bytes_read = fread(ra->buffer, 1, ra->buffer_size, ra->file);
+  //ra->bytes_read = fread(ra->buffer, 1, ra->buffer_size, ra->file);
+
+  ssize_t r = read(fileno(ra->file), ra->buffer, ra->buffer_size);
+  ra->bytes_read = r < 0 ? 0 : r;
+
   xSemaphoreGive(ra->mutex);
   return ra->bytes_read;
 }
