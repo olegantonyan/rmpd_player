@@ -57,7 +57,7 @@ static void thread(void *_args) {
               msg.callback(false);
             }
           }
-          vTaskDelay(pdMS_TO_TICKS(5678));
+          vTaskDelay(pdMS_TO_TICKS(321));
         } while(msg.max_retries-- > 0);
 
         free(msg.data);

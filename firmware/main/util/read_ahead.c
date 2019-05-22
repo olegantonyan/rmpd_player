@@ -89,10 +89,9 @@ static bool start(ReadAhead_t *ra) {
 
 static size_t read_file(ReadAhead_t *ra) {
   xSemaphoreTake(ra->mutex, portMAX_DELAY);
-  //ra->bytes_read = fread(ra->buffer, 1, ra->buffer_size, ra->file);
 
-  ssize_t r = read(fileno(ra->file), ra->buffer, ra->buffer_size);
-  ra->bytes_read = r < 0 ? 0 : r;
+  ssize_t bytes_read = read(fileno(ra->file), ra->buffer, ra->buffer_size);
+  ra->bytes_read = bytes_read < 0 ? 0 : bytes_read;
 
   xSemaphoreGive(ra->mutex);
   return ra->bytes_read;

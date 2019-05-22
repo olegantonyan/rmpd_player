@@ -327,8 +327,9 @@ static bool play_file(player_message_t *pm) {
     return false;
   }
 
+  size_t fsize = file_size(f);
   ReadAhead_t *ra = read_ahead_init(f, VS1011_BUFFER_SIZE);
-  vs1011_play(file_read_func, file_size(f), (void *)ra, vs1011_callback);
+  vs1011_play(file_read_func, fsize, (void *)ra, vs1011_callback);
   fclose(f);
   read_ahead_deinit(ra);
   return true;

@@ -9,6 +9,7 @@
 #include "freertos/task.h"
 #include <string.h>
 #include "system/sysinfo.h"
+#include <unistd.h>
 
 static const char *TAG = "remote_http";
 
@@ -93,8 +94,8 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
             ESP_LOGE(TAG, "error creating tempfile for incomming data dump");
             r->datafile = NULL;
           } else {
-            fwrite(r->data, r->length, 1, r->datafile->file);
-            fwrite(evt->data, evt->data_len, 1, r->datafile->file);
+            write(fileno(r->datafile->file), r->data, r->length);
+            write(fileno(r->datafile->file), evt->data, evt->data_len);
             tempfile_close(r->datafile);
           }
         } else {
@@ -103,7 +104,7 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
         }
       } else {
         tempfile_open(r->datafile, "ab+");
-        fwrite(evt->data, evt->data_len, 1, r->datafile->file);
+        write(fileno(r->datafile->file), evt->data, evt->data_len);
         tempfile_close(r->datafile);
       }
 
