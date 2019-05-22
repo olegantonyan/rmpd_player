@@ -63,7 +63,8 @@ int file_download_start(const char *url, const char *download_path, size_t buffe
       .max_redirection_count = 4,
       .disable_auto_redirect = false,
       .user_data = (void *)&f,
-      .buffer_size = buffer_size
+      .buffer_size = buffer_size,
+      .buffer_size_tx = 512
     };
     ESP_LOGI(TAG, "request to %s", config.url);
     esp_http_client_handle_t client = esp_http_client_init(&config);
