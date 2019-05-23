@@ -29,7 +29,7 @@ bool remote_control_init() {
 
   sema = xSemaphoreCreateBinary();
 
-  BaseType_t task_created = xTaskCreate(thread, TAG, 3000, NULL, 5, NULL);
+  BaseType_t task_created = xTaskCreate(thread, TAG, 2400, NULL, 5, NULL);
   if (pdPASS != task_created) {
     ESP_LOGE(TAG, "cannot create thread");
     return false;

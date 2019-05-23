@@ -77,7 +77,7 @@ void app_main() {
   sd_init();
   tempfile_init();
   web_init();
-
+  remote_control_init();
   player_init();
   if (cloud_scheduler_is_enabled()) {
     cloud_scheduler_init();
@@ -86,6 +86,5 @@ void app_main() {
     offline_scheduler_init();
   }
 
-  remote_control_init();
   firmware_update_confirm(true); // TODO check if everything is ok
 }

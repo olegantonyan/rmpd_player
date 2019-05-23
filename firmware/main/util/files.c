@@ -16,31 +16,6 @@ bool file_exists(const char *path) {
   return access(path, F_OK) != -1;
 }
 
-bool file_copy(const char *src, const char *dst) {
-  FILE *sf = fopen(src, "rb");
-  if (sf == NULL) {
-    return false;
-  }
-
-  FILE *df = fopen(dst, "wb+");
-  if (df == NULL) {
-    return false;
-  }
-
-  uint8_t buffer[64] = { 0 };
-  size_t bytes_read = 0;
-  while ((bytes_read = fread(buffer, sizeof(uint8_t), sizeof(buffer), sf)) > 0) {
-    if (fwrite(buffer, sizeof(uint8_t), bytes_read, df) != bytes_read) {
-      fclose(sf);
-      fclose(df);
-      return false;
-    }
-  }
-  fclose(sf);
-  fclose(df);
-  return true;
-}
-
 int mkdir_p(const char *path) {
     const size_t len = strlen(path);
     char _path[PATH_MAX];
