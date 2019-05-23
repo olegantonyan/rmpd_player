@@ -65,7 +65,7 @@ int file_download_start(const char *url, const char *download_path, size_t buffe
       .disable_auto_redirect = false,
       .user_data = (void *)&f,
       .buffer_size = buffer_size,
-      .buffer_size_tx = 512
+      .buffer_size_tx = 2048
     };
     ESP_LOGI(TAG, "request to %s", config.url);
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -82,7 +82,7 @@ int file_download_start(const char *url, const char *download_path, size_t buffe
     if (err == ESP_OK) {
       status = esp_http_client_get_status_code(client);
     } else {
-      ESP_LOGW(TAG, "http status get request failed: %s", esp_err_to_name(err));
+      ESP_LOGW(TAG, "http get request failed: %s", esp_err_to_name(err));
     }
     esp_http_client_cleanup(client);
   } while(false);
