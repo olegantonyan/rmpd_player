@@ -1,3 +1,73 @@
+1.7.11
+======
+Fixes:
+------
+* Fix a bug where cJSON_Minify could overflow it's buffer, both reading and writing. This is a security issue. (see #338). Big thanks @bigric3 for reporting.
+* Unset `true` and `false` macros before setting them if they exist. See #339, thanks @raiden00pl for reporting
+
+1.7.10
+======
+Fixes:
+------
+* Fix package config file for `libcjson`. Thanks @shiluotang for reporting (#321)
+* Correctly split lists in `cJSON_Utils`'s merge sort. Thanks @andysCaplin for the fix (#322)
+
+1.7.9
+=====
+Fixes:
+------
+* Fix a bug where `cJSON_GetObjectItemCaseSensitive` would pass a nullpointer to `strcmp` when called on an array (#315). Thanks @yuweol for reporting.
+* Fix error in `cJSON_Utils` where the case sensitivity was not respected (#317). Thanks @yuta-oxo for fixing.
+* Fix some warnings detected by the Visual Studio Static Analyzer (#307). Thanks @bnason-nf
+
+1.7.8
+=====
+Fixes:
+------
+* cJSON now works with the `__stdcall` calling convention on Windows, see #295, thanks @zhindes for contributing
+
+1.7.7
+=====
+Fixes:
+------
+* Fix a memory leak when realloc fails (see #267), thanks @AlfieDeng for reporting
+* Fix a typo in the header file (see #266), thanks @zhaozhixu
+
+1.7.6
+=====
+Fixes:
+------
+* Add `SONAME` to the ELF files built by the Makefile (see #252), thanks @YanhaoMo for reporting
+* Add include guards and `extern "C"` to `cJSON_Utils.h` (see #256), thanks @daschfg for reporting
+
+Other changes:
+--------------
+* Mark the Makefile as deprecated in the README.
+
+1.7.5
+=====
+Fixes:
+------
+* Fix a bug in the JSON Patch implementation of `cJSON Utils` (see #251), thanks @bobkocisko.
+
+1.7.4
+=====
+Fixes:
+------
+* Fix potential use after free if the `string` parameter to `cJSON_AddItemToObject` is an alias of the `string` property of the object that is added (#248). Thanks @hhallen for reporting.
+
+1.7.3
+=====
+Fixes:
+------
+* Fix potential double free, thanks @projectgus for reporting (see #241)
+
+1.7.2
+=====
+Fixes:
+------
+* Fix the use of GNUInstallDirs variables and the pkgconfig file. Thanks @zeerd for reporting (see #240)
+
 1.7.1
 =====
 Fixes:

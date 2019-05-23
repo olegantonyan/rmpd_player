@@ -647,7 +647,9 @@ static void SPI_MASTER_ISR_ATTR spi_new_trans(spi_device_t *dev, spi_trans_priv_
 
     trans = trans_buf->trans;
     host->cur_cs = dev_id;
-    //We should be done with the transmission.
+
+    //Reconfigure according to device settings, the function only has effect when the dev_id is changed.
+    spi_setup_device(host, dev_id);
 
     hal->tx_bitlen = trans->length;
     hal->rx_bitlen = trans->rxlength;
@@ -683,8 +685,6 @@ static void SPI_MASTER_ISR_ATTR spi_new_trans(spi_device_t *dev, spi_trans_priv_
         hal->dummy_bits = dev->cfg.dummy_bits;
     }
 
-    //Reconfigure according to device settings, the function only has effect when the dev_id is changed.
-    spi_setup_device(host, dev_id);
     spi_hal_setup_trans(hal);
     spi_hal_prepare_data(hal);
 
@@ -715,7 +715,7 @@ static void SPI_MASTER_ISR_ATTR spi_intr(void *arg)
     BaseType_t do_yield = pdFALSE;
     spi_host_t *host = (spi_host_t *)arg;
 
-    assert(spi_hal_usr_is_done(&host->hal) == 1);
+    assert(spi_hal_usr_is_done(&host->hal));
 
     /*------------ deal with the in-flight transaction -----------------*/
     if (host->cur_cs != NO_CS) {

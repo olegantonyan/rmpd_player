@@ -35,7 +35,9 @@ typedef struct esp_http_client_event *esp_http_client_event_handle_t;
 typedef enum {
     HTTP_EVENT_ERROR = 0,       /*!< This event occurs when there are any errors during execution */
     HTTP_EVENT_ON_CONNECTED,    /*!< Once the HTTP has been connected to the server, no data exchange has been performed */
-    HTTP_EVENT_HEADER_SENT,     /*!< After sending all the headers to the server */
+    HTTP_EVENT_HEADERS_SENT,     /*!< After sending all the headers to the server */
+    HTTP_EVENT_HEADER_SENT = HTTP_EVENT_HEADERS_SENT, /*!< This header has been kept for backward compatability
+                                                           and will be deprecated in future versions esp-idf */
     HTTP_EVENT_ON_HEADER,       /*!< Occurs when receiving each header sent from the server */
     HTTP_EVENT_ON_DATA,         /*!< Occurs when receiving data from the server, possibly multiple portions of the packet */
     HTTP_EVENT_ON_FINISH,       /*!< Occurs when finish a HTTP session */
@@ -120,6 +122,17 @@ typedef struct {
     bool                        use_global_ca_store;      /*!< Use a global ca_store for all the connections in which this bool is set. */
 } esp_http_client_config_t;
 
+/**
+ * Enum for the HTTP status codes.
+ */
+typedef enum {
+    /* 3xx - Redirection */
+    HttpStatus_MovedPermanently  = 301,
+    HttpStatus_Found             = 302,
+
+    /* 4xx - Client Error */
+    HttpStatus_Unauthorized      = 401
+} HttpStatus_Code;
 
 #define ESP_ERR_HTTP_BASE               (0x7000)                    /*!< Starting number of HTTP error codes */
 #define ESP_ERR_HTTP_MAX_REDIRECT       (ESP_ERR_HTTP_BASE + 1)     /*!< The error exceeds the number of HTTP redirects */
@@ -406,6 +419,29 @@ esp_err_t esp_http_client_cleanup(esp_http_client_handle_t client);
  */
 esp_http_client_transport_t esp_http_client_get_transport_type(esp_http_client_handle_t client);
 
+/**
+ * @brief      Set redirection URL.
+ *             When received the 30x code from the server, the client stores the redirect URL provided by the server.
+ *             This function will set the current URL to redirect to enable client to execute the redirection request.
+ *
+ * @param[in]  client  The esp_http_client handle
+ *
+ * @return      
+ *     - ESP_OK
+ *     - ESP_FAIL
+ */
+esp_err_t esp_http_client_set_redirection(esp_http_client_handle_t client);
+
+/**
+ * @brief      On receiving HTTP Status code 401, this API can be invoked to add authorization
+ *             information.
+ *
+ * @note       There is a possibility of receiving body message with redirection status codes, thus make sure
+ *             to flush off body data after calling this API.
+ *
+ * @param[in]  client   The esp_http_client handle
+ */
+void esp_http_client_add_auth(esp_http_client_handle_t client);
 
 #ifdef __cplusplus
 }

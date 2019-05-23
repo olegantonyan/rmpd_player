@@ -127,6 +127,28 @@ static void cjson_get_object_item_case_sensitive_should_get_object_items(void)
     cJSON_Delete(item);
 }
 
+static void cjson_get_object_item_should_not_crash_with_array(void) {
+    cJSON *array = NULL;
+    cJSON *found = NULL;
+    array = cJSON_Parse("[1]");
+
+    found = cJSON_GetObjectItem(array, "name");
+    TEST_ASSERT_NULL(found);
+
+    cJSON_Delete(array);
+}
+
+static void cjson_get_object_item_case_sensitive_should_not_crash_with_array(void) {
+    cJSON *array = NULL;
+    cJSON *found = NULL;
+    array = cJSON_Parse("[1]");
+
+    found = cJSON_GetObjectItemCaseSensitive(array, "name");
+    TEST_ASSERT_NULL(found);
+
+    cJSON_Delete(array);
+}
+
 static void typecheck_functions_should_check_type(void)
 {
     cJSON invalid[1];
@@ -410,7 +432,7 @@ static void cjson_functions_shouldnt_crash_with_null_pointers(void)
     cJSON_Delete(item);
 }
 
-static void *failing_realloc(void *pointer, size_t size)
+static void * CJSON_CDECL failing_realloc(void *pointer, size_t size)
 {
     (void)size;
     (void)pointer;
@@ -508,7 +530,26 @@ static void cjson_create_array_reference_should_create_an_array_reference(void) 
     cJSON_Delete(number_reference);
 }
 
-int main(void)
+static void cjson_add_item_to_object_should_not_use_after_free_when_string_is_aliased(void)
+{
+    cJSON *object = cJSON_CreateObject();
+    cJSON *number = cJSON_CreateNumber(42);
+    char *name = (char*)cJSON_strdup((const unsigned char*)"number", &global_hooks);
+
+    TEST_ASSERT_NOT_NULL(object);
+    TEST_ASSERT_NOT_NULL(number);
+    TEST_ASSERT_NOT_NULL(name);
+
+    number->string = name;
+
+    /* The following should not have a use after free
+     * that would show up in valgrind or with AddressSanitizer */
+    cJSON_AddItemToObject(object, number->string, number);
+
+    cJSON_Delete(object);
+}
+
+int CJSON_CDECL main(void)
 {
     UNITY_BEGIN();
 
@@ -516,6 +557,8 @@ int main(void)
     RUN_TEST(cjson_array_foreach_should_not_dereference_null_pointer);
     RUN_TEST(cjson_get_object_item_should_get_object_items);
     RUN_TEST(cjson_get_object_item_case_sensitive_should_get_object_items);
+    RUN_TEST(cjson_get_object_item_should_not_crash_with_array);
+    RUN_TEST(cjson_get_object_item_case_sensitive_should_not_crash_with_array);
     RUN_TEST(typecheck_functions_should_check_type);
     RUN_TEST(cjson_should_not_parse_to_deeply_nested_jsons);
     RUN_TEST(cjson_set_number_value_should_set_numbers);
@@ -530,6 +573,7 @@ int main(void)
     RUN_TEST(cjson_create_string_reference_should_create_a_string_reference);
     RUN_TEST(cjson_create_object_reference_should_create_an_object_reference);
     RUN_TEST(cjson_create_array_reference_should_create_an_array_reference);
+    RUN_TEST(cjson_add_item_to_object_should_not_use_after_free_when_string_is_aliased);
 
     return UNITY_END();
 }

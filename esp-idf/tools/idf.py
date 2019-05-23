@@ -66,7 +66,7 @@ GENERATORS = \
     [
         # ('generator name', 'build command line', 'version command line', 'verbose flag')
         ("Ninja", ["ninja"], ["ninja", "--version"], "-v"),
-        (MAKE_GENERATOR, [MAKE_CMD, "-j", str(multiprocessing.cpu_count() + 2)], ["make", "--version"], "VERBOSE=1"),
+        (MAKE_GENERATOR, [MAKE_CMD, "-j", str(multiprocessing.cpu_count() + 2)], [MAKE_CMD, "--version"], "VERBOSE=1"),
     ]
 GENERATOR_CMDS = dict((a[0], a[1]) for a in GENERATORS)
 GENERATOR_VERBOSE = dict((a[0], a[3]) for a in GENERATORS)
@@ -88,6 +88,16 @@ def _run_tool(tool_name, args, cwd):
         raise FatalError("%s failed with exit code %d" % (tool_name, e.returncode))
 
 
+def _realpath(path):
+    """
+    Return the cannonical path with normalized case.
+
+    It is useful on Windows to comparision paths in case-insensitive manner.
+    On Unix and Mac OS X it works as `os.path.realpath()` only.
+    """
+    return os.path.normcase(os.path.realpath(path))
+
+
 def check_environment():
     """
     Verify the environment contains the top-level tools we need to operate
@@ -97,9 +107,9 @@ def check_environment():
     if not executable_exists(["cmake", "--version"]):
         raise FatalError("'cmake' must be available on the PATH to use idf.py")
     # find the directory idf.py is in, then the parent directory of this, and assume this is IDF_PATH
-    detected_idf_path = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
+    detected_idf_path = _realpath(os.path.join(os.path.dirname(__file__), ".."))
     if "IDF_PATH" in os.environ:
-        set_idf_path = os.path.realpath(os.environ["IDF_PATH"])
+        set_idf_path = _realpath(os.environ["IDF_PATH"])
         if set_idf_path != detected_idf_path:
             print("WARNING: IDF_PATH environment variable is set to %s but idf.py path indicates IDF directory %s. "
                   "Using the environment variable directory, but results may be unexpected..."
@@ -196,9 +206,9 @@ def _ensure_build_directory(args, always_run_cmake=False):
 
     try:
         home_dir = cache["CMAKE_HOME_DIRECTORY"]
-        if os.path.normcase(os.path.realpath(home_dir)) != os.path.normcase(os.path.realpath(project_dir)):
+        if _realpath(home_dir) != _realpath(project_dir):
             raise FatalError("Build directory '%s' configured for project '%s' not '%s'. Run 'idf.py fullclean' to start again."
-                             % (build_dir, os.path.realpath(home_dir), os.path.realpath(project_dir)))
+                             % (build_dir, _realpath(home_dir), _realpath(project_dir)))
     except KeyError:
         pass  # if cmake failed part way, CMAKE_HOME_DIRECTORY may not be set yet
 
@@ -327,6 +337,26 @@ def reconfigure(action, args):
     _ensure_build_directory(args, True)
 
 
+def _delete_windows_symlinks(directory):
+    """
+    It deletes symlinks recursively on Windows. It is useful for Python 2 which doesn't detect symlinks on Windows.
+    """
+    deleted_paths = []
+    if os.name == 'nt':
+        import ctypes
+        for root, dirnames, filenames in os.walk(directory):
+            for d in dirnames:
+                full_path = os.path.join(root, d)
+                try:
+                    full_path = full_path.decode('utf-8')
+                except Exception:
+                    pass
+                if ctypes.windll.kernel32.GetFileAttributesW(full_path) & 0x0400:
+                    os.rmdir(full_path)
+                    deleted_paths.append(full_path)
+    return deleted_paths
+
+
 def fullclean(action, args):
     build_dir = args.build_dir
     if not os.path.isdir(build_dir):
@@ -345,8 +375,16 @@ def fullclean(action, args):
         if os.path.exists(red):
             raise FatalError("Refusing to automatically delete files in directory containing '%s'. Delete files manually if you're sure." % red)
     # OK, delete everything in the build directory...
+    # Note: Python 2.7 doesn't detect symlinks on Windows (it is supported form 3.2). Tools promising to not
+    # follow symlinks will actually follow them. Deleting the build directory with symlinks deletes also items
+    # outside of this directory.
+    deleted_symlinks = _delete_windows_symlinks(build_dir)
+    if args.verbose and len(deleted_symlinks) > 1:
+        print('The following symlinks were identified and removed:\n%s' % "\n".join(deleted_symlinks))
     for f in os.listdir(build_dir):  # TODO: once we are Python 3 only, this can be os.scandir()
         f = os.path.join(build_dir, f)
+        if args.verbose:
+            print('Removing: %s' % f)
         if os.path.isdir(f):
             shutil.rmtree(f)
         else:
@@ -469,7 +507,7 @@ def get_default_serial_port():
     ports = list(reversed(sorted(
         p.device for p in serial.tools.list_ports.comports())))
     try:
-        print("Choosing default port %s (use '-p PORT' option to set a specific serial port)" % ports[0])
+        print("Choosing default port %s (use '-p PORT' option to set a specific serial port)" % ports[0].encode('ascii', 'ignore'))
         return ports[0]
     except IndexError:
         raise RuntimeError("No serial ports found. Connect a device, or use '-p PORT' option to set a specific port.")
@@ -532,12 +570,12 @@ def main():
     check_environment()
 
     # Advanced parameter checks
-    if args.build_dir is not None and os.path.realpath(args.project_dir) == os.path.realpath(args.build_dir):
+    if args.build_dir is not None and _realpath(args.project_dir) == _realpath(args.build_dir):
         raise FatalError("Setting the build directory to the project directory is not supported. Suggest dropping "
                          "--build-dir option, the default is a 'build' subdirectory inside the project directory.")
     if args.build_dir is None:
         args.build_dir = os.path.join(args.project_dir, "build")
-    args.build_dir = os.path.realpath(args.build_dir)
+    args.build_dir = _realpath(args.build_dir)
 
     completed_actions = set()
 

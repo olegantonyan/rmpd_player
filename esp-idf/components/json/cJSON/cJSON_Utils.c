@@ -499,6 +499,7 @@ static cJSON *sort_list(cJSON *list, const cJSON_bool case_sensitive)
     {
         /* Split the lists */
         second->prev->next = NULL;
+        second->prev = NULL;
     }
 
     /* Recursively sort the sub-lists. */
@@ -510,7 +511,7 @@ static cJSON *sort_list(cJSON *list, const cJSON_bool case_sensitive)
     while ((first != NULL) && (second != NULL))
     {
         cJSON *smaller = NULL;
-        if (compare_strings((unsigned char*)first->string, (unsigned char*)second->string, false) < 0)
+        if (compare_strings((unsigned char*)first->string, (unsigned char*)second->string, case_sensitive) < 0)
         {
             smaller = first;
         }
@@ -987,6 +988,12 @@ static int apply_patch(cJSON *object, const cJSON *patch, const cJSON_bool case_
         }
         cJSON_AddItemToObject(parent, (char*)child_pointer, value);
         value = NULL;
+    }
+    else /* parent is not an object */
+    {
+        /* Couldn't find object to add to. */
+        status = 9;
+        goto cleanup;
     }
 
 cleanup:

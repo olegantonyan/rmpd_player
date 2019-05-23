@@ -544,7 +544,7 @@ static const uint8_t data_drom[320+3] = {
 
 TEST_CASE("SPI Master DMA test, TX and RX in different regions", "[spi]")
 {
-#ifdef CONFIG_SPIRAM_SUPPORT
+#ifdef CONFIG_ESP32_SPIRAM_SUPPORT
     //test psram if enabled
     ESP_LOGI(TAG, "testing PSRAM...");
     uint32_t* data_malloc = (uint32_t*)heap_caps_malloc(324, MALLOC_CAP_SPIRAM);
@@ -992,6 +992,9 @@ static IRAM_ATTR void spi_transmit_polling_measure(spi_device_handle_t spi, spi_
 
 TEST_CASE("spi_speed","[spi]")
 {
+#ifdef CONFIG_FREERTOS_CHECK_PORT_CRITICAL_COMPLIANCE
+    return;
+#endif
     uint32_t t_flight;
     //to get rid of the influence of randomly interrupts, we measured the performance by median value
     uint32_t t_flight_sorted[TEST_TIMES];

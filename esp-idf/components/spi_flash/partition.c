@@ -168,10 +168,13 @@ static esp_err_t load_partitions()
         item->info.type = it->type;
         item->info.subtype = it->subtype;
         item->info.encrypted = it->flags & PART_FLAG_ENCRYPTED;
-        if (esp_flash_encryption_enabled() && (
-                it->type == PART_TYPE_APP
+
+        if (!esp_flash_encryption_enabled()) {
+            /* If flash encryption is not turned on, no partitions should be treated as encrypted */
+            item->info.encrypted = false;
+        } else if (it->type == PART_TYPE_APP
                 || (it->type == PART_TYPE_DATA && it->subtype == PART_SUBTYPE_DATA_OTA)
-                || (it->type == PART_TYPE_DATA && it->subtype == PART_SUBTYPE_DATA_NVS_KEYS))) {
+                || (it->type == PART_TYPE_DATA && it->subtype == PART_SUBTYPE_DATA_NVS_KEYS)) {
             /* If encryption is turned on, all app partitions and OTA data
                are always encrypted */
             item->info.encrypted = true;
@@ -240,7 +243,7 @@ esp_err_t esp_partition_read(const esp_partition_t* partition,
     if (!partition->encrypted) {
         return spi_flash_read(partition->address + src_offset, dst, size);
     } else {
-#if CONFIG_FLASH_ENCRYPTION_ENABLED
+#if CONFIG_SECURE_FLASH_ENC_ENABLED
         /* Encrypted partitions need to be read via a cache mapping */
         const void *buf;
         spi_flash_mmap_handle_t handle;
@@ -256,7 +259,7 @@ esp_err_t esp_partition_read(const esp_partition_t* partition,
         return ESP_OK;
 #else
         return ESP_ERR_NOT_SUPPORTED;
-#endif // CONFIG_FLASH_ENCRYPTION_ENABLED
+#endif // CONFIG_SECURE_FLASH_ENC_ENABLED
     }
 }
 
@@ -274,11 +277,11 @@ esp_err_t esp_partition_write(const esp_partition_t* partition,
     if (!partition->encrypted) {
         return spi_flash_write(dst_offset, src, size);
     } else {
-#if CONFIG_FLASH_ENCRYPTION_ENABLED
+#if CONFIG_SECURE_FLASH_ENC_ENABLED
         return spi_flash_write_encrypted(dst_offset, src, size);
 #else
         return ESP_ERR_NOT_SUPPORTED;
-#endif // CONFIG_FLASH_ENCRYPTION_ENABLED
+#endif // CONFIG_SECURE_FLASH_ENC_ENABLED
     }
 }
 

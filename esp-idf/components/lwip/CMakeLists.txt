@@ -89,7 +89,7 @@ set(COMPONENT_SRCS "apps/dhcpserver/dhcpserver.c"
                    "port/esp32/netif/ethernetif.c"
                    "port/esp32/netif/wlanif.c")
 
-if(CONFIG_PPP_SUPPORT)
+if(CONFIG_LWIP_PPP_SUPPORT)
     list(APPEND COMPONENT_SRCS "lwip/src/netif/ppp/auth.c"
                    "lwip/src/netif/ppp/ccp.c"
                    "lwip/src/netif/ppp/chap-md5.c"
@@ -130,7 +130,7 @@ set(COMPONENT_ADD_LDFRAGMENTS linker.lf)
 register_component()
 
 # lots of LWIP source files evaluate macros that check address of stack variables
-component_compile_options(-Wno-address)
+target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-address)
 
 if(GCC_NOT_5_2_0)
     set_source_files_properties(

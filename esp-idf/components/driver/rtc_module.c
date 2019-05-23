@@ -1706,7 +1706,7 @@ esp_err_t adc2_get_raw(adc2_channel_t channel, adc_bits_width_t width_bit, int* 
     }
 
     //disable other peripherals
-#ifdef CONFIG_ADC2_DISABLE_DAC
+#ifdef CONFIG_ADC_DISABLE_DAC
     adc2_dac_disable( channel );
 #endif
     // set controller
@@ -1962,15 +1962,15 @@ static void rtc_isr(void* arg)
 {
     uint32_t status = REG_READ(RTC_CNTL_INT_ST_REG);
     rtc_isr_handler_t* it;
-    portENTER_CRITICAL(&s_rtc_isr_handler_list_lock);
+    portENTER_CRITICAL_ISR(&s_rtc_isr_handler_list_lock);
     SLIST_FOREACH(it, &s_rtc_isr_handler_list, next) {
         if (it->mask & status) {
-            portEXIT_CRITICAL(&s_rtc_isr_handler_list_lock);
+            portEXIT_CRITICAL_ISR(&s_rtc_isr_handler_list_lock);
             (*it->handler)(it->handler_arg);
-            portENTER_CRITICAL(&s_rtc_isr_handler_list_lock);
+            portENTER_CRITICAL_ISR(&s_rtc_isr_handler_list_lock);
         }
     }
-    portEXIT_CRITICAL(&s_rtc_isr_handler_list_lock);
+    portEXIT_CRITICAL_ISR(&s_rtc_isr_handler_list_lock);
     REG_WRITE(RTC_CNTL_INT_CLR_REG, status);
 }
 
