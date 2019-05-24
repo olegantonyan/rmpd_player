@@ -10,8 +10,15 @@
 #include "esp_vfs_fat.h"
 #include "driver/sdmmc_host.h"
 #include "sdmmc_cmd.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "freertos/semphr.h"
 
 static const char *TAG = "sdcard";
+
+static SemaphoreHandle_t global_lock = NULL;
+static bool global_lock_init();
 
 /*                   | micro sd
 GPIO14 (MTMS) | CLK  | 5
@@ -56,36 +63,6 @@ bool sd_init() {
   // Card has been initialized, print its properties
   sdmmc_card_print_info(stdout, card);
 
-  /*FILE *f = fopen(STORAGE_SD_MOUNTPOINT "/hello.txt", "r");
-  if (f == NULL) {
-    ESP_LOGE(TAG, "Failed to open file for reading");
-    return false;
-  }
-  char line[64];
-  fgets(line, sizeof(line), f);
-  fclose(f);
-  // strip newline
-  char* pos = strchr(line, '\n');
-  if (pos) {
-      *pos = '\0';
-  }
-  ESP_LOGI(TAG, "Read from file: '%s'", line);
-*/
-
-/*  DIR *dp = opendir(STORAGE_SD_MOUNTPOINT);
-  if (dp == NULL) {
-    ESP_LOGE(TAG, "error opening directory");
-  } else {
-    while(true) {
-      struct dirent *ep = readdir(dp);
-      if (!ep) {
-        break;
-      }
-      ESP_LOGI(TAG, "%s", ep->d_name);
-    }
-    closedir(dp);
-  }*/
-
   return true;
 }
 
@@ -107,4 +84,29 @@ uint64_t sd_bytes_free() {
   /* Print the free space (assuming 512 bytes/sector) */
   //printf("%10lu KiB total drive space.\n%10lu KiB available.\n", tot_sect / 2, fre_sect / 2);
   return (fre_sect / 2) * 1024;
+}
+
+bool sd_global_lock_acquire(uint32_t ms) {
+  if (!global_lock_init()) {
+    return false;
+  }
+  return xSemaphoreTake(global_lock, pdMS_TO_TICKS(ms)) == pdTRUE;
+}
+
+bool sd_global_lock_release() {
+  if (!global_lock_init()) {
+    return false;
+  }
+  return xSemaphoreGive(global_lock) == pdTRUE;
+}
+
+static bool global_lock_init() {
+  if (global_lock == NULL) {
+    global_lock = xSemaphoreCreateMutex();
+    if (global_lock == NULL) {
+      ESP_LOGE(TAG, "cannot create global lock mutex");
+      return false;
+    }
+  }
+  return true;
 }

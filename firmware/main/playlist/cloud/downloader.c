@@ -175,7 +175,7 @@ static bool download_file(const char *url, const char *filename) {
   if (!file_exists(filepath_permanent)) {
     int result = 0;
     while (true) {
-      result = file_download_start(full_url, filepath_temp, 8192);
+      result = file_download_start(full_url, filepath_temp, 4096);
       if (result < 200 || result > 299) {
         ESP_LOGW(TAG, "error downloading file (status %d), retrying...", result);
         vTaskDelay(pdMS_TO_TICKS(1000));

@@ -158,7 +158,7 @@ static void render_status(httpd_req_t *req) {
 
   cJSON *root = cJSON_CreateObject();
 
-  char now_playing[800] = { 0 };
+  char now_playing[512] = { 0 };
   if (player_get_now_playing(now_playing, sizeof(now_playing))) {
     cJSON_AddItemToObject(root, "now_playing", cJSON_CreateString(now_playing));
   } else {

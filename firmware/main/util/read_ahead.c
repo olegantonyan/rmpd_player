@@ -5,6 +5,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <unistd.h>
+#include "storage/sd.h"
 
 static const char *TAG = "read_ahead";
 
@@ -90,7 +91,12 @@ static bool start(ReadAhead_t *ra) {
 static size_t read_file(ReadAhead_t *ra) {
   xSemaphoreTake(ra->mutex, portMAX_DELAY);
 
+  bool taken = sd_global_lock_acquire(5);
   ssize_t bytes_read = read(fileno(ra->file), ra->buffer, ra->buffer_size);
+  if (taken) {
+    sd_global_lock_release();
+  }
+
   ra->bytes_read = bytes_read < 0 ? 0 : bytes_read;
 
   xSemaphoreGive(ra->mutex);

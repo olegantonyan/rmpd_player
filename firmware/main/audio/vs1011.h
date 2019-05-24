@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define VS1011_BUFFER_SIZE 4096
+#define VS1011_BUFFER_SIZE 8192
 
 typedef struct {
   uint32_t position;
