@@ -58,7 +58,7 @@ int file_download_start(const char *url, const char *download_path, size_t buffe
     esp_http_client_config_t config = {
       .event_handler = http_event_handle,
       .url = url,
-      .timeout_ms = 6000,
+      .timeout_ms = 30000,
       .method = HTTP_METHOD_GET,
       .cert_pem = certs(),
       .max_redirection_count = 4,
@@ -143,7 +143,7 @@ static void file_write_thread(void *args) {
     if(f->stop_flag) {
       break;
     }
-    
+
     bool taken = sd_global_lock_acquire(1500);
     write(fileno(f->file), f->buffer, f->bytes_in_buffer);
     //fwrite(f->buffer, f->bytes_in_buffer, 1, f->file);

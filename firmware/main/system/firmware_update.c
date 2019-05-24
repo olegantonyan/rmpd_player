@@ -102,7 +102,7 @@ static bool ota_start(const char *url) {
     esp_http_client_config_t config = {
       .event_handler = http_event_handle,
       .url = url,
-      .timeout_ms = 6000,
+      .timeout_ms = 30000,
       .method = HTTP_METHOD_GET,
       .cert_pem = certs(),
       .max_redirection_count = 4,

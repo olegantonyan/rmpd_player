@@ -31,7 +31,7 @@ int http_post_cmd(const char *send_data, size_t send_data_len, uint32_t send_seq
   esp_http_client_config_t config = {
     .event_handler = http_event_handle,
     .url = url,
-    .timeout_ms = 4000,
+    .timeout_ms = 10000,
     .method = HTTP_METHOD_POST,
     .cert_pem = certs(),
     .auth_type = HTTP_AUTH_TYPE_BASIC,
