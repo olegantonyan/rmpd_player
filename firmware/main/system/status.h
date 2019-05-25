@@ -9,4 +9,7 @@
 void status_set_online(bool arg);
 bool status_online();
 
+void status_set_synchronizing(bool arg);
+bool status_synchronizing();
+
 #endif

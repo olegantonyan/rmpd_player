@@ -20,7 +20,8 @@ export default {
     time: "",
     volume: 0,
     random: false,
-    online: false
+    online: false,
+    synchronizing: false
   },
 
   audio: {

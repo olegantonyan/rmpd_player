@@ -24,6 +24,7 @@ module.exports = () => ({
     './src/index.js',
     './styles/app.css',
     './styles/side-menu.css',
+    './styles/loader.css',
     './node_modules/purecss/build/pure.css'
   ],
   devtool: 'source-map',

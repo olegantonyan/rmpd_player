@@ -17,6 +17,7 @@
 #include "playlist/cloud/traverse.h"
 #include <dirent.h>
 #include "playlist/cloud/cleanup_files.h"
+#include "system/status.h"
 
 static const char *TAG = "downloader";
 
@@ -99,6 +100,8 @@ static void thread(void *args) {
 
   ESP_LOGI(TAG, "begin files download");
 
+  status_set_synchronizing(true);
+
   ThreadArg_t *ta = (ThreadArg_t *)args;
   Tempfile_t *tmp_playlist = ta->tmp_playlist;
   uint32_t sequence = ta->sequence;
@@ -152,6 +155,7 @@ static void thread(void *args) {
   }
 
   free(args);
+  status_set_synchronizing(false);
   xEventGroupClearBits(event_group, RUNNING_BIT);
   xEventGroupSetBits(event_group, STOPPED_BIT);
   vTaskDelete(NULL);
