@@ -13,8 +13,6 @@ const appArgs = [
 
 function onMount(main) {
   main.status.fetch()
-  setInterval(() => { main.status.fetch() }, 1500)
-  //setTimeout(sub, 2000);
 }
 
 let main = app(...appArgs)

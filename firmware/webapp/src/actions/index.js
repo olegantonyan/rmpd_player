@@ -44,16 +44,26 @@ export default {
 
   status: {
     fetch: () => (state, actions) => {
+      const timeo = () => { setTimeout(() => { actions.fetch() }, 1500) }
+
       fetch("/api/status.json", { headers: { "Connection": "close" } })
         .then(data => data.json())
-        .then((data) => actions.update(data))
+        .then((data) => {
+          timeo()
+          actions.update(data)
+        })
+        .catch(error => timeo())
     },
     update: value => state => { return value },
 
     update_volume: value => (state, actions) => {
-      fetch("/api/volume.json", { method: "POST", body: JSON.stringify({volume: Number(value)}), headers: { "Content-Type": "application/json", "Connection": "close" } })
-        .then(data => data.json())
-        .then((data) => { actions.update(data) })
+      clearTimeout(window.volume_timeout_timer)
+      window.volume_timeout_timer = setTimeout(() => {
+        console.log('to')
+        fetch("/api/volume.json", { method: "POST", body: JSON.stringify({volume: Number(value)}), headers: { "Content-Type": "application/json", "Connection": "close" } })
+          .then(data => data.json())
+          .then((data) => { actions.update(data) })
+      }, 300)
       return { volume: value }
     },
 
@@ -76,7 +86,10 @@ export default {
 
   audio: {
     update: value => state => {
-      fetch("/api/tone.json", { method: "POST", body: JSON.stringify(value), headers: { "Content-Type": "application/json", "Connection": "close" } })
+      clearTimeout(window.tone_timeout_timer)
+      window.tone_timeout_timer = setTimeout(() => {
+        fetch("/api/tone.json", { method: "POST", body: JSON.stringify(value), headers: { "Content-Type": "application/json", "Connection": "close" } })
+      }, 300)
       return value
     },
 
