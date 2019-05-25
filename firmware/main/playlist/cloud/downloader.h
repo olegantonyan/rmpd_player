@@ -7,5 +7,6 @@
 
 bool cloud_downloader_start(Tempfile_t *tmp_playlist, uint32_t sequence);
 bool cloud_downloader_is_running();
+bool cloud_downloader_stop();
 
 #endif

@@ -21,6 +21,8 @@
 static const char *TAG = "downloader";
 
 static const EventBits_t RUNNING_BIT = BIT0;
+static const EventBits_t STOP_BIT = BIT1;
+static const EventBits_t STOPPED_BIT = BIT2;
 static EventGroupHandle_t event_group = NULL;
 
 static void thread(void *args);
@@ -28,6 +30,7 @@ static bool download_from_playlist(Tempfile_t *tmp_playlist, uint32_t sequence);
 static bool extract_and_download(json_stream *json, uint32_t sequence);
 static bool download_file(const char *url, const char *filename);
 static void notify(uint32_t files_done, uint32_t sequence);
+static bool is_stopping();
 
 typedef struct {
   Tempfile_t *tmp_playlist;
@@ -43,10 +46,15 @@ bool cloud_downloader_start(Tempfile_t *tmp_playlist, uint32_t sequence) {
     }
   }
   if (cloud_downloader_is_running()) {
-    // TODO stop it
-    ESP_LOGE(TAG, "download is already running");
-    return false;
+    ESP_LOGW(TAG, "download is already running. stopping it...");
+    if (!cloud_downloader_stop()) {
+      ESP_LOGE(TAG, "error stopping downloader");
+      return false;
+    }
   }
+  xEventGroupClearBits(event_group, RUNNING_BIT);
+  xEventGroupClearBits(event_group, STOP_BIT);
+  xEventGroupClearBits(event_group, STOPPED_BIT);
 
   ThreadArg_t *ta = malloc(sizeof(ThreadArg_t)); // free in thread
   ta->tmp_playlist = tmp_playlist;
@@ -65,6 +73,23 @@ bool cloud_downloader_is_running() {
     return false;
   }
   return xEventGroupGetBits(event_group) & RUNNING_BIT;
+}
+
+bool cloud_downloader_stop() {
+  if (!cloud_downloader_is_running()) {
+    return true;
+  }
+  xEventGroupSetBits(event_group, STOP_BIT);
+  bool ok = xEventGroupWaitBits(event_group, STOPPED_BIT, pdTRUE,	pdFALSE, portMAX_DELAY) & STOPPED_BIT;
+  vTaskDelay(pdMS_TO_TICKS(50)); // HACK to "ensure" thread has died
+  return ok;
+}
+
+static bool is_stopping() {
+  if (event_group == NULL) {
+    return false;
+  }
+  return xEventGroupGetBits(event_group) & STOP_BIT;
 }
 
 static void thread(void *args) {
@@ -107,24 +132,28 @@ static void thread(void *args) {
     }
   }
 
-  ESP_LOGI(TAG, "finish files download");
-
-  if (ok) {
-    AckCommandArgs_t a = {
-      .sequence = sequence,
-      .message = "files download complete"
-    };
-    outgoing_command(ACK_OK, &a, NULL);
+  if (is_stopping()) {
+    ESP_LOGI(TAG, "stopped");
   } else {
-    AckCommandArgs_t a = {
-      .sequence = sequence,
-      .message = "files download error"
-    };
-    outgoing_command(ACK_FAIL, &a, NULL);
+    ESP_LOGI(TAG, "finish files download");
+    if (ok) {
+      AckCommandArgs_t a = {
+        .sequence = sequence,
+        .message = "files download complete"
+      };
+      outgoing_command(ACK_OK, &a, NULL);
+    } else {
+      AckCommandArgs_t a = {
+        .sequence = sequence,
+        .message = "files download error"
+      };
+      outgoing_command(ACK_FAIL, &a, NULL);
+    }
   }
 
   free(args);
   xEventGroupClearBits(event_group, RUNNING_BIT);
+  xEventGroupSetBits(event_group, STOPPED_BIT);
   vTaskDelete(NULL);
 }
 
@@ -175,7 +204,10 @@ static bool download_file(const char *url, const char *filename) {
   if (!file_exists(filepath_permanent)) {
     int result = 0;
     while (true) {
-      result = file_download_start(full_url, filepath_temp, 4096);
+      result = file_download_start(full_url, filepath_temp, 4096, is_stopping);
+      if (is_stopping()) {
+        break;
+      }
       if (result < 200 || result > 299) {
         ESP_LOGW(TAG, "error downloading file (status %d), retrying...", result);
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -183,8 +215,14 @@ static bool download_file(const char *url, const char *filename) {
         break;
       }
     }
-    rename(filepath_temp, filepath_permanent);
-    ESP_LOGI(TAG, "downloaded file %s", filepath_permanent);
+
+    if (is_stopping()) {
+      remove(filepath_temp);
+      ok = false;
+    } else {
+      rename(filepath_temp, filepath_permanent);
+      ESP_LOGI(TAG, "downloaded file %s", filepath_permanent);
+    }
   } else {
     ESP_LOGI(TAG, "file %s already exists, skipping", filepath_permanent);
   }
@@ -274,7 +312,7 @@ static bool extract_and_download(json_stream *json, uint32_t sequence) {
         break;
     }
 
-  } while (t != JSON_DONE && t != JSON_ERROR);
+  } while (t != JSON_DONE && t != JSON_ERROR && !is_stopping());
 
   return true;
 }

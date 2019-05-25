@@ -23,6 +23,7 @@ typedef struct {
   bool stop_flag;
   SemaphoreHandle_t received_sema;
   SemaphoreHandle_t written_sema;
+  bool (*is_stopping_func)();
 } FileWriterArg_t;
 
 static esp_err_t http_event_handle(esp_http_client_event_t *evt);
@@ -37,7 +38,7 @@ remove("/sdcard/download.aaa");
 int res = file_download_start("http://192.168.1.3:3000/rails/active_storage/blobs/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBWdz09IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--875f1583cf8ad0aa2d9cdfb39bc25147ec484b3b/09%20The%20Immaculate%20Deception.mp3", "/sdcard/download.aa");
 ESP_LOGI(TAG, "STATUS %d", res);
 */
-int file_download_start(const char *url, const char *download_path, size_t buffer_size) {
+int file_download_start(const char *url, const char *download_path, size_t buffer_size, bool (*is_stopping_func)()) {
   FileWriterArg_t f;
   f.file = fopen(download_path, "ab+");
   f.buffer = malloc(buffer_size);
@@ -45,6 +46,7 @@ int file_download_start(const char *url, const char *download_path, size_t buffe
   f.received_sema = xSemaphoreCreateBinary();
   f.written_sema = xSemaphoreCreateBinary();
   f.stop_flag = false;
+  f.is_stopping_func = is_stopping_func;
   xSemaphoreGive(f.written_sema);
 
   int status = -1;
@@ -116,6 +118,10 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt) {
     case HTTP_EVENT_ON_DATA:
       ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
       FileWriterArg_t *f = (FileWriterArg_t *)evt->user_data;
+      if (f->is_stopping_func != NULL && f->is_stopping_func()) {
+        esp_http_client_close(evt->client);
+        break;
+      }
       if(evt->data_len > f->max_size) {
         ESP_LOGE(TAG, "received more bytes than we can save to file");
       } else {
