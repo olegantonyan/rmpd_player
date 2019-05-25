@@ -8,6 +8,8 @@
 #include "storage/nvs.h"
 #include "config/config.h"
 #include "system/sysinfo.h"
+#include "playlist/cloud/cleanup_files.h"
+#include "playlist/cloud/downloader.h"
 
 static const char *TAG = "firmware_update";
 
@@ -21,6 +23,9 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt);
 static bool ota_start(const char *url);
 
 bool firmware_update_start(const char *url, uint32_t sequence) {
+  cloud_downloader_stop();
+  cloud_cleanup_files_stop();
+
   bool result = ota_start(url);
 
   if (result) {
