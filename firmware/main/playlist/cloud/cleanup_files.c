@@ -128,6 +128,7 @@ static void doit(const char *playlist_path, const char *mediafiles_path, const c
         ESP_LOGE(TAG, "error opening playlist file to cleanup nonplaylist files");
         return;
       }
+      setvbuf(f, NULL, _IOFBF, 1024);
       json_stream json;
       CleanupNonPlaylistContext_t ctx = {
         .target_filename = (const char *)ep->d_name,
