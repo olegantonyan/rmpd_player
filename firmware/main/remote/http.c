@@ -17,14 +17,14 @@ static esp_err_t http_event_handle(esp_http_client_event_t *evt);
 
 int http_post_cmd(const char *send_data, size_t send_data_len, uint32_t send_seq, http_response_t *response) {
   url_t *url_parsed = malloc(sizeof(url_t));
-  char server_addr[96] = { 0 };
+  char server_addr[64] = { 0 };
   strncpy(server_addr, config_server_url(), sizeof(server_addr) - 1);
   if (!url_parse(server_addr, url_parsed)) {
     free(url_parsed);
     ESP_LOGE(TAG, "server url parse error");
     return -1;
   }
-  char url[300] = { 0 };
+  char url[128] = { 0 };
   snprintf(url, sizeof(url), "%s://%s:%s@%s:%s/deviceapi/status", url_parsed->protocol, config_deviceid(), config_server_password(), url_parsed->host, url_parsed->port);
   free(url_parsed);
 
