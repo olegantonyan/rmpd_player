@@ -7,6 +7,7 @@ extern bool update_setting(IncomingCommandArgument_t *arg);
 extern bool update_playlist(IncomingCommandArgument_t *arg);
 extern bool update_software(IncomingCommandArgument_t *arg);
 extern bool delete_all_file(IncomingCommandArgument_t *arg);
+extern bool delete_playlist(IncomingCommandArgument_t *arg);
 
 static const char *TAG = "incoming_cmd";
 
@@ -92,6 +93,8 @@ static bool execute(const char *command, IncomingCommandArgument_t *arg) {
     return update_software(arg);
   } else if (strcmp(command, "delete_all_file") == 0) {
     return delete_all_file(arg);
+  } else if (strcmp(command, "delete_playlist") == 0) {
+    return delete_playlist(arg);
   }
 
   return false;

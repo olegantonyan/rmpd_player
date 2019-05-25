@@ -4,6 +4,11 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 size_t file_size(FILE *f) {
   fseek(f, 0, SEEK_END);
@@ -51,4 +56,33 @@ int mkdir_p(const char *path) {
     }
 
     return 0;
+}
+
+bool remove_directory(const char *path) {
+  DIR *dp = opendir(path);
+  if (dp == NULL) {
+    return false;
+  }
+
+  while(true) {
+    struct dirent *ep = readdir(dp);
+    if (!ep) {
+      break;
+    }
+    size_t newpath_len = strlen(path) + strlen(ep->d_name) + 4;
+    char *newpath = malloc(newpath_len);
+    snprintf(newpath, newpath_len, "%s/%s", path, ep->d_name);
+    if (ep->d_type == DT_DIR) {
+      if (strcmp(ep->d_name, ".") != 0 && strcmp(ep->d_name, "..") != 0) {
+        remove_directory(newpath);
+        rmdir(newpath);
+      }
+    } else {
+      remove(newpath);
+    }
+    free(newpath);
+  }
+  closedir(dp);
+
+  return true;
 }

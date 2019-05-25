@@ -9,5 +9,6 @@
 size_t file_size(FILE *f);
 int mkdir_p(const char *path);
 bool file_exists(const char *path);
+bool remove_directory(const char *path);
 
 #endif

@@ -16,32 +16,31 @@
 #include "playlist/cloud/cleanup_files.h"
 #include "playlist/cloud/downloader.h"
 
-static const char *TAG = "delete_all_file";
+static const char *TAG = "delete_playlist";
 
-bool delete_all_file(IncomingCommandArgument_t *arg) {
+bool delete_playlist(IncomingCommandArgument_t *arg) {
   if (arg == NULL) {
     return false;
   }
 
-  ESP_LOGI(TAG, "started delete all files");
+  ESP_LOGI(TAG, "started delete playlist");
 
-  offline_scheduler_deinit();
   cloud_downloader_stop();
   cloud_scheduler_deinit();
   cloud_cleanup_files_stop();
 
-  bool ok = remove_directory(STORAGE_SD_MOUNTPOINT);
+  bool ok = remove_directory(CLOUD_SCHEDULER_FILES_PATH);
 
   AckCommandArgs_t a = {
     .sequence = arg->sequence,
-    .message = "delete all files complete"
+    .message = "delete playlist complete"
   };
   if (ok) {
     outgoing_command(ACK_OK, &a, NULL);
-    ESP_LOGI(TAG, "done delete all files");
+    ESP_LOGI(TAG, "done delete playlist");
   } else {
     outgoing_command(ACK_FAIL, &a, NULL);
-    ESP_LOGI(TAG, "error delete all files");
+    ESP_LOGI(TAG, "error delete playlist");
   }
 
   return true;

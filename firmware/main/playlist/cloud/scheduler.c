@@ -23,6 +23,7 @@ static bool is_stopping();
 static const EventBits_t STOP_BIT = BIT0;
 static const EventBits_t STOPPED_BIT = BIT1;
 static EventGroupHandle_t event_group = NULL;
+static TaskHandle_t thread_handle = NULL;
 
 bool cloud_scheduler_is_enabled() {
   return file_exists(CLOUD_SCHEDULER_PLAYLIST_PATH);
@@ -34,19 +35,27 @@ bool cloud_scheduler_init() {
     return false;
   }
 
-  event_group = xEventGroupCreate();
   if (event_group == NULL) {
-    ESP_LOGE(TAG, "cannot create event group");
-    return false;
-  }
+    event_group = xEventGroupCreate();
+    if (event_group == NULL) {
+      ESP_LOGE(TAG, "cannot create event group");
+      return false;
+    }
+  }  
+  xEventGroupClearBits(event_group, STOP_BIT);
+  xEventGroupClearBits(event_group, STOPPED_BIT);
+  thread_handle = NULL;
 
-  return xTaskCreate(scheduler_thread, TAG, 3000, NULL, 6, NULL) == pdPASS;
+  return xTaskCreate(scheduler_thread, TAG, 3000, NULL, 6, &thread_handle) == pdPASS;
 }
 
 bool cloud_scheduler_deinit() {
   ESP_LOGI(TAG, "de-initializing");
   if (event_group == NULL) {
     return false;
+  }
+  if (thread_handle == NULL) {
+    return true;
   }
   player_stop();
   xEventGroupSetBits(event_group, STOP_BIT);
@@ -79,6 +88,7 @@ static void scheduler_thread(void *args) {
     taskYIELD();
   }
   xEventGroupSetBits(event_group, STOPPED_BIT);
+  thread_handle = NULL;
   vTaskDelete(NULL);
 }
 
