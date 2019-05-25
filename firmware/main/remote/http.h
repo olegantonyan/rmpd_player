@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include "util/tempfile.h"
 
-#define REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH 2048
+#define REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH 1024
 
 typedef struct {
   uint32_t sequence;

@@ -108,7 +108,8 @@ static bool ota_start(const char *url) {
       .max_redirection_count = 4,
       .disable_auto_redirect = false,
       .user_data = (void *)&ctx,
-      .buffer_size = 2048
+      .buffer_size = 2048,
+      .buffer_size_tx = 2048
     };
     ESP_LOGI(TAG, "request to %s", config.url);
     client = esp_http_client_init(&config);
@@ -120,6 +121,7 @@ static bool ota_start(const char *url) {
     err = esp_http_client_perform(client);
     if (err == ESP_OK) {
       int status = esp_http_client_get_status_code(client);
+      ESP_LOGI(TAG, "request status code %d", status);
       if (200 <= status && status < 300 && ctx.ok) {
         err = esp_ota_end(ctx.handle);
         if (err != ESP_OK) {
@@ -127,6 +129,7 @@ static bool ota_start(const char *url) {
           break;
         }
 
+        ESP_LOGI(TAG, "setting boot partition");
         err = esp_ota_set_boot_partition(update_partition);
         if (err != ESP_OK) {
           ESP_LOGE(TAG, "esp_ota_set_boot_partition failed: %s", esp_err_to_name(err));

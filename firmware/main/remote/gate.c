@@ -18,7 +18,7 @@ static const char *TAG = "remote_gate";
 static void thread(void *_args);
 
 bool gate_init() {
-  BaseType_t task_created = xTaskCreate(thread, TAG, 5200 + REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH, NULL, 5, NULL);
+  BaseType_t task_created = xTaskCreate(thread, TAG, 6500 + REMOTE_HTTP_MAX_RECEIVE_DATA_LENGTH, NULL, 5, NULL);
   if (pdPASS != task_created) {
     ESP_LOGE(TAG, "cannot create thread");
     return false;
