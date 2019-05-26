@@ -58,6 +58,7 @@ static bool extract_playlist(const char *src_file_path, const char *src_string, 
     if (src_file == NULL) {
       return false;
     }
+    setvbuf(src_file, NULL, _IOFBF, 1024);
   } else if (src_string != NULL) {
     src_file = NULL;
   } else {

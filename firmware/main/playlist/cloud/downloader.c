@@ -21,6 +21,12 @@
 
 static const char *TAG = "downloader";
 
+typedef enum {
+  DOWNLOAD_FILE_ERROR,
+  DOWNLOAD_FILE_OK,
+  DOWNLOAD_FILE_EXISTS
+} DownloadResult_t;
+
 static const EventBits_t RUNNING_BIT = BIT0;
 static const EventBits_t STOP_BIT = BIT1;
 static const EventBits_t STOPPED_BIT = BIT2;
@@ -29,7 +35,7 @@ static EventGroupHandle_t event_group = NULL;
 static void thread(void *args);
 static bool download_from_playlist(Tempfile_t *tmp_playlist, uint32_t sequence);
 static bool extract_and_download(json_stream *json, uint32_t sequence);
-static bool download_file(const char *url, const char *filename);
+static DownloadResult_t download_file(const char *url, const char *filename);
 static void notify(uint32_t files_done, uint32_t sequence);
 static bool is_stopping();
 
@@ -170,7 +176,7 @@ static bool download_from_playlist(Tempfile_t *tmp_playlist, uint32_t sequence) 
   return ok;
 }
 
-static bool download_file(const char *url, const char *filename) {
+static DownloadResult_t download_file(const char *url, const char *filename) {
   char *full_url = NULL;
   bool malloced_full_url = false;
   if (strncmp(url, "http", 4) == 0) { // full url
@@ -192,28 +198,28 @@ static bool download_file(const char *url, const char *filename) {
   size_t filepath_permanent_len = strlen(filename) + strlen(CLOUD_SCHEDULER_FILES_PATH) + 5;
   char *filepath_permanent = malloc(filepath_permanent_len);
   if (filepath_permanent == NULL) {
-    return false;
+    return DOWNLOAD_FILE_ERROR;
   }
   snprintf(filepath_permanent, filepath_permanent_len, "%s/%s", CLOUD_SCHEDULER_FILES_PATH, filename);
 
   size_t filepath_temp_len = strlen(filename) + strlen(TEMPFILE_DIR) + 5;
   char *filepath_temp = malloc(filepath_temp_len);
   if (filepath_permanent == NULL) {
-    return false;
+    return DOWNLOAD_FILE_ERROR;
   }
   snprintf(filepath_temp, filepath_temp_len, "%s/%s", TEMPFILE_DIR, filename);
 
 
-  bool ok = true;
+  DownloadResult_t result = DOWNLOAD_FILE_OK;
   if (!file_exists(filepath_permanent)) {
-    int result = 0;
+    int status = 0;
     while (true) {
-      result = file_download_start(full_url, filepath_temp, 4096, is_stopping);
+      status = file_download_start(full_url, filepath_temp, 4096, is_stopping);
       if (is_stopping()) {
         break;
       }
-      if (result < 200 || result > 299) {
-        ESP_LOGW(TAG, "error downloading file (status %d), retrying...", result);
+      if (status < 200 || status > 299) {
+        ESP_LOGW(TAG, "error downloading file (status %d), retrying...", status);
         vTaskDelay(pdMS_TO_TICKS(1000));
       } else {
         break;
@@ -222,13 +228,14 @@ static bool download_file(const char *url, const char *filename) {
 
     if (is_stopping()) {
       remove(filepath_temp);
-      ok = false;
+      result = DOWNLOAD_FILE_ERROR;
     } else {
       rename(filepath_temp, filepath_permanent);
       ESP_LOGI(TAG, "downloaded file %s", filepath_permanent);
     }
   } else {
     ESP_LOGI(TAG, "file %s already exists, skipping", filepath_permanent);
+    result = DOWNLOAD_FILE_EXISTS;
   }
 
   free(filepath_permanent);
@@ -237,7 +244,7 @@ static bool download_file(const char *url, const char *filename) {
   if (malloced_full_url) {
     free(full_url);
   }
-  return ok;
+  return result;
 }
 
 static void notify(uint32_t files_done, uint32_t sequence) {
@@ -286,7 +293,8 @@ static bool extract_and_download(json_stream *json, uint32_t sequence) {
         }
 
         if (strlen(url) > 0 && strlen(filename) > 0) {
-          if(!download_file(url, filename)) {
+          DownloadResult_t dl_res = download_file(url, filename);
+          if(dl_res == DOWNLOAD_FILE_ERROR) {
             ESP_LOGE(TAG, "error downloading file from %s", url);
             return false;
           }
@@ -296,7 +304,9 @@ static bool extract_and_download(json_stream *json, uint32_t sequence) {
           url_found = false;
           filename_found = false;
           files_done++;
-          notify(files_done, sequence);
+          if (dl_res != DOWNLOAD_FILE_EXISTS) {
+            notify(files_done, sequence);
+          }
         }
 
         break;
