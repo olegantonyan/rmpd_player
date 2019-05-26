@@ -41,7 +41,7 @@ bool cloud_scheduler_init() {
       ESP_LOGE(TAG, "cannot create event group");
       return false;
     }
-  }  
+  }
   xEventGroupClearBits(event_group, STOP_BIT);
   xEventGroupClearBits(event_group, STOPPED_BIT);
   thread_handle = NULL;

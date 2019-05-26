@@ -40,6 +40,8 @@ static void stop();
 static void on_medifile_callback(const char *path, uint16_t index);
 static void mediafile_enum_func(const char *fname, uint16_t index);
 
+static bool deinit_flag = false;
+
 bool offline_scheduler_init() {
   state.mutex = xSemaphoreCreateMutex();
   if (state.mutex == NULL) {
@@ -111,10 +113,10 @@ void offline_scheduler_deinit() {
   if (eTaskGetState(state.thread_handle) == eSuspended) {
     return;
   }
-
+  deinit_flag = true;
+  player_stop();
   vTaskSuspend(state.thread_handle);
   stream_scheduler_deinit();
-  player_stop();
 }
 
 static void scheduler_thread(void * args) {
@@ -178,6 +180,11 @@ static void mediafile_enum_func(const char *fname, uint16_t index) {
 }
 
 static void on_medifile_callback(const char *path, uint16_t index) {
+  if (deinit_flag) {
+    taskYIELD();
+    return;
+  }
+
   ESP_LOGD(TAG, "index %u next_index %u : %s", index, state.next, path);
   if (index != state.next) {
     return;

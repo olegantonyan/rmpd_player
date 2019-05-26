@@ -51,8 +51,8 @@ static QueueHandle_t back_queue = NULL;
 
 static const EventBits_t STATE_CHANGED_BIT = BIT0;
 static const EventBits_t PLAYER_STOP_BIT = BIT1;
-static const EventBits_t PLAYER_STOPED_BIT = BIT2;
-static EventGroupHandle_t event_group;
+static const EventBits_t PLAYER_STOPPED_BIT = BIT2;
+static EventGroupHandle_t event_group = NULL;
 
 static void player_thread(void * args);
 static bool play(player_message_t *pm);
@@ -67,6 +67,7 @@ static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx);
 
 bool player_start(const char *fname, void (*error_callback)()) {
+  ESP_LOGD(TAG, "player start");
   if (get_state() == PLAYING) {
     player_stop();
   }
@@ -85,16 +86,18 @@ bool player_start(const char *fname, void (*error_callback)()) {
   strcpy(m.filename, fname);
   m.error_callback = error_callback;
 
-  xEventGroupClearBits(event_group, PLAYER_STOPED_BIT);
+  xEventGroupClearBits(event_group, PLAYER_STOP_BIT | PLAYER_STOPPED_BIT);
 
   BaseType_t result = xQueueSend(queue, &m, portMAX_DELAY);
   if (result != pdTRUE) {
+    ESP_LOGE(TAG, "queue send failed");
     return false;
   }
 
   player_result_t pr;
   result = xQueueReceive(back_queue, &pr, portMAX_DELAY);
   if (result != pdTRUE) {
+    ESP_LOGE(TAG, "queue receive failed");
     return false;
   }
   return pr.success;
@@ -106,7 +109,9 @@ bool player_stop() {
     return true;
   }
   xEventGroupSetBits(event_group, PLAYER_STOP_BIT);
-  return wait_for_state(STOPPED, portMAX_DELAY);
+  bool ok = wait_for_state(STOPPED, portMAX_DELAY);
+  xEventGroupClearBits(event_group, PLAYER_STOP_BIT);
+  return ok;
 }
 
 bool player_get_now_playing(char *buffer, size_t length) {
@@ -239,9 +244,9 @@ static void player_thread(void * args) {
       set_state(PLAYING);
       player_result_t result;
       result.success = play(&message);
-      set_state(STOPPED);
       set_now_playing(NULL);
-      xQueueSend(back_queue, &result, 0);
+      xQueueSend(back_queue, &result, pdMS_TO_TICKS(1000));
+      set_state(STOPPED);
       if (message.filename != NULL) {
         free(message.filename);
       }
@@ -299,8 +304,8 @@ static bool play_stream(player_message_t *pm) {
     }
     vs1011_play(stream_read_func, 0, &stream, vs1011_callback);
 
-    if (xEventGroupGetBits(event_group) & PLAYER_STOPED_BIT) {
-      xEventGroupClearBits(event_group, PLAYER_STOPED_BIT);
+    if (xEventGroupGetBits(event_group) & PLAYER_STOPPED_BIT) {
+      xEventGroupClearBits(event_group, PLAYER_STOPPED_BIT);
       ESP_LOGD(TAG, "stopped by player stop");
       stream_stop(&stream);
       return true;
@@ -388,7 +393,7 @@ static void vs1011_callback(audio_info_t ai) {
 static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
   if (xEventGroupGetBits(event_group) & PLAYER_STOP_BIT) {
     xEventGroupClearBits(event_group, PLAYER_STOP_BIT);
-    xEventGroupSetBits(event_group, PLAYER_STOPED_BIT);
+    xEventGroupSetBits(event_group, PLAYER_STOPPED_BIT);
     return 0;
   }
   return read_ahead_next((ReadAhead_t *)ctx, buffer, buffer_size);
@@ -397,7 +402,7 @@ static size_t file_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
 static size_t stream_read_func(uint8_t *buffer, size_t buffer_size, void *ctx) {
   if (xEventGroupGetBits(event_group) & PLAYER_STOP_BIT) {
     xEventGroupClearBits(event_group, PLAYER_STOP_BIT);
-    xEventGroupSetBits(event_group, PLAYER_STOPED_BIT);
+    xEventGroupSetBits(event_group, PLAYER_STOPPED_BIT);
     return 0;
   }
   return stream_read((stream_t *)ctx, buffer, buffer_size);
