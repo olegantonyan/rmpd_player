@@ -40,14 +40,20 @@ static void stop();
 static void on_medifile_callback(const char *path, uint16_t index);
 static void mediafile_enum_func(const char *fname, uint16_t index);
 
-static bool deinit_flag = false;
+static bool stop_flag = false;
 
 bool offline_scheduler_init() {
+  if (state.thread_handle != NULL) {
+    ESP_LOGE(TAG, "already running, skipping initialization");
+    return false;
+  }
+
   state.mutex = xSemaphoreCreateMutex();
   if (state.mutex == NULL) {
     ESP_LOGE(TAG, "cannot create mutex");
     return false;
   }
+  stop_flag = false;
 
   offline_scheduler_set_random(config_random());
 
@@ -110,13 +116,9 @@ void offline_scheduler_deinit() {
   if (state.thread_handle == NULL) {
     return;
   }
-  if (eTaskGetState(state.thread_handle) == eSuspended) {
-    return;
-  }
-  deinit_flag = true;
+
+  stop_flag = true;
   player_stop();
-  vTaskSuspend(state.thread_handle);
-  stream_scheduler_deinit();
 }
 
 static void scheduler_thread(void * args) {
@@ -156,7 +158,7 @@ static void scheduler_thread(void * args) {
       wifi_wait_connected(5000);
     }
 
-    while(true) {
+    while(!stop_flag) {
       index = 0;
       recurse_dir(STORAGE_SD_MOUNTPOINT, 0, &index, on_medifile_callback, offline_scheduler_mediafile_match_func);
       taskYIELD();
@@ -167,8 +169,8 @@ static void scheduler_thread(void * args) {
   stream_scheduler_deinit();
 
   state.thread_handle = NULL;
-  //vSemaphoreDelete(state.mutex);
-  //state.mutex = NULL;
+  vSemaphoreDelete(state.mutex);
+  state.mutex = NULL;
   vTaskDelete(NULL);
 }
 
@@ -180,8 +182,7 @@ static void mediafile_enum_func(const char *fname, uint16_t index) {
 }
 
 static void on_medifile_callback(const char *path, uint16_t index) {
-  if (deinit_flag) {
-    taskYIELD();
+  if (stop_flag) {
     return;
   }
 

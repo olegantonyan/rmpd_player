@@ -67,7 +67,9 @@ bool stream_scheduler_start() {
 }
 
 void stream_scheduler_deinit() {
-  vTaskDelete(p.thread_handle);
+  if (p.thread_handle != NULL) {
+    vTaskDelete(p.thread_handle);
+  }
   p.thread_handle = NULL;
   p.initialized = false;
   if (p.mutex != NULL) {
