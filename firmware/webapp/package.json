@@ -1,12 +1,12 @@
 {
   "name": "webapp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "webapp",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server",
-    "build": "rm -rf build && webpack -p --config webpack.config.prod.js",
-    "deploy": "rm -rf ../main/web/fs/*.{ico,html,css,js,svg,jpg,gif,png}; cp -R build/* ../main/web/fs/"
+    "start": "parcel src/index.html -d build/dev",
+    "build": "rm -rf build/prod && parcel build src/index.html --public-url ./ -d build/prod",
+    "deploy": "rm -rf ../main/web/fs/index.html; cp build/prod/index.html ../main/web/fs/"
   },
   "author": "Oleg Antonyan",
   "license": "MIT",
@@ -15,20 +15,12 @@
     "purecss": "^1.0.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.22.2",
-    "babel-core": "^6.22.1",
-    "babel-loader": "^7.1.5",
-    "babel-minify-webpack-plugin": "^0.2.0",
-    "babel-plugin-dynamic-import-webpack": "^1.1.0",
-    "babel-plugin-transform-react-jsx": "^6.22.0",
-    "babel-preset-env": "^1.6.1",
-    "css-loader": "^0.28.0",
-    "extract-text-webpack-plugin": "^3.0.0",
-    "html-webpack-plugin": "^3.2.0",
-    "imports": "^1.0.0",
-    "script-ext-html-webpack-plugin": "^2.1.3",
-    "uglifyjs-webpack-plugin": "^1.3.0",
-    "webpack": "^3.11.0",
-    "webpack-dev-server": "^2.11.3"
+    "@babel/core": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-react": "^7.0.0",
+    "autoprefixer": "^9.1.5",
+    "cssnano": "^4.1.10",
+    "parcel-bundler": "^1.10.1",
+    "parcel-plugin-inliner": "^1.0.10"
   }
 }

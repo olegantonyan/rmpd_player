@@ -29,7 +29,6 @@
 static const char *TAG = "web";
 
 static void send_text_file(const char *start, httpd_req_t *req);
-static void send_binary_file(const char *start, const char *end, httpd_req_t *req);
 static esp_err_t root_get_handler(httpd_req_t *req);
 static esp_err_t settings_get_handler(httpd_req_t *req);
 static esp_err_t settings_post_handler(httpd_req_t *req);
@@ -629,13 +628,7 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
     send_text_file(index_html_start, req);
   } else if(strcmp("/favicon.ico", req->uri) == 0) {
     httpd_resp_set_type(req, "image/x-icon");
-    send_binary_file(favicon_ico_start, favicon_ico_end, req);
-  }else if(strcmp("/main.css", req->uri) == 0) {
-    httpd_resp_set_type(req, "text/css");
-    send_text_file(main_css_start, req);
-  } else if(strcmp("/main.js", req->uri) == 0) {
-    httpd_resp_set_type(req, "application/javascript");
-    send_text_file(main_js_start, req);
+    httpd_resp_send(req, "", 0); // stub empty response
   } else {
     httpd_resp_send_404(req);
   }
@@ -644,26 +637,13 @@ static esp_err_t root_get_handler(httpd_req_t *req) {
 }
 
 static void send_text_file(const char *data, httpd_req_t *req) {
-  static const size_t HTTP_CHUNK_SIZE = 1024;
+  static const size_t HTTP_CHUNK_SIZE = 4096;
   size_t data_len = strlen(data);
   if(data_len <= HTTP_CHUNK_SIZE) {
     httpd_resp_send(req, data, data_len);
   } else {
     for(size_t bytes_sent = 0; bytes_sent < data_len; bytes_sent += HTTP_CHUNK_SIZE) {
       httpd_resp_send_chunk(req, data + bytes_sent, MIN(data_len - bytes_sent, HTTP_CHUNK_SIZE));
-    }
-    httpd_resp_send_chunk(req, NULL, 0);
-  }
-}
-
-static void send_binary_file(const char *start, const char *end, httpd_req_t *req) {
-  static const size_t HTTP_CHUNK_SIZE = 1024;
-  size_t data_len = end - start;
-  if(data_len <= HTTP_CHUNK_SIZE) {
-    httpd_resp_send(req, start, data_len);
-  } else {
-    for(size_t bytes_sent = 0; bytes_sent < data_len; bytes_sent += HTTP_CHUNK_SIZE) {
-      httpd_resp_send_chunk(req, start + bytes_sent, MIN(data_len - bytes_sent, HTTP_CHUNK_SIZE));
     }
     httpd_resp_send_chunk(req, NULL, 0);
   }

@@ -14,6 +14,3 @@ COMPONENT_EMBED_TXTFILES += clock/zones.json
 
 # web files
 COMPONENT_EMBED_TXTFILES += web/fs/index.html
-COMPONENT_EMBED_TXTFILES += web/fs/main.js
-COMPONENT_EMBED_TXTFILES += web/fs/main.css
-COMPONENT_EMBED_FILES := web/fs/favicon.ico

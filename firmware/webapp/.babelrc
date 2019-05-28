@@ -1,16 +1,4 @@
 {
-  "plugins": [
-    ["transform-react-jsx", { "pragma": "h" }],
-    "dynamic-import-webpack"
-  ],
-  "presets": [
-    ["env", { "modules": false }]
-  ],
-  "env": {
-    "test": {
-      "presets": [
-        ["env", "es2015"]
-      ]
-    }
-  }
+  "presets": ["@babel/preset-env", "@babel/preset-react"],
+  "plugins": [["@babel/plugin-transform-react-jsx", { "pragma": "h" }]]
 }
