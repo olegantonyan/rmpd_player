@@ -3,3 +3,4 @@ firmware/.dep
 node_modules/
 .cache/
 firmware/webapp/build/
+hardware/rmpd_player/fp-info-cache
