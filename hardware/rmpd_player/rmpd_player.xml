@@ -2,8 +2,8 @@
 <export version="D">
   <design>
     <source>/home/oleg/projects/rmpd_player/hardware/rmpd_player/rmpd_player.sch</source>
-    <date>Sat 23 Mar 2019 16:39:09 EET</date>
-    <tool>Eeschema 5.0.2-5.0.2</tool>
+    <date>Thu 06 Jun 2019 21:27:45 EET</date>
+    <tool>Eeschema 5.1.2-5.1.2</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
         <title>rmpd_player</title>
@@ -431,7 +431,7 @@
       <value>MICRO_SD</value>
       <footprint>microsd:Conn_uSDcard</footprint>
       <datasheet>http://katalog.we-online.de/em/datasheet/693072010801.pdf</datasheet>
-      <libsource lib="Connector" part="Micro_SD_Card" description="Micro SD Card Socket"/>
+      <libsource lib="rmpd_player-rescue" part="Micro_SD_Card-Connector" description=""/>
       <sheetpath names="/" tstamps="/"/>
       <tstamp>5C2C64F7</tstamp>
     </comp>
@@ -1168,12 +1168,14 @@
         <alias>NJM5532</alias>
         <alias>ADA4807-2ARM</alias>
         <alias>OPA2691</alias>
-        <alias>LT6233</alias>
+        <alias>LT6234</alias>
         <alias>OPA2356xxD</alias>
         <alias>OPA2356xxDGK</alias>
         <alias>OPA1612AxD</alias>
         <alias>MC33172</alias>
         <alias>OPA1602</alias>
+        <alias>TLV2372</alias>
+        <alias>LT6237</alias>
       </aliases>
       <description>Dual Operational Amplifiers, DIP-8/SOIC-8/TSSOP-8/VSSOP-8</description>
       <docs>http://www.ti.com/lit/ds/symlink/lm358.pdf</docs>
@@ -1241,28 +1243,6 @@
         <pin num="1" name="IN1" type="passive"/>
         <pin num="2" name="IN2" type="passive"/>
         <pin num="3" name="EXT" type="passive"/>
-      </pins>
-    </libpart>
-    <libpart lib="Connector" part="Micro_SD_Card">
-      <description>Micro SD Card Socket</description>
-      <docs>http://katalog.we-online.de/em/datasheet/693072010801.pdf</docs>
-      <footprints>
-        <fp>microSD*</fp>
-      </footprints>
-      <fields>
-        <field name="Reference">J</field>
-        <field name="Value">Micro_SD_Card</field>
-      </fields>
-      <pins>
-        <pin num="1" name="DAT2" type="BiDi"/>
-        <pin num="2" name="DAT3/CD" type="BiDi"/>
-        <pin num="3" name="CMD" type="input"/>
-        <pin num="4" name="VDD" type="power_in"/>
-        <pin num="5" name="CLK" type="input"/>
-        <pin num="6" name="VSS" type="power_in"/>
-        <pin num="7" name="DAT0" type="input"/>
-        <pin num="8" name="DAT1" type="input"/>
-        <pin num="9" name="SHIELD" type="passive"/>
       </pins>
     </libpart>
     <libpart lib="Connector_Generic" part="Conn_01x02">
@@ -1662,6 +1642,26 @@
         <pin num="3" name="C" type="passive"/>
       </pins>
     </libpart>
+    <libpart lib="rmpd_player-rescue" part="Micro_SD_Card-Connector">
+      <footprints>
+        <fp>microSD*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Micro_SD_Card-Connector</field>
+      </fields>
+      <pins>
+        <pin num="1" name="DAT2" type="BiDi"/>
+        <pin num="2" name="DAT3/CD" type="BiDi"/>
+        <pin num="3" name="CMD" type="input"/>
+        <pin num="4" name="VDD" type="power_in"/>
+        <pin num="5" name="CLK" type="input"/>
+        <pin num="6" name="VSS" type="power_in"/>
+        <pin num="7" name="DAT0" type="input"/>
+        <pin num="8" name="DAT1" type="input"/>
+        <pin num="9" name="SHIELD" type="passive"/>
+      </pins>
+    </libpart>
     <libpart lib="vs1011e" part="VS1011E">
       <description>VLSI VS1011E</description>
       <docs>/home/oleg/projects/rmpd_player/doc/vlsi/vs1011.pdf</docs>
@@ -1740,6 +1740,9 @@
     </library>
     <library logical="Transistor_BJT">
       <uri>/usr/share/kicad/library/Transistor_BJT.lib</uri>
+    </library>
+    <library logical="rmpd_player-rescue">
+      <uri>/home/oleg/projects/rmpd_player/hardware/rmpd_player/rmpd_player-rescue.lib</uri>
     </library>
     <library logical="vs1011e">
       <uri>/home/oleg/projects/rmpd_player/hardware/rmpd_player/vs1011e.lib</uri>
