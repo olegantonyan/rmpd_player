@@ -29,13 +29,13 @@ static void thread(void * args) {
   ESP_LOGI(TAG, "initializing ntp");
 
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
-  sntp_setservername(0, "0.ru.pool.ntp.org");
+  sntp_setservername(0, "time.cloudflare.com");
   sntp_setservername(1, "time.google.com");
   sntp_setservername(2, "time-a-g.nist.gov ");
   sntp_setservername(3, "time-b-g.nist.gov");
   sntp_setservername(4, "time-c-g.nist.gov");
   sntp_setservername(5, "time-d-g.nist.gov");
-  sntp_setservername(6, "time-d-g.nist.gov");
+  sntp_setservername(6, "0.ru.pool.ntp.org");
   sntp_setservername(7, "2.opensuse.pool.ntp.org");
   sntp_setservername(8, "utcnist.colorado.edu ");
   sntp_setservername(9, "time.windows.com");
