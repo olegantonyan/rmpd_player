@@ -47,6 +47,8 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
     t = json_next(json);
     switch(t) {
       case JSON_ARRAY_END:
+      case JSON_ARRAY:
+      case JSON_OBJECT:
       case JSON_OBJECT_END:
         pdjson_helper_reset(&state);
         break;
@@ -72,7 +74,11 @@ static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper
   parser_context_t *context = (parser_context_t *)ctx;
 
   if (is_equal(key, "filename") && type == PDJSON_HELPER_STRING) {
-    context->track.filename = value->string;
+    if (context->track.filename != NULL) {
+      free((void *)context->track.filename);
+    }
+    context->track.filename = malloc(strlen(value->string) + 1);
+    strcpy((char *)context->track.filename, value->string);
   } else if (is_equal(key, "media_item_id") && type == PDJSON_HELPER_NUMBER) {
     context->track.id = (int64_t)value->number;
   }
@@ -82,6 +88,7 @@ static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper
       context->stop_flag = true;
     }
     context->track.id = 0;
+    free((void *)context->track.filename);
     context->track.filename = NULL;
   }
 }
