@@ -7,5 +7,6 @@
 
 bool string_ends_with(const char *str, const char *suffix);
 void string_chomp(char *line);
+bool string_is_equal(const char *one, const char *two);
 
 #endif

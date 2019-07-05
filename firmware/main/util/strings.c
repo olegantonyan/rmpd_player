@@ -15,3 +15,10 @@ void string_chomp(char *line) {
     }
   }
 }
+
+bool string_is_equal(const char *one, const char *two) {
+  if (one == NULL || two == NULL) {
+    return false;
+  }
+  return strcmp(one, two) == 0;
+}
