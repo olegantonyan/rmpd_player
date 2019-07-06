@@ -10,21 +10,26 @@
 
 static const char *TAG = "traverse";
 
-static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback)(const Track_t *track, void *ctx));
-static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper_value_type_t type, void *ctx);
-
 typedef struct {
-  bool (*callback)(const Track_t *track, void *ctx);
-  void *ctx;
   Track_t track;
-  bool stop_flag;
 
   struct {
-    uint16_t filename:1;
-    uint16_t id:1;
-    uint16_t type:1;
+    uint8_t filename:1;
+    uint8_t id:1;
+    uint8_t type:1;
+    uint8_t schedule_intervals:1;
   } found;
-} parser_context_t;
+
+  /*struct {
+    uint8_t schedule_intervals:1;
+    uint8_t date_interval:1;
+    uint8_t schedule:1;
+  } searching;*/
+} ParserContext_t;
+
+static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback)(const Track_t *track, void *ctx));
+static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper_value_type_t type, void *ctx);
+static bool track_ready(const ParserContext_t *context);
 
 bool traverse_playlist(json_stream *playlist,  void *ctx, bool (*callback)(const Track_t *track, void *ctx)) {
   if (callback == NULL) {
@@ -39,18 +44,14 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
   pdjson_helper_state_t state;
   pdjson_helper_init(&state, json);
 
-  parser_context_t context;
+  ParserContext_t context;
   memset(&context, 0, sizeof(context));
-  context.callback = callback;
-  context.ctx = ctx;
-  context.stop_flag = false;
 
   bool ok = true;
   do {
     t = json_next(json);
     switch(t) {
       case JSON_ARRAY_END:
-      case JSON_ARRAY:
       case JSON_OBJECT:
       case JSON_OBJECT_END:
         pdjson_helper_reset(&state);
@@ -65,8 +66,18 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
         ok = false;
         break;
     }
+
+    if (ok && track_ready(&context)) {
+      if (!callback(&context.track, ctx)) {
+        break;
+      }
+      memset(&context.found, 0, sizeof(context.found));
+      free((void *)context.track.filename);
+      context.track.filename = NULL;
+    }
+
     taskYIELD();
-  } while (t != JSON_DONE && t != JSON_ERROR && !context.stop_flag);
+  } while (t != JSON_DONE && t != JSON_ERROR);
 
   pdjson_helper_deinit(&state);
 
@@ -74,7 +85,7 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
 }
 
 static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper_value_type_t type, void *ctx) {
-  parser_context_t *context = (parser_context_t *)ctx;
+  ParserContext_t *context = (ParserContext_t *)ctx;
 
   if (string_is_equal(key, "filename") && type == PDJSON_HELPER_STRING) {
     if (context->track.filename != NULL) {
@@ -94,14 +105,20 @@ static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper
       context->track.type = TRACK_ADVERTISING;
       context->found.type = 1;
     }
-  }
+  } /*else if (string_is_equal(key, "schedule_intervals")) {
+    context->searching.schedule_intervals = 1;
+  } else if (string_is_equal(key, "date_interval")) {
+    context->searching.date_interval = 1;
+  } else if (string_is_equal(key, "schedule")) {
+    context->searching.schedule = 1;
+  }*/
+}
 
-  if (context->found.id && context->found.filename && context->found.type) {
-    if (!context->callback(&context->track, context->ctx)) {
-      context->stop_flag = true;
-    }
-    memset(&context->found, 0, sizeof(context->found));
-    free((void *)context->track.filename);
-    context->track.filename = NULL;
-  }
+static bool track_ready(const ParserContext_t *context) {
+  return (
+    context->found.id &&
+    context->found.filename &&
+    context->found.type &&
+    (context->track.type == TRACK_BACKGROUND || (context->track.type == TRACK_ADVERTISING/* && context.found.schedule_intervals*/))
+  );
 }

@@ -96,6 +96,9 @@ static bool on_file_parse_callback(const Track_t *track, void *_ctx) {
   if (is_stopping()) {
     return false;
   }
+  if (track->type != TRACK_BACKGROUND) {
+    return true;
+  }
 
   size_t fullpath_len = strlen(CLOUD_SCHEDULER_FILES_PATH) + strlen(track->filename) + 4;
   char *fullpath = malloc(fullpath_len);
