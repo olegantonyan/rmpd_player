@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 #include "util/pdjson_helper.h"
 #include "util/strings.h"
+#include "util/datetime.h"
 
 static const char *TAG = "traverse";
 
@@ -20,16 +21,16 @@ typedef struct {
     uint8_t schedule_intervals:1;
   } found;
 
-  /*struct {
+  struct {
     uint8_t schedule_intervals:1;
-    uint8_t date_interval:1;
     uint8_t schedule:1;
-  } searching;*/
+  } searching;
 } ParserContext_t;
 
 static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback)(const Track_t *track, void *ctx));
 static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper_value_type_t type, void *ctx);
 static bool track_ready(const ParserContext_t *context);
+static void free_track(Track_t *track);
 
 bool traverse_playlist(json_stream *playlist,  void *ctx, bool (*callback)(const Track_t *track, void *ctx)) {
   if (callback == NULL) {
@@ -51,35 +52,87 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
   do {
     t = json_next(json);
     switch(t) {
-      case JSON_ARRAY_END:
-      case JSON_OBJECT:
-      case JSON_OBJECT_END:
-        pdjson_helper_reset(&state);
-        break;
-
-      default:
-        pdjson_helper_next(&state, t, on_parse, &context);
-        break;
-
       case JSON_ERROR:
         ESP_LOGE(TAG, "json parse error: %s line %d pos %d", json_get_error(json), json_get_lineno(json), json_get_position(json));
         ok = false;
         break;
+
+      case JSON_OBJECT:
+        if (context.searching.schedule_intervals) {
+          //printf("JSON_OBJECT %d\n", context.track.date_intervals_size);
+          context.track.date_intervals_size++;
+          context.track.date_intervals = realloc(context.track.date_intervals, sizeof(DateInterval_t) * (context.track.date_intervals_size + 1));
+          context.track.date_intervals[context.track.date_intervals_size - 1].schedule_seconds_size = 0;
+          context.track.date_intervals[context.track.date_intervals_size - 1].schedule_seconds = NULL;
+        }
+        pdjson_helper_reset(&state);
+        break;
+
+      case JSON_OBJECT_END:
+        pdjson_helper_reset(&state);
+        break;
+
+      case JSON_ARRAY:
+        pdjson_helper_reset(&state);
+        break;
+
+      case JSON_ARRAY_END:
+        if (context.searching.schedule) {
+          context.searching.schedule = 0;
+        } else if (context.searching.schedule_intervals) {
+          context.searching.schedule_intervals = 0;
+          context.found.schedule_intervals = 1;
+        }
+        pdjson_helper_reset(&state);
+        break;
+
+      case JSON_STRING: {
+        size_t len = 0;
+        const char *s = json_get_string(json, &len);
+        if (context.searching.schedule) {
+          size_t interval_index = context.track.date_intervals_size - 1;
+          if (context.track.date_intervals != NULL) {
+            context.track.date_intervals[interval_index].schedule_seconds_size++;
+
+            size_t new_size = sizeof(int32_t) * (context.track.date_intervals[interval_index].schedule_seconds_size + 1);
+            context.track.date_intervals[interval_index].schedule_seconds = realloc(context.track.date_intervals[interval_index].schedule_seconds, new_size);
+
+            size_t schedule_index = context.track.date_intervals[interval_index].schedule_seconds_size - 1;
+            context.track.date_intervals[interval_index].schedule_seconds[schedule_index] = 0;
+            int32_t val = datetime_string_to_seconds_int(s);
+            if (val >= 0) {
+              context.track.date_intervals[interval_index].schedule_seconds[schedule_index] = val;
+            }
+          }
+
+        } else if (string_is_equal(s, "schedule_intervals")) {
+          context.searching.schedule_intervals = 1;
+        } else  if (string_is_equal(s, "schedule")) {
+          context.searching.schedule = 1;
+        }
+      }
+      default:
+        pdjson_helper_next(&state, t, on_parse, &context);
+        break;
     }
 
     if (ok && track_ready(&context)) {
-      if (!callback(&context.track, ctx)) {
+      bool contin = callback(&context.track, ctx);
+
+      memset(&context.found, 0, sizeof(context.found));
+      free_track(&context.track);
+
+      if (!contin) {
         break;
       }
-      memset(&context.found, 0, sizeof(context.found));
-      free((void *)context.track.filename);
-      context.track.filename = NULL;
     }
 
     taskYIELD();
   } while (t != JSON_DONE && t != JSON_ERROR);
 
   pdjson_helper_deinit(&state);
+
+  free_track(&context.track);
 
   return ok;
 }
@@ -105,13 +158,25 @@ static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper
       context->track.type = TRACK_ADVERTISING;
       context->found.type = 1;
     }
-  } /*else if (string_is_equal(key, "schedule_intervals")) {
-    context->searching.schedule_intervals = 1;
-  } else if (string_is_equal(key, "date_interval")) {
-    context->searching.date_interval = 1;
-  } else if (string_is_equal(key, "schedule")) {
-    context->searching.schedule = 1;
-  }*/
+  }
+
+  if (context->searching.schedule_intervals) {
+    if (type == PDJSON_HELPER_STRING) {
+      if (string_is_equal(key, "begin")) {
+        int32_t begin = datetime_date_string_to_date_int(value->string);
+        //printf("  begin %s\n", value->string);
+        if (begin > 0 && context->track.date_intervals != NULL && context->track.date_intervals_size > 0) {
+          context->track.date_intervals[context->track.date_intervals_size - 1].begin_date = begin;
+        }
+      } else if (string_is_equal(key, "end")) {
+        int32_t end = datetime_date_string_to_date_int(value->string);
+        //printf("    end %s\n", value->string);
+        if (end > 0 && context->track.date_intervals != NULL && context->track.date_intervals_size > 0) {
+          context->track.date_intervals[context->track.date_intervals_size - 1].end_date = end;
+        }
+      }
+    }
+  }
 }
 
 static bool track_ready(const ParserContext_t *context) {
@@ -119,6 +184,22 @@ static bool track_ready(const ParserContext_t *context) {
     context->found.id &&
     context->found.filename &&
     context->found.type &&
-    (context->track.type == TRACK_BACKGROUND || (context->track.type == TRACK_ADVERTISING/* && context.found.schedule_intervals*/))
+    (context->track.type == TRACK_BACKGROUND || (context->track.type == TRACK_ADVERTISING && context->found.schedule_intervals))
   );
+}
+
+static void free_track(Track_t *track) {
+  free((void *)track->filename);
+  track->filename = NULL;
+  if (track->date_intervals != NULL) {
+    for (size_t i = 0; i < track->date_intervals_size; i++) {
+      if (track->date_intervals[i].schedule_seconds != NULL) {
+        free(track->date_intervals[i].schedule_seconds);
+        track->date_intervals[i].schedule_seconds = NULL;
+      }
+    }
+    free(track->date_intervals);
+    track->date_intervals = NULL;
+  }
+  track->date_intervals_size = 0;
 }
