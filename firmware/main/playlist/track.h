@@ -25,4 +25,7 @@ typedef struct {
   uint16_t date_intervals_size;
 } Track_t;
 
+bool track_copy(Track_t *dst, const Track_t *src);
+void track_free(Track_t *track);
+
 #endif

@@ -30,7 +30,6 @@ typedef struct {
 static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback)(const Track_t *track, void *ctx));
 static void on_parse(const char *key, const pdjson_value_t *value, pdjson_helper_value_type_t type, void *ctx);
 static bool track_ready(const ParserContext_t *context);
-static void free_track(Track_t *track);
 
 bool traverse_playlist(json_stream *playlist,  void *ctx, bool (*callback)(const Track_t *track, void *ctx)) {
   if (callback == NULL) {
@@ -120,7 +119,7 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
       bool contin = callback(&context.track, ctx);
 
       memset(&context.found, 0, sizeof(context.found));
-      free_track(&context.track);
+      track_free(&context.track);
 
       if (!contin) {
         break;
@@ -132,7 +131,7 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
 
   pdjson_helper_deinit(&state);
 
-  free_track(&context.track);
+  track_free(&context.track);
 
   return ok;
 }
@@ -186,20 +185,4 @@ static bool track_ready(const ParserContext_t *context) {
     context->found.type &&
     (context->track.type == TRACK_BACKGROUND || (context->track.type == TRACK_ADVERTISING && context->found.schedule_intervals))
   );
-}
-
-static void free_track(Track_t *track) {
-  free((void *)track->filename);
-  track->filename = NULL;
-  if (track->date_intervals != NULL) {
-    for (size_t i = 0; i < track->date_intervals_size; i++) {
-      if (track->date_intervals[i].schedule_seconds != NULL) {
-        free(track->date_intervals[i].schedule_seconds);
-        track->date_intervals[i].schedule_seconds = NULL;
-      }
-    }
-    free(track->date_intervals);
-    track->date_intervals = NULL;
-  }
-  track->date_intervals_size = 0;
 }

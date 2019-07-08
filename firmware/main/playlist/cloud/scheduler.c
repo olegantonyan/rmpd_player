@@ -97,13 +97,13 @@ static bool on_file_parse_callback(const Track_t *track, void *_ctx) {
     return false;
   }
   if (track->type != TRACK_BACKGROUND) {
-    for (size_t i = 0; i < track->date_intervals_size; i++) {
+    /*for (size_t i = 0; i < track->date_intervals_size; i++) {
       ESP_LOGI(TAG, "ad: %s interval begin %d end %d", track->filename, (int)track->date_intervals[i].begin_date, (int)track->date_intervals[i].end_date);
 
       for (size_t j = 0; j < track->date_intervals[i].schedule_seconds_size; j++) {
         ESP_LOGI(TAG, " ---- at %d", (int)track->date_intervals[i].schedule_seconds[j]);
       }
-    }
+    }*/
     return true;
   }
 

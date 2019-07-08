@@ -19,7 +19,7 @@ int32_t datetime_string_to_seconds_int(const char *string) {
 }
 
 int32_t datetime_date_string_to_date_int(const char *string) {
-  /*if (NULL == string) {
+  if (NULL == string) {
     return 0;
   }
 
@@ -30,8 +30,8 @@ int32_t datetime_date_string_to_date_int(const char *string) {
   if (sscanf(string, "%u.%u.%u", &day, &month, &year) != 3) {
     return -1;
   }
-  return year * 1000 + month * 40 + day;*/
-  if (NULL == string) {
+  return year * 1000 + month * 40 + day;
+  /*if (NULL == string) {
     return 0;
   }
 
@@ -45,7 +45,7 @@ int32_t datetime_date_string_to_date_int(const char *string) {
   char buf[10] = { 0 };
   snprintf(buf, sizeof buf, "%u%u%u", day, month, year);
   return atoi(buf);
-
+*/
 }
 
 int32_t datetime_current_date_int() {
