@@ -48,6 +48,7 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
   memset(&context, 0, sizeof(context));
 
   bool ok = true;
+  bool callback_was_called = false;
   do {
     t = json_next(json);
     switch(t) {
@@ -68,6 +69,11 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
         break;
 
       case JSON_OBJECT_END:
+        if (callback_was_called) {
+          callback_was_called = false;
+          memset(&context.found, 0, sizeof(context.found));
+          track_free(&context.track);
+        }
         pdjson_helper_reset(&state);
         break;
 
@@ -103,11 +109,13 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
               context.track.date_intervals[interval_index].schedule_seconds[schedule_index] = val;
             }
           }
-
+          break;
         } else if (string_is_equal(s, "schedule_intervals")) {
           context.searching.schedule_intervals = 1;
+          break;
         } else  if (string_is_equal(s, "schedule")) {
           context.searching.schedule = 1;
+          break;
         }
       }
       default:
@@ -115,11 +123,13 @@ static bool traverse_playlist_json(json_stream *json, void *ctx, bool (*callback
         break;
     }
 
-    if (ok && track_ready(&context)) {
+    if (!callback_was_called && ok && track_ready(&context)) {
       bool contin = callback(&context.track, ctx);
 
       memset(&context.found, 0, sizeof(context.found));
       track_free(&context.track);
+
+      callback_was_called = true;
 
       if (!contin) {
         break;

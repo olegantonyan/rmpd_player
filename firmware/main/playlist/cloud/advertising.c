@@ -29,7 +29,7 @@ bool advertising_init(const char *playlist_file_path) {
   json_close(&json);
   fclose(f);
 
-/*
+
   for (size_t j = 0; j < ADVERTISING_MAX_TRACKS; j++) {
     Track_t *track = ads[j];
     if (track != NULL) {
@@ -41,7 +41,7 @@ bool advertising_init(const char *playlist_file_path) {
       }
     }
   }
-*/
+
   return true;
 }
 

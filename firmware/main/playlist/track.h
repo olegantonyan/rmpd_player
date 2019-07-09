@@ -27,5 +27,6 @@ typedef struct {
 
 bool track_copy(Track_t *dst, const Track_t *src);
 void track_free(Track_t *track);
+const char *track_type_to_string(const Track_t *track);
 
 #endif

@@ -61,3 +61,16 @@ void track_free(Track_t *track) {
   }
   track->date_intervals_size = 0;
 }
+
+const char *track_type_to_string(const Track_t *track) {
+  if (track == NULL) {
+    return NULL;
+  }
+
+  if (track->type == TRACK_BACKGROUND) {
+    return "background";
+  } else if (track->type == TRACK_ADVERTISING) {
+    return "advertising";
+  }
+  return NULL;
+}
