@@ -9,10 +9,12 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
+#include "freertos/timers.h"
 #include "playlist/cloud/traverse.h"
 #include "pdjson.h"
 #include "audio/player.h"
 #include "remote/commands/outgoing.h"
+#include "playlist/cloud/advertising.h"
 
 static const char *TAG = "cloud_sched";
 
@@ -72,6 +74,11 @@ static bool is_stopping() {
 }
 
 static void scheduler_thread(void *args) {
+
+  if (!advertising_init(CLOUD_SCHEDULER_PLAYLIST_PATH)) {
+    ESP_LOGE(TAG, "error initializing advertising");
+  }
+
   while (!is_stopping()) {
 
     FILE *f = fopen(CLOUD_SCHEDULER_PLAYLIST_PATH, "r");
@@ -87,6 +94,9 @@ static void scheduler_thread(void *args) {
 
     taskYIELD();
   }
+
+  advertising_deinit();
+
   xEventGroupSetBits(event_group, STOPPED_BIT);
   thread_handle = NULL;
   vTaskDelete(NULL);
@@ -97,13 +107,6 @@ static bool on_file_parse_callback(const Track_t *track, void *_ctx) {
     return false;
   }
   if (track->type != TRACK_BACKGROUND) {
-    /*for (size_t i = 0; i < track->date_intervals_size; i++) {
-      ESP_LOGI(TAG, "ad: %s interval begin %d end %d", track->filename, (int)track->date_intervals[i].begin_date, (int)track->date_intervals[i].end_date);
-
-      for (size_t j = 0; j < track->date_intervals[i].schedule_seconds_size; j++) {
-        ESP_LOGI(TAG, " ---- at %d", (int)track->date_intervals[i].schedule_seconds[j]);
-      }
-    }*/
     return true;
   }
 
