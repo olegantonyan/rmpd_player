@@ -29,7 +29,7 @@ static const EventBits_t STOPPED_BIT = BIT1;
 static EventGroupHandle_t event_group = NULL;
 static TaskHandle_t thread_handle = NULL;
 static TimerHandle_t seconds_timer = NULL;
-static const Track_t *next_track_override = NULL; // TODO replace with Queue
+static QueueHandle_t next_track_override_queue = NULL;
 
 bool cloud_scheduler_is_enabled() {
   return file_exists(CLOUD_SCHEDULER_PLAYLIST_PATH);
@@ -98,6 +98,8 @@ static bool is_stopping() {
 
 static void scheduler_thread(void *args) {
 
+  next_track_override_queue = xQueueCreate(1, sizeof(Track_t *));
+
   if (!advertising_init(CLOUD_SCHEDULER_PLAYLIST_PATH)) {
     ESP_LOGE(TAG, "error initializing advertising");
   }
@@ -120,6 +122,8 @@ static void scheduler_thread(void *args) {
 
   advertising_deinit();
 
+  vQueueDelete(next_track_override_queue);
+
   xEventGroupSetBits(event_group, STOPPED_BIT);
   thread_handle = NULL;
   vTaskDelete(NULL);
@@ -130,11 +134,12 @@ static bool on_file_parse_callback(const Track_t *track, void *_ctx) {
     return false;
   }
 
-  if (next_track_override != NULL) {
-    play(next_track_override);
-    next_track_override = NULL;
+  Track_t *next_override = NULL;
+  if (xQueueReceive(next_track_override_queue, &next_override, 0) == pdTRUE && next_override != NULL) {
+    play(next_override);
+    xQueueReset(next_track_override_queue); // if there was another ad track added before previos one finished
   }
-  
+
   if (track->type != TRACK_BACKGROUND) {
     return true;
   }
@@ -164,6 +169,6 @@ static void seconds_timer_callback(TimerHandle_t tmr) {
   }
   time_t t = time(NULL);
   ESP_LOGI(TAG, "time to interrupt for ad: %s [%s]", ad_now->filename, ctime(&t));
-  next_track_override = ad_now;
+  xQueueSend(next_track_override_queue, &ad_now, 0);
   player_stop();
 }
