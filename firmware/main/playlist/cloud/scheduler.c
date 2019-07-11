@@ -97,7 +97,6 @@ static bool is_stopping() {
 }
 
 static void scheduler_thread(void *args) {
-
   next_track_override_queue = xQueueCreate(1, sizeof(Track_t *));
 
   if (!advertising_init(CLOUD_SCHEDULER_PLAYLIST_PATH)) {
@@ -105,7 +104,6 @@ static void scheduler_thread(void *args) {
   }
 
   while (!is_stopping()) {
-
     FILE *f = fopen(CLOUD_SCHEDULER_PLAYLIST_PATH, "r");
     if (f == NULL) {
       ESP_LOGE(TAG, "error opening playlist file");
@@ -122,7 +120,10 @@ static void scheduler_thread(void *args) {
 
   advertising_deinit();
 
-  vQueueDelete(next_track_override_queue);
+  if (next_track_override_queue != NULL) {
+    vQueueDelete(next_track_override_queue);
+  }
+  next_track_override_queue = NULL;
 
   xEventGroupSetBits(event_group, STOPPED_BIT);
   thread_handle = NULL;
@@ -134,17 +135,22 @@ static bool on_file_parse_callback(const Track_t *track, void *_ctx) {
     return false;
   }
 
-  Track_t *next_override = NULL;
-  if (xQueueReceive(next_track_override_queue, &next_override, 0) == pdTRUE && next_override != NULL) {
-    play(next_override);
-    xQueueReset(next_track_override_queue); // if there was another ad track added before previos one finished
+  if (next_track_override_queue != NULL) {
+    Track_t *next_override = NULL;
+    if (xQueueReceive(next_track_override_queue, &next_override, 0) == pdTRUE && next_override != NULL) {
+      play(next_override);
+      xQueueReset(next_track_override_queue); // if there was another ad track added before previos one finished
+    }
   }
 
-  if (track->type != TRACK_BACKGROUND) {
-    return true;
+  if (is_stopping()) {
+    return false;
   }
 
-  play(track);
+  if (track->type == TRACK_BACKGROUND) {
+    play(track);
+  }
+
   return true;
 }
 
@@ -168,7 +174,9 @@ static void seconds_timer_callback(TimerHandle_t tmr) {
     return;
   }
   time_t t = time(NULL);
-  ESP_LOGI(TAG, "time to interrupt for ad: %s [%s]", ad_now->filename, ctime(&t));
-  xQueueSend(next_track_override_queue, &ad_now, 0);
+  ESP_LOGI(TAG, "time to interrupt for ad: %s | %s", ad_now->filename, ctime(&t));
+  if (next_track_override_queue != NULL) {
+    xQueueSend(next_track_override_queue, &ad_now, 0);
+  }
   player_stop();
 }
