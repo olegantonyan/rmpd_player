@@ -12,13 +12,13 @@
   "license": "MIT",
   "dependencies": {
     "hyperapp": "^1.2.10",
-    "purecss": "^1.0.0"
+    "purecss": "^1.0.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.4.5",
+    "@babel/core": "^7.5.4",
+    "@babel/preset-env": "^7.5.4",
     "@babel/preset-react": "^7.0.0",
-    "autoprefixer": "^9.6.0",
+    "autoprefixer": "^9.6.1",
     "cssnano": "^4.1.10",
     "parcel-bundler": "^1.12.3",
     "parcel-plugin-inliner": "^1.0.10"

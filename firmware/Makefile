@@ -7,7 +7,7 @@ IDF_PATH := $(shell pwd)/../esp-idf
 export IDF_PATH
 
 PROJECT_NAME := firmware
-PROJECT_VER := "1.1.0"
+PROJECT_VER := "1.1.1"
 
 include $(IDF_PATH)/make/project.mk
 
